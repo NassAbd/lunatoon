@@ -59,6 +59,16 @@ textarea::placeholder { color: #858e8a; }
 .generate-button { border: 0; border-radius: 5px; background: var(--lime); color: #1a220a; display: flex; gap: 10px; align-items: center; justify-content: center; width: 100%; min-height: 47px; padding: 12px; margin-top: 17px; font-size: 12px; font-weight: 700; transition: background .2s, transform .2s; }
 .generate-button:hover:enabled { background: #e2ff93; transform: translateY(-1px); }
 .generate-button:disabled { background: #a2b65f; }
+.continuity-label { display: block; margin: 18px 0 10px; }
+#image-approach { width: 100%; padding: 11px 10px; border: 1px solid #3b4634; border-radius: 5px; background: #171e16; color: #d4e2c5; font-size: 11px; }
+#image-approach:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+.approach-note { color: #a5b298; font-size: 9px; line-height: 1.7; margin: 9px 0 0; }
+.timing-breakdown { color: #a2b29a; font: 9px/1.9 Consolas, monospace; margin: 10px 0; }
+.experiment-actions { border-top: 1px solid #2d3828; margin-top: 15px; padding-top: 13px; }
+.experiment-actions button { border: 1px solid #4b5f38; background: #202c19; color: #d0e7b7; border-radius: 4px; padding: 9px 11px; font-size: 10px; line-height: 1.7; }
+.experiment-actions p, .previous-run > p { font-size: 9px; line-height: 1.8; color: #a4b398; }
+.previous-run { border-top: 1px solid #394930; padding-top: 20px; margin-top: 25px; }
+.previous-run summary { color: #c8d9b7; font-size: 11px; line-height: 1.8; margin-bottom: 15px; }
 .generate-button > svg:last-child { margin-left: auto; }
 .generate-button > span:not(.spinner) { margin-right: auto; }
 .generation-note { display: flex; justify-content: center; gap: 7px; color: #8e968c; font-size: 7px; letter-spacing: .6px; margin: 13px 0 0; }
@@ -115,7 +125,7 @@ textarea::placeholder { color: #858e8a; }
 .image-placeholder p { margin: 17px 0 8px; color: #b8d1cf; font-size: 13px; }
 .image-placeholder > span:last-child { color: #8aa4a6; font-size: 10px; }
 .speech-bubble { position: absolute; max-width: 65%; border: 2px solid #111c20; color: #17252c; background: #f4f4e7; border-radius: 15px 19px 17px 3px; padding: 13px 17px; box-shadow: 2px 4px 0 #07191d66; z-index: 1; }
-.speech-bubble p { margin: 4px 0 0; font-size: clamp(13px, 1.25vw, 17px); line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
+.speech-bubble p { margin: 4px 0 0; font-size: clamp(15px, 1.25vw, 18px); line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; }
 .bubble-speaker { font: 8px Consolas, monospace; letter-spacing: 1px; color: #556455; text-transform: uppercase; }
 .bubble-top-left { top: 5%; left: 5%; }
 .bubble-top-right { top: 5%; right: 5%; border-radius: 19px 15px 3px 17px; }

@@ -58,3 +58,7 @@ Local verification completed on **2026-10-24**, using Node 24.14.0, Next.js 16.4
 ## 6. Recommendation: continue with a measured live experiment
 
 Continue the feasibility experiment, conditional on real results; do not expand product scope yet. Run the three actions plus the custom twist, record multiple full pipeline timings and qualitative quality notes, then compare the observed results against the targets. If character consistency is weak, evaluate a reference-image approach next; if latency is too high, compare quality settings and supported models. There is insufficient live evidence to claim feasibility or justify a pivot today.
+
+## Subsequent evidence supplied for POC 02
+
+The original verification notes above describe the initial implementation session. The user subsequently confirmed at least one real OpenAI generation and dialogue appearing before images. They reported approximately **5.58s text-ready** and **18.66s both images complete** from one observed run. Its raw request IDs, per-panel timings, token usage and server/browser timing breakdown were not supplied; it is not a representative benchmark or an inferred bottleneck. See [POC 02 decision](references/POC_02_DECISION.md) for the separate, controlled comparison and current evidence.

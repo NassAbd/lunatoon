@@ -2,8 +2,9 @@ import { z } from "zod";
 
 export const CHOICES = ["Activate the device", "Destroy the device", "Investigate its origin"] as const;
 export const INITIAL_CONTEXT = "New Kyoto, 2089. Rain never stops in the lower city. Detective Kael follows an anonymous signal into an abandoned transit station. Beneath a shattered advertisement, he finds a palm-sized black device with a pulsing cyan core. It knows his name. Every surveillance camera turns toward him. For the first time in years, the city's all-seeing AI has gone silent.";
-export const CHARACTER_IDENTITY = "Detective Kael: a 32-year-old man with warm brown skin, short swept-back black hair, a thin scar through his left eyebrow, an amber left cybernetic eye, and a mustard-yellow high-collared trench coat over a charcoal shirt. Keep this face, hair, eye, and costume identical in every panel.";
-export const ART_DIRECTION = "Cinematic cyberpunk webtoon illustration, detailed hand-inked linework, restrained cel shading, deep midnight blue shadows, cyan light and small acid-yellow accents, rain and atmospheric depth. No lettering, captions, speech bubbles, watermarks, or panel borders. Leave negative space at top and bottom for HTML dialogue overlays.";
+export { CHARACTER_IDENTITY, ART_DIRECTION } from "./art-direction";
+export const ImageApproachSchema = z.enum(["text", "reference"]);
+export type ImageApproach = z.infer<typeof ImageApproachSchema>;
 
 const shortText = z.string().min(1).max(400);
 export const SpeechBubbleSchema = z.object({
@@ -48,17 +49,27 @@ export const StoryRequestSchema = z.object({
   choice: z.enum(CHOICES),
   instruction: z.string().trim().max(500).default(""),
 }).strict();
-export const ImageRequestSchema = z.object({ panel: ScriptPanelSchema }).strict();
+export const ImageRequestSchema = z.object({ panel: ScriptPanelSchema, approach: ImageApproachSchema.default("text") }).strict();
 export const UsageSchema = z.object({
   input_tokens: z.number().nonnegative(),
   output_tokens: z.number().nonnegative(),
   total_tokens: z.number().nonnegative(),
+  input_text_tokens: z.number().nonnegative().optional(),
+  input_image_tokens: z.number().nonnegative().optional(),
+  cached_input_tokens: z.number().nonnegative().optional(),
 });
 export const MetricsSchema = z.object({
   model: z.string(),
   duration_ms: z.number().nonnegative(),
   request_id: z.string().nullable(),
   usage: UsageSchema.nullable(),
+  quality: z.string().optional(),
+  approach: ImageApproachSchema.optional(),
+  prompt_version: z.string().optional(),
+  sdk_ms: z.number().nonnegative().optional(),
+  validation_ms: z.number().nonnegative().optional(),
+  output_chars: z.number().nonnegative().optional(),
+  client: z.object({ request_ms: z.number().nonnegative(), validation_ms: z.number().nonnegative(), decode_ms: z.number().nonnegative() }).optional(),
 });
 export const StoryResponseSchema = z.object({ script: ValidatedScriptSchema, metrics: MetricsSchema });
 export const ImageResponseSchema = z.object({

@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "reference:build": "node scripts/build-reference.mjs",
+    "experiment:live": "playwright test --config=playwright.live.config.ts"
   },
   "dependencies": {
     "next": "^16.0.0",
