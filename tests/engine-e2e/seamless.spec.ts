@@ -7,6 +7,7 @@ import type { ReaderObservation } from "../../src/lib/reader-timing";
 type Stats = { scripts: number; images: number; streamedImages: number; previews: number; completedImages: number[] };
 type Measurement = { phase: string; elapsedMs: number; scroll: number; timeOrigin: number; readerSame: boolean; decisionSame: boolean; earlierPanelsSame: boolean; decisionTop: number; decisionHeight: number; panels: { top: number; height: number }[] };
 type BrowserMemory = { reader: Element; decision: Element; earlierPanels: Element[]; started: number };
+type ImageStreamEvidence = { url: string; status: number | null; ok: boolean; eof: boolean; settledRecords: number; readErrors: string[]; fetchError: string | null };
 const runtime = () => JSON.parse(readFileSync("test-results-engine/runtime.json", "utf8")) as { mockURL: string };
 const stats = async (request: APIRequestContext): Promise<Stats> => (await request.get(`${runtime().mockURL}/__stats`)).json();
 const control = async (request: APIRequestContext, data: Record<string, boolean | number>) => {
@@ -70,6 +71,58 @@ async function expectCompletedPanelsAccessible(page: Page, count: number) {
     expect(accessible).not.toContain("Keep reading. The scene will appear here.");
   }
 }
+async function observeImageStreamReads(page: Page) {
+  await page.addInitScript(() => {
+    const evidence: ImageStreamEvidence[] = [];
+    (window as Window & { imageStreamEvidence?: ImageStreamEvidence[] }).imageStreamEvidence = evidence;
+    const originalFetch = window.fetch;
+    window.fetch = async function (input, init) {
+      const url = new URL(input instanceof Request ? input.url : String(input), location.href);
+      const method = init?.method ?? (input instanceof Request ? input.method : "GET");
+      if (method.toUpperCase() !== "POST" || !/\/panels\/[^/]+\/image$/.test(url.pathname)) return originalFetch.call(this, input, init);
+      const observed: ImageStreamEvidence = { url: url.href, status: null, ok: false, eof: false, settledRecords: 0, readErrors: [], fetchError: null };
+      evidence.push(observed);
+      let response: Response;
+      try { response = await originalFetch.call(this, input, init); }
+      catch (error) { observed.fetchError = error instanceof Error ? error.name : "UnknownError"; throw error; }
+      observed.status = response.status; observed.ok = response.ok;
+      if (!response.body) return response;
+      const originalGetReader = response.body.getReader;
+      Object.defineProperty(response.body, "getReader", { value: function (this: ReadableStream<Uint8Array>, ...args: unknown[]) {
+        const reader = Reflect.apply(originalGetReader, this, args) as ReadableStreamDefaultReader<Uint8Array>;
+        const originalRead = reader.read;
+        const decoder = new TextDecoder(); let prefix = "";
+        const finishLine = () => {
+          // The route writes type first. Retain only a bounded record prefix;
+          // never clone/tee the response or retain image/snapshot payloads.
+          if (/^\s*\{\s*"type"\s*:\s*"settled"\s*[,}]/.test(prefix)) observed.settledRecords++;
+          prefix = "";
+        };
+        const inspect = (text: string) => {
+          let offset = 0;
+          while (offset < text.length) {
+            const newline = text.indexOf("\n", offset); const end = newline < 0 ? text.length : newline;
+            prefix += text.slice(offset, Math.min(end, offset + Math.max(0, 64 - prefix.length)));
+            if (newline < 0) break;
+            finishLine(); offset = newline + 1;
+          }
+        };
+        Object.defineProperty(reader, "read", { value: async function (this: ReadableStreamDefaultReader<Uint8Array>, ...readArgs: unknown[]) {
+          let result: ReadableStreamReadResult<Uint8Array>;
+          try { result = await Reflect.apply(originalRead, this, readArgs) as ReadableStreamReadResult<Uint8Array>; }
+          catch (error) { observed.readErrors.push(error instanceof Error ? error.name : "UnknownError"); throw error; }
+          if (result.done) { inspect(decoder.decode()); if (prefix) finishLine(); observed.eof = true; }
+          else inspect(decoder.decode(result.value, { stream: true }));
+          return result;
+        } });
+        // Return the original reader. cancel/releaseLock/closed and all read
+        // arguments/results keep their native behavior and object identity.
+        return reader;
+      } });
+      return response;
+    };
+  });
+}
 
 test.afterEach(async ({ request }) => { await control(request, {}); });
 
@@ -77,10 +130,12 @@ test("both decisions append in place with mocked provider previews, stable scrol
   await control(request, { scriptDelay: 500, imageDelay: 1800, reverseImages: true, streamPreviews: true });
   const beforeCalls = await stats(request);
   const activeImageRequests = new Set<Request>(); let finishedImageRequests = 0, failedImageRequests = 0;
+  const nativeImageFailures: { url: string; error: string | null }[] = [];
+  await observeImageStreamReads(page);
   const isImageRequest = (item: Request) => item.method() === "POST" && /\/panels\/[^/]+\/image$/.test(item.url());
   page.on("request", item => { if (isImageRequest(item)) activeImageRequests.add(item); });
   page.on("requestfinished", item => { if (isImageRequest(item)) { activeImageRequests.delete(item); finishedImageRequests++; } });
-  page.on("requestfailed", item => { if (isImageRequest(item)) { activeImageRequests.delete(item); failedImageRequests++; } });
+  page.on("requestfailed", item => { if (isImageRequest(item)) { activeImageRequests.delete(item); failedImageRequests++; nativeImageFailures.push({ url: item.url(), error: item.failure()?.errorText ?? null }); } });
   await page.goto("/"); await page.getByRole("button", { name: "Begin the story" }).click();
   await expect(page).toHaveURL(/\/run\/[a-f0-9-]+$/); const url = page.url();
   await page.getByRole("radio", { name: "Destroy the device" }).check();
@@ -147,8 +202,28 @@ test("both decisions append in place with mocked provider previews, stable scrol
   expect(generated.scripts - beforeCalls.scripts).toBe(2); expect(generated.images - beforeCalls.images).toBe(4);
   expect(generated.streamedImages - beforeCalls.streamedImages).toBe(4); expect(generated.previews - beforeCalls.previews).toBe(4);
   expect(generated.completedImages.slice(beforeCalls.completedImages.length)).toEqual([2, 1, 2, 1]);
+  await expect.poll(() => page.evaluate(() => (window as Window & { imageStreamEvidence?: ImageStreamEvidence[] }).imageStreamEvidence?.filter(item => item.eof).length)).toBe(4);
+  const streams = await page.evaluate(() => (window as Window & { imageStreamEvidence?: ImageStreamEvidence[] }).imageStreamEvidence ?? []);
+  expect(streams).toHaveLength(4);
+  for (const stream of streams) {
+    expect(stream.ok).toBe(true); expect(stream.status).toBe(200);
+    expect(stream.eof).toBe(true); expect(stream.settledRecords).toBe(1);
+    expect(stream.readErrors).toEqual([]); expect(stream.fetchError).toBeNull();
+  }
+  await expect(page.locator(".book-recovery[role='alert']")).toHaveCount(0);
+  await expect(page.getByText("Last request:", { exact: false })).toHaveCount(0);
   await expect.poll(() => activeImageRequests.size).toBe(0);
-  expect(finishedImageRequests).toBe(4); expect(failedImageRequests).toBe(0);
+  expect(finishedImageRequests + failedImageRequests).toBe(4);
+  // Chrome can report ERR_ABORTED after a fetch stream was fully consumed:
+  // https://github.com/microsoft/playwright/issues/42742. Tolerate only that
+  // transport event, paired with this exact response's successful body EOF.
+  for (const failure of nativeImageFailures) {
+    expect(failure.error).toBe("net::ERR_ABORTED");
+    expect(streams.find(stream => stream.url === failure.url)).toMatchObject({ ok: true, eof: true, settledRecords: 1, readErrors: [], fetchError: null });
+  }
+  const transportEvidence = { finishedImageRequests, failedImageRequests, activeImageRequests: activeImageRequests.size, nativeImageFailures, streams };
+  writeFileSync("test-results-engine/poc05/stream-transport-evidence.json", JSON.stringify(transportEvidence, null, 2));
+  await info.attach("image-stream-transport-evidence", { body: JSON.stringify(transportEvidence, null, 2), contentType: "application/json" });
   await saveMeasurements("continuous-reader-measurements", observations, info);
   await expect(page.locator(".book-developer")).not.toHaveAttribute("open", "");
   await page.screenshot({ path: "test-results-engine/poc05/complete-story-desktop.png", fullPage: true });

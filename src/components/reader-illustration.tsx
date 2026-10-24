@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ImageDisplayTiming } from "@/lib/reader-timing";
 import { Icon } from "./icon";
+import "@/app/generation-ux.css";
 export type OnImageDisplay = (kind: "preview" | "final", timing: ImageDisplayTiming) => void;
 function DecodedImage({ src, description, kind, onDisplay }: { src: string; description: string; kind: "preview" | "final"; onDisplay?: OnImageDisplay }) {
   const [ready, setReady] = useState(false); const [failed, setFailed] = useState(false);
@@ -33,10 +34,21 @@ function DecodedImage({ src, description, kind, onDisplay }: { src: string; desc
 }
 export function ReaderIllustration({ src, preview, description, error, onDisplay }: { src?: string; preview?: string; description: string; error?: string; onDisplay?: OnImageDisplay }) {
   return <>
-    <div className="image-placeholder reading-placeholder" aria-hidden={Boolean(src)}>
-      <span className="placeholder-mark"><Icon name={error ? "break" : "moon"} size={28} /></span>
-      <p>{error ? "This illustration couldn’t be finished" : "Illustrating this moment…"}</p>
-      <span>{error ? "Your dialogue is still here." : "Keep reading. The scene will appear here."}</span>
+    <div className="image-placeholder reading-placeholder generation-placeholder" data-state={error ? "failed" : "pending"} aria-hidden={Boolean(src)}>
+      {/* Authored decorative geometry, not a generated preview or story event. */}
+      <svg className="generation-composition" viewBox="0 0 480 720" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <path className="generation-structure" d="M0 0H480V720H0ZM28 720V148L106 70H374L452 148V720M44 720V160L116 88H364L436 160V720M28 148H452M44 160H436M28 196H452M44 210H436" />
+        <path className="generation-structure" d="M28 196L44 242M452 196L436 242M28 320H44M436 320H452M28 444H44M436 444H452M28 568H44M436 568H452M44 590H436" />
+        <path className="generation-floor" d="M0 720L180 590M96 720L204 590M192 720L228 590M288 720L252 590M384 720L276 590M480 720L300 590M0 704H480M24 662H456M72 628H408M116 604H364" />
+        <path className="generation-light" d="M118 108H184M296 108H362M58 232V286M422 232V286M56 582H122M358 582H424" />
+        <circle className="generation-orbit" cx="240" cy="176" r="26" />
+        <path className="generation-orbit" d="M240 138V146M240 206V214M202 176H210M270 176H278" />
+      </svg>
+      <div className="generation-copy">
+        <span className="placeholder-mark"><Icon name={error ? "break" : "moon"} size={24} /></span>
+        <p>{error ? "This illustration couldn’t be finished" : "Illustrating this moment…"}</p>
+        <span>{error ? "Your dialogue is still here." : "Keep reading. The scene will appear here."}</span>
+      </div>
     </div>
     {preview && !error && <DecodedImage key={preview} src={preview} description={`Preview: ${description}`} kind="preview" onDisplay={onDisplay} />}
     {src && <DecodedImage key={src} src={src} description={description} kind="final" onDisplay={onDisplay} />}

@@ -1,0 +1,95 @@
+/* Static, original noir geometry. This never represents generation progress. */
+.story-reader .reading-placeholder.generation-placeholder {
+  isolation: isolate;
+  padding: 28px;
+  background:
+    radial-gradient(ellipse at 50% 48%, #23424a 0%, #122c36 42%, #0b1b25 78%);
+}
+
+.story-reader .reading-placeholder.generation-placeholder::before {
+  background: linear-gradient(180deg, #0b1b2500 28%, #10252d6b 42%, #10252d6b 62%, #0b1b2500 80%);
+}
+
+.story-reader .generation-composition {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  pointer-events: none;
+  stroke-linecap: square;
+  stroke-linejoin: bevel;
+}
+
+.story-reader .generation-structure {
+  stroke: #83ada9;
+  stroke-width: 1;
+  opacity: 0.2;
+}
+
+.story-reader .generation-floor {
+  stroke: #83ada9;
+  stroke-width: 0.8;
+  opacity: 0.12;
+}
+
+.story-reader .generation-light {
+  stroke: #d9f77c;
+  stroke-width: 2;
+  opacity: 0.36;
+}
+
+.story-reader .generation-orbit {
+  stroke: #b7d0b5;
+  stroke-width: 0.8;
+  opacity: 0.2;
+}
+
+.story-reader .generation-copy {
+  position: relative;
+  max-width: 28ch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.story-reader .generation-copy .placeholder-mark {
+  display: grid;
+  place-items: center;
+  padding: 13px;
+  color: #d9f77c;
+  border-color: #a3bd7142;
+  background: #283f36;
+}
+
+.story-reader .reading-placeholder .generation-copy p {
+  margin: 22px 0 10px;
+  color: #eef3e6;
+  font-size: clamp(16px, 1.4vw, 19px);
+  line-height: 1.5;
+  letter-spacing: -0.015em;
+}
+
+.story-reader .generation-copy > span:last-child {
+  max-width: 26ch;
+  color: #b3c6bf;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.story-reader .generation-placeholder[data-state="failed"] .generation-composition {
+  opacity: 0.55;
+}
+
+/* Only the reveal is shorter; request, decode and visibility measurements remain separate. */
+.story-reader .generated-image.reader-image.is-ready {
+  animation-duration: 220ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-reader .generated-image.reader-image.is-ready,
+  .story-reader .preview-image.reader-image.is-ready {
+    /* Keep animationend so the existing real visibility measurement still completes. */
+    animation-duration: 0.01ms;
+  }
+}

@@ -1,10 +1,12 @@
 # Lunatoon — local webtoon POCs
 
-A local, desktop-first experiment in interactive webtoons. Select an action, add an optional twist, and generate one two-panel continuation of **Neon Protocol**. The script appears before two independent illustration requests finish.
+A local, desktop-first interactive webtoon demo. Discover **Neon Protocol**, select an action, add an optional twist, and complete a story through two decisions and four generated panels. Dialogue appears before each pair of independent illustration requests finishes.
 
-The light reading experience opens at `/`. Click **Begin the story** to create a local persistent, two-decision story at `/run/<uuid>`. The original POC 01/02 reader remains at `/experiment`. `SPECS.md` remains the long-term reference; there are no accounts, public sharing, story library, creator studio or deployment setup.
+The light library opens at `/`. Click **Begin the story** to create a local persistent story at `/run/<uuid>`. `/saved` lists local reading sessions; `/story/neon-protocol` introduces the story and `/about` explains the demo. **The Last Lightkeeper** is an original **Coming soon** preview, not playable. The original POC 01/02 reader remains at `/experiment`. `SPECS.md` remains the long-term reference; there are no accounts, public sharing, creator studio or deployment setup.
 
-In the saved reader, each submitted choice stays in the timeline and its two panels appear directly below it without navigation or automatic scrolling. Dialogue arrives first. Supported Flare reference edits request one real partial preview within each existing image call, followed independently by the saved final illustration. Other modes keep the existing final-only workflow and a fixed-size noir placeholder. Refresh/restart reads saved final assets without generating again.
+In the saved reader, four immediately available authored opening beats lead into the first decision. Each submitted choice stays in the timeline and its two panels appear directly below it without navigation or automatic scrolling. Dialogue arrives first. Supported Flare reference edits request one optional real partial preview within each existing image call, followed independently by the saved final illustration. The provider may send no preview; the POC 05.1 live sample sent only finals. A fixed-size, clearly decorative noir placeholder supports the wait. Refresh/restart reads saved final assets without generating again.
+
+Saved sessions are for this **local single-user installation**. The catalogue uses bounded read-only SQLite queries and never starts generation or recovery. Do not expose this unauthenticated local app or private `data/` directory as a public service.
 
 ## Run locally
 
@@ -135,7 +137,7 @@ Rebuild the original static reference after deliberately editing its source with
 2. Reload the same URL or restart the app. Saved dialogue, local images and immutable original references are reused with **zero generation calls**. Unstarted reserved work requires an explicit resume action; loading a page never submits paid work.
 3. Choose the next option based on the new event, source clue and facts. The second continuation uses saved facts and appearance, and ends the story.
 4. A failed image has its own explicit paid retry; successful siblings and script stay saved. A/B same-script replay remains explicit and consumes two image calls.
-5. Inspect **Run cost & latency diagnostics** for measured usage, estimated spend, unknown costs, separate reference-input tokens/cost, reservations and stage limits. Download diagnostics for all attempts. Current-visit browser request-flow timings are labeled separately from saved server timings and the original POC 02 decode-complete measurements.
+5. Open the collapsed **Developer details** for measured usage, estimated spend, unknown costs, separate reference-input tokens/cost, reservations and stage limits. Download diagnostics for all attempts. Current-visit browser request-flow timings are labeled separately from saved server timings and the original POC 02 decode-complete measurements.
 
 SQLite and assets live under ignored `data/`. **Back up the entire directory with the app stopped.** Use Node 24.14.0: the built-in SQLite API is experimental in that version. No additional service or npm library is required. Asset paths in the DB are relative; saved references are content-addressed and integrity checked.
 
@@ -206,3 +208,11 @@ See [POC 05 results](POC_05_RESULTS.md) for before/after scroll measurements, te
 Next choices now need one genuine consequence from the current chapter; the second chapter uses saved consequences without an arbitrary two-fact quota. Prompt, strict request schema and validation agree. Unknown references, identity, ownership, destroyed objects and chronological constraints remain protected, with separate diagnostic rules for missing or unknown causal references.
 
 One fresh live **Activate the device** story completed both decisions and all four reference illustrations, then survived reload and server restart without new calls. All four image streams returned finals **without partial previews**; live preview display remains unverified. The experiment used two narrative/four image calls, estimated at $0.089825 from returned usage. All three opening choices have mocked two-decision regression coverage; this is not a statistical reliability claim. See [POC 05.1 results](POC_05_1_RESULTS.md) for timings, screenshots, continuity limitations and 96 unit/SDK plus 17 browser test results.
+
+## POC 06: library, illustrated opening and generation feedback
+
+The homepage now pairs one playable story with one honest upcoming preview. Saved sessions can be resumed or reread from `/saved`; listings show stored progress and a short local session ID, without exposing twists or dialogue. A story is listed as completed only when its ending and all expected illustrations are saved. Listing does not inspect files or recover interrupted stages; opening its existing reader URL performs the engine's established recovery checks.
+
+The opening uses three new original vector compositions plus the existing immutable Kael illustration. Short captions replace the long prose block for the canonical opening. Generated panels retain their dialogue placement, fixed dimensions and independent arrival. The final decode-first fade is 220 ms; this presentation change is not a provider latency improvement. Reduced motion remains supported.
+
+No narrative contract, generation settings, reference asset, budget, call limit or paid retry policy was changed. No paid calls were made in POC 06. The [streaming audit](references/technical/POC_06_STREAMING.md) distinguishes documented optional previews from the final-only live observation. See [POC 06 results](POC_06_RESULTS.md) for tests, screenshots and limits.

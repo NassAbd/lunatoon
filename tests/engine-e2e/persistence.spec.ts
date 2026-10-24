@@ -69,7 +69,7 @@ test("failed image retry consumes one call only, preserves its sibling and scrip
 });
 
 test("light reading flow puts choices after panels, hides diagnostics and preserves hammer destruction through the ending", async ({ page, request }) => {
-  await page.goto("/");
+  await page.goto("/story/neon-protocol");
   await expect(page.locator(".story-reader")).toHaveCSS("background-color", "rgb(250, 250, 247)");
   await expect(page.getByRole("heading", { name: "Neon Protocol" })).toBeVisible();
   await expect(page.locator(".book-developer")).not.toHaveAttribute("open", "");
