@@ -9,7 +9,7 @@ import { mockChapter, jpegBase64 } from "./mock-chapter.mjs";
 const port = 3110;
 const directory = mkdtempSync(path.join(os.tmpdir(), "lunatoon-browser-"));
 const stats = { scripts: 0, images: 0, contexts: [], imagePrompts: [], endpoints: [] };
-let nextProcess, failSecond = false, invalidScript = false, imageDelay = 900;
+let nextProcess, failSecond = false, invalidScript = false, duplicateEndingDialogue = false, imageDelay = 900;
 async function body(request) { const chunks = []; for await (const chunk of request) chunks.push(chunk); return Buffer.concat(chunks).toString("utf8"); }
 function json(response, data, status = 200) { response.writeHead(status, { "Content-Type": "application/json", "x-request-id": `req_local_mock_${stats.scripts}_${stats.images}` }); response.end(JSON.stringify(data)); }
 async function startNext() {
@@ -23,7 +23,7 @@ async function startNext() {
 const mock = http.createServer(async (request, response) => {
   try {
     if (request.url === "/__stats") return json(response, stats);
-    if (request.url === "/__control") { const input = JSON.parse(await body(request)); failSecond = Boolean(input.failSecond); invalidScript = Boolean(input.invalidScript); imageDelay = input.imageDelay ?? 900; return json(response, { ok: true }); }
+    if (request.url === "/__control") { const input = JSON.parse(await body(request)); failSecond = Boolean(input.failSecond); invalidScript = Boolean(input.invalidScript); duplicateEndingDialogue = Boolean(input.duplicateEndingDialogue); imageDelay = input.imageDelay ?? 900; return json(response, { ok: true }); }
     if (request.url === "/__restart") { const child = nextProcess; const stopped = once(child, "exit"); child.kill("SIGTERM"); await stopped; await startNext(); return json(response, { ok: true }); }
     if (request.url === "/v1/responses") {
       const input = JSON.parse(await body(request)); const context = JSON.parse(input.input.find(item => item.role === "user").content);
@@ -32,6 +32,7 @@ const mock = http.createServer(async (request, response) => {
       await new Promise(resolve => setTimeout(resolve, 120));
       const chapter = mockChapter(context);
       if (invalidScript) chapter.story_state_updates.facts_added[0].id = "device_knows_kael";
+      if (duplicateEndingDialogue && context.step === 2) chapter.panels[1].dialogues = [chapter.panels[1].dialogues[0], { ...chapter.panels[1].dialogues[0], text: "A second line with the same presentation ID." }];
       return json(response, { id: "resp_local_mock", model: input.model, status: "completed", output: [{ type: "message", id: "msg_local_mock", role: "assistant", status: "completed", content: [{ type: "output_text", text: JSON.stringify(chapter), annotations: [] }] }], usage: { input_tokens: 630, input_tokens_details: { cached_tokens: 0 }, output_tokens: 412, total_tokens: 1042 } });
     }
     if (["/v1/images/edits", "/v1/images/generations"].includes(request.url)) {

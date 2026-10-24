@@ -59,6 +59,21 @@ describe("persistent orchestration with a mocked provider", () => {
     expect(saved.summary.script_calls).toBe(1); expect(saved.summary.image_calls).toBe(2);
     expect(saved.panels.every(p => p.status === "complete")).toBe(true);
   });
+  it("retains actionable second-chapter validation diagnostics and request ID without applying invalid output", async () => {
+    const s = setup(); await s.decide(); await s.illustrate();
+    s.provider.script = async context => {
+      const chapter = chapterFixture(context);
+      chapter.panels[1].dialogues = [chapter.panels[1].dialogues[0], { ...chapter.panels[1].dialogues[0], text: "Another line with a duplicated ID." }];
+      return { chapter, metrics: { ...measuredMetrics, request_id: "req_mock_second_validation" } };
+    };
+    const saved = await s.engine.decide(s.run.id, { operation_id: operation(), choice_id: "follow_cat", instruction: "He retreats into a bar." });
+    expect(saved.nodes[1].error?.code).toBe("invalid_chapter_contract");
+    expect(saved.nodes[1].error?.request_id).toBe("req_mock_second_validation");
+    expect(saved.nodes[1].error?.diagnostics).toMatchObject({ phase: "chapter_validation", kind: "schema", issues: [{ path: "panels.1.dialogues", rule: "dialogue_ids_unique" }] });
+    expect(saved.run.step).toBe(1); expect(saved.panels).toHaveLength(2);
+    expect(saved.summary.script_calls).toBe(2); expect(saved.summary.image_calls).toBe(2); expect(saved.summary.unknown_cost_attempts).toBe(0);
+    expect(saved.summary.estimated_micro_usd).toBe(39764);
+  });
   it("continues from two saved causal facts and appearance, ends in two decisions and never mixes runs", async () => {
     const s = setup(); await s.decide(); await s.illustrate();
     await s.engine.decide(s.run.id, { operation_id: operation(), choice_id: "follow_cat", instruction: "" }); await s.illustrate();

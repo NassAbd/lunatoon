@@ -32,14 +32,14 @@ export const ScriptSchema = z.object({
 export const ValidatedScriptSchema = ScriptSchema.superRefine((script, ctx) => {
   if (script.panels.length !== 2) return;
   if (script.panels[0].sequence_index !== 1 || script.panels[1].sequence_index !== 2) {
-    ctx.addIssue({ code: "custom", message: "Panels must be ordered 1, 2." });
+    ctx.addIssue({ code: "custom", path: ["panels"], message: "Panels must be ordered 1, 2." });
   }
   if (script.panels[0].panel_id === script.panels[1].panel_id) {
-    ctx.addIssue({ code: "custom", message: "Panel IDs must be unique." });
+    ctx.addIssue({ code: "custom", path: ["panels", 1, "panel_id"], message: "Panel IDs must be unique." });
   }
-  for (const panel of script.panels) {
+  for (const [index, panel] of script.panels.entries()) {
     if (new Set(panel.dialogues.map((bubble) => bubble.id)).size !== panel.dialogues.length) {
-      ctx.addIssue({ code: "custom", message: "Dialogue IDs must be unique within a panel." });
+      ctx.addIssue({ code: "custom", path: ["panels", index, "dialogues"], message: "Dialogue IDs must be unique within a panel." });
     }
   }
 });

@@ -4,7 +4,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { SnapshotSchema, type Snapshot } from "../../src/lib/story-engine/contracts";
 
-type Stats = { scripts: number; images: number; contexts: { state: { facts: { id: string }[]; characters: { injuries: string[]; clothing_condition: string }[] }; recent_panels: unknown[] }[]; imagePrompts: string[]; endpoints: string[] };
+type Stats = { scripts: number; images: number; contexts: { instruction: string; state: { facts: { id: string }[]; characters: { injuries: string[]; clothing_condition: string }[] }; recent_panels: unknown[] }[]; imagePrompts: string[]; endpoints: string[] };
 const runtime = () => JSON.parse(readFileSync("test-results-engine/runtime.json", "utf8")) as { mockURL: string; dataDirectory: string };
 const stats = async (request: APIRequestContext): Promise<Stats> => (await request.get(`${runtime().mockURL}/__stats`)).json();
 async function start(request: APIRequestContext, approach = "reference") { const res = await request.post("/api/runs", { data: { operation_id: randomUUID(), approach } }); expect(res.ok()).toBe(true); return SnapshotSchema.parse(await res.json()); }
@@ -33,6 +33,9 @@ test("saved two-decision story paints dialogue first, completes images independe
   const final = await stats(request); expect(final.scripts - before.scripts).toBe(2); expect(final.images - before.images).toBe(4);
   expect(final.contexts.at(-1)!.state.facts.map(f => f.id)).toEqual(expect.arrayContaining(["device_source", "cat_access"])); expect(final.contexts.at(-1)!.state.characters[0].injuries).toContain("A shallow cut on his right hand"); expect(final.contexts.at(-1)!.recent_panels).toHaveLength(2);
   expect(final.imagePrompts.at(-1)).toContain("torn at the right cuff");
+  expect((await request.post(`${runtime().mockURL}/__restart`)).ok()).toBe(true);
+  await page.goto(url); await expect(page.locator(".generated-image")).toHaveCount(4);
+  await expect(page.getByText("A story only you could tell.")).toBeVisible(); expect(await stats(request)).toEqual(final);
 });
 
 test("duplicate operation IDs claim one narrative/image request and cross-run asset reads are rejected", async ({ request }) => {
@@ -125,5 +128,37 @@ test("narrative failure uses friendly copy and only an explicit retry makes anot
   current = await stats(request); expect(current.scripts - before.scripts).toBe(2); expect(current.images - before.images).toBe(2);
   await page.getByText("Developer details", { exact: true }).click();
   await expect(page.getByText("Narrative: 2 attempted", { exact: false })).toBeVisible();
+  await request.post(`${runtime().mockURL}/__control`, { data: { imageDelay: 900 } });
+});
+
+test("a controlled second-decision validation failure records safe diagnostics, keeps usage, and requires explicit isolated recovery", async ({ page, request }) => {
+  const before = await stats(request); const run = await start(request); const base = `/api/runs/${run.run.id}`;
+  await request.post(`${runtime().mockURL}/__control`, { data: { imageDelay: 150, duplicateEndingDialogue: true } });
+  let saved = SnapshotSchema.parse(await (await request.post(`${base}/nodes`, { data: { operation_id: randomUUID(), choice_id: "investigate", instruction: "A cyborg cat appears." } })).json());
+  saved = await illustrate(request, saved); const firstImages = saved.panels.map(panel => panel.image_path);
+  await page.goto(`/run/${run.run.id}`); await page.reload();
+  await page.getByRole("radio", { name: "Follow the cat into the Aster Lab maintenance route" }).check();
+  await page.getByLabel("Add a little of your imagination").fill("He retreats into a bar.");
+  await page.getByRole("button", { name: "Continue the story" }).click();
+  await expect(page.getByRole("heading", { name: "This part of the story couldn’t be written." })).toBeVisible();
+  saved = SnapshotSchema.parse(await (await request.get(base)).json());
+  expect(saved.nodes[1].error).toMatchObject({ code: "invalid_chapter_contract", request_id: expect.stringMatching(/^req_local_mock_/), diagnostics: { phase: "chapter_validation", issues: [{ path: "panels.1.dialogues", rule: "dialogue_ids_unique" }] } });
+  expect(saved.summary.script_calls).toBe(2); expect(saved.summary.image_calls).toBe(2); expect(saved.summary.unknown_cost_attempts).toBe(0);
+  expect(saved.run.step).toBe(1); expect(saved.panels.map(panel => panel.image_path)).toEqual(firstImages);
+  const failedCounters = await stats(request); expect(failedCounters.scripts - before.scripts).toBe(2); expect(failedCounters.images - before.images).toBe(2);
+  await page.getByText("Developer details", { exact: true }).click();
+  await page.getByText("Request accounting details", { exact: true }).click();
+  await expect(page.getByText("panels.1.dialogues: dialogue_ids_unique", { exact: false })).toBeVisible();
+  await page.reload(); expect((await stats(request)).scripts).toBe(failedCounters.scripts);
+  await request.post(`${runtime().mockURL}/__control`, { data: { imageDelay: 150 } });
+  await page.getByRole("button", { name: "Try this part again" }).click();
+  await expect(page.locator(".generated-image")).toHaveCount(4); await expect(page.getByText("A story only you could tell.")).toBeVisible();
+  saved = SnapshotSchema.parse(await (await request.get(base)).json());
+  expect(saved.panels.slice(0, 2).map(panel => panel.image_path)).toEqual(firstImages);
+  expect(saved.summary.script_calls).toBe(3); expect(saved.summary.image_calls).toBe(4);
+  const after = await stats(request); expect(after.contexts.at(-1)?.recent_panels).toHaveLength(2);
+  expect(after.contexts.at(-1)?.instruction).toBe("He retreats into a bar.");
+  expect((await request.post(`${runtime().mockURL}/__restart`)).ok()).toBe(true);
+  await page.goto(`/run/${run.run.id}`); await expect(page.locator(".generated-image")).toHaveCount(4); expect(await stats(request)).toEqual(after);
   await request.post(`${runtime().mockURL}/__control`, { data: { imageDelay: 900 } });
 });

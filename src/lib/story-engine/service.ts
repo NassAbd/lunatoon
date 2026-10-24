@@ -1,6 +1,7 @@
 import { isReferenceModelSupported } from "../art-direction";
 import type { ImageApproach, Metrics } from "../contracts";
 import { GenerationError } from "../server/ai";
+import { stageError } from "./failure-diagnostics";
 import { EngineError } from "./errors";
 import { providerFailure, type StoryProvider } from "./provider";
 import { StoryStore } from "./store";
@@ -25,14 +26,15 @@ export class StoryEngine {
     if (node.chapter || snapshot.events.some((event) => event.operation_id === input.operation_id && event.status !== "planned")) return snapshot;
     this.provider.prepare();
     const claim = this.store.claimScript(runId, nodeId, input); if (!claim) return this.snapshot(runId);
-    let metrics: Metrics | null = null;
+    let metrics: Metrics | null = null; let responseReceived = false;
     try {
       const context = { bible: snapshot.bible, state: node.before, step: node.step, max_steps: snapshot.run.limits.max_steps, choice: node.choice, instruction: node.instruction, recent_panels: snapshot.panels.filter((panel) => snapshot.nodes.some((old) => old.id === panel.node_id && old.step < node.step)).map((panel) => panel.script).slice(-4) };
-      const result = await this.provider.script(context, snapshot.run.models, signal); metrics = result.metrics;
+      const result = await this.provider.script(context, snapshot.run.models, signal); metrics = result.metrics; responseReceived = true;
       this.store.finishScript(claim, result.chapter, result.metrics);
     } catch (error: unknown) {
       if (error instanceof GenerationError) metrics ??= error.metrics;
-      this.store.fail(claim, error instanceof EngineError ? { code: error.code, message: error.message, request_id: metrics?.request_id ?? null } : providerFailure(error), metrics);
+      const failure = responseReceived ? stageError(error, "script_commit") : error;
+      this.store.fail(claim, failure instanceof EngineError ? { code: failure.code, message: failure.message, request_id: metrics?.request_id ?? null, diagnostics: failure.diagnostics } : providerFailure(failure), metrics);
     }
     return this.snapshot(runId);
   }

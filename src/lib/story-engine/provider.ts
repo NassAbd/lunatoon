@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { z } from "zod";
+import { stageError } from "./failure-diagnostics";
 import { zodTextFormat } from "openai/helpers/zod";
 import { generateIllustration, GenerationError, getClient } from "../server/ai";
 import { ChapterSchema, type Chapter, type GenerationEvent, type Models, type NarrativeContext, type Panel, type Snapshot } from "./contracts";
@@ -38,6 +40,7 @@ export function openAIProvider(): StoryProvider {
 }
 
 export function providerFailure(error: unknown) {
+  if (error instanceof z.ZodError) { const failure = stageError(error, "provider_parse"); return { code: failure.code, message: failure.message, request_id: null, diagnostics: failure.diagnostics }; }
   const requestId = error instanceof OpenAI.APIError ? error.requestID ?? null : error instanceof GenerationError ? error.metrics?.request_id ?? null : null;
   if (error instanceof GenerationError) return { code: error.code, message: error.message, request_id: requestId };
   if (error instanceof OpenAI.APIError) {

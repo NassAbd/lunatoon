@@ -103,3 +103,9 @@ Mutation bodies are bounded/validated and reject a mismatched Origin. Operation 
 ## Verification and references
 
 See `POC_03_RESULTS.md` for executed checks, and `api-cost-model.md` for budget semantics. Official references checked 2026-10-24: [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [Image generation](https://developers.openai.com/api/docs/guides/image-generation), [Node 24 SQLite documentation](https://nodejs.org/download/release/latest-v24.x/docs/api/sqlite.html). The shorter `https://nodejs.org/docs/latest-v24.x/api/sqlite.html` fetch failed; the official download documentation URL succeeded. Next route handlers, promised dynamic params and distDir were checked in installed `next/dist/docs`. No undocumented streaming/image-reference feature is assumed.
+
+## POC 04 diagnostic checkpoint
+
+Failure records can now include optional safe `diagnostics`: local phase, schema/continuity/storage/unexpected kind, allowlisted error type, up to twelve allowlisted field paths/static rules and a numeric SQLite error code when available. Local chapter/state and node/panel/usage commit phases are distinguished; available narrative request ID/usage survive a post-response validation failure. Existing error records remain valid without migration. No new raw provider output, input values, arbitrary keys, raw exceptions or stack traces are persisted by this metadata.
+
+The service's historical generic `stage_failed` hid local post-response errors; a controlled second-chapter cross-field validation failure reproduces that reporting defect. Its cause is now visible without changing validation rules or applying the failed chapter. The original live exception was not retained and remains unconfirmed. See `POC_04_RESULTS.md`; this diagnostic checkpoint does not open the P0 gate for platform work or authorize paid tests.

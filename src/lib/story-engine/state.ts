@@ -1,6 +1,7 @@
 import { CHARACTER_IDENTITY } from "../art-direction";
 import { ValidatedScriptSchema } from "../contracts";
 import { ChapterSchema, StateSchema, type Chapter, type StoryState } from "./contracts";
+import { withFailurePhase } from "./failure-diagnostics";
 import { EngineError } from "./errors";
 
 function requireState(valid: boolean, message: string): asserts valid {
@@ -11,8 +12,11 @@ export function initialState(): StoryState {
 }
 export function applyChapter(before: StoryState, proposed: Chapter, step: number, maxSteps: number): StoryState {
   requireState(Number.isInteger(step) && step >= 1 && step <= maxSteps && maxSteps <= 2, "Chapter chronology must stay within the configured story steps.");
-  const chapter = ChapterSchema.parse(proposed);
-  ValidatedScriptSchema.parse({ story_node_id: "node_step_2", panels: chapter.panels });
+  const chapter = withFailurePhase("chapter_validation", () => {
+    const parsed = ChapterSchema.parse(proposed);
+    ValidatedScriptSchema.parse({ story_node_id: "node_step_2", panels: parsed.panels });
+    return parsed;
+  });
   requireState(chapter.is_ending === (step === maxSteps), "The final decision must end the short story, and earlier decisions must offer a next choice.");
   // Origin reveals and exact wording are creative guidance, never continuity gates.
   const updates = chapter.story_state_updates;

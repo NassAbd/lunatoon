@@ -174,3 +174,9 @@ The persistent reader uses a warm off-white surface, a central comic column and 
 The hammer/destruction failure was caused by a mandatory origin-reveal rule and exact source-name substring matching, unrelated to continuity. Source clues are now required-but-nullable in strict Structured Outputs; they are creative guidance. Identity, object ownership, destroyed-prop continuity, fact IDs, chapter order and ending constraints remain hard checks. Choosing destruction must record the device as destroyed. No database reset or automatic paid retry occurs; previously failed runs retain their usage history and need an explicit retry within their existing limits.
 
 See [POC 03.1 results](POC_03_1_RESULTS.md) for regression evidence, limitations and desktop screenshots. No paid tests were run for this corrective iteration.
+
+## POC 04 diagnostic checkpoint — P0 gate remains blocked
+
+`feat/platform-experience` currently adds safe narrative failure diagnostics, not a new platform UI. Failed attempts now retain their local phase, static field/rule codes, error type and available request ID under **Developer details → Request accounting details** and in diagnostic downloads. Raw rejected narrative/error content and credentials are not added to these details. Historical errors without metadata remain readable.
+
+Read [POC 04 findings](POC_04_RESULTS.md) before claiming story completion is fixed: the previous live second-decision exception was discarded, so its precise cause remains unconfirmed. Controlled mocked failures and successful four-panel/restart flows pass; no new paid calls were made. Narrative/state invariants and existing run limits are unchanged. Opening, library, preview-story and branding work are deferred until the actual P0 root cause is identified and its regression passes.

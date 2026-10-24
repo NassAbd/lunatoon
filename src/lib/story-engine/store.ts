@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ART_DIRECTION } from "../art-direction";
 import { CHOICES, INITIAL_CONTEXT, type ImageApproach, type Metrics, type ScriptPanel } from "../contracts";
 import { BibleSchema, EventSchema, NodeSchema, PanelSchema, RunSchema, type Bible, type Chapter, type Failure, type GenerationEvent, type Limits, type Models, type Panel, type Run, type Snapshot, type StoryNode } from "./contracts";
+import { withFailurePhase } from "./failure-diagnostics";
 import { EngineError } from "./errors";
 import { PRICES, reservation, summarize, usageCost } from "./cost";
 import { applyChapter, initialState } from "./state";
@@ -154,16 +155,22 @@ export class StoryStore {
     return this.transaction(() => {
       if (!this.owns(claim)) { this.reconcileLate(claim.id, metrics); return false; }
       const node = this.node(claim.node_id); const run = this.run(claim.run_id);
-      const after = applyChapter(node.before, chapter, node.step, run.limits.max_steps);
+      const after = withFailurePhase("state_validation", () => applyChapter(node.before, chapter, node.step, run.limits.max_steps));
       if (node.step === 1 && node.choice_id === "destroy" && after.objects.find(object => object.id === "device")?.condition !== "destroyed") throw new EngineError("invalid_story_state", "Destroying the device must record its destroyed condition before the story can continue.", 422);
-      node.after = after; node.chapter = chapter; node.status = "script_ready"; node.metrics = metrics; node.script_ready_at = this.now(); this.saveNode(node);
-      run.state = after; run.step = node.step; run.status = chapter.is_ending ? "ended" : "active"; run.updated_at = this.now(); this.saveRun(run);
-      for (const script of chapter.panels) {
-        const event = this.events(run.id).find((event) => event.node_id === node.id && event.stage === "image" && event.sequence === script.sequence_index && event.status === "planned")!;
-        const panel: Panel = { id: randomUUID(), node_id: node.id, sequence: script.sequence_index, script, visual_brief: this.visualBrief(after, script), status: "pending", image_path: null, error: null, metrics: null, operation_id: event.operation_id };
-        this.db.prepare("INSERT INTO comic_panels(id,node_id,sequence,document) VALUES(?,?,?,?)").run(panel.id, node.id, panel.sequence, JSON.stringify(panel)); event.panel_id = panel.id; this.saveEvent(event);
-      }
-      this.account(claim, metrics); claim.status = "succeeded"; claim.finished_at = this.now(); this.saveEvent(claim); return true;
+      node.after = after; node.chapter = chapter; node.status = "script_ready"; node.metrics = metrics; node.script_ready_at = this.now();
+      withFailurePhase("node_commit", () => {
+        this.saveNode(node);
+        run.state = after; run.step = node.step; run.status = chapter.is_ending ? "ended" : "active"; run.updated_at = this.now(); this.saveRun(run);
+      });
+      withFailurePhase("panel_commit", () => {
+        for (const script of chapter.panels) {
+          const event = this.events(run.id).find((event) => event.node_id === node.id && event.stage === "image" && event.sequence === script.sequence_index && event.status === "planned");
+          if (!event) throw new EngineError("image_reservation_missing", "No reserved image stage matches this panel. The chapter was not saved and no new image call was made.", 500);
+          const panel: Panel = { id: randomUUID(), node_id: node.id, sequence: script.sequence_index, script, visual_brief: this.visualBrief(after, script), status: "pending", image_path: null, error: null, metrics: null, operation_id: event.operation_id };
+          this.db.prepare("INSERT INTO comic_panels(id,node_id,sequence,document) VALUES(?,?,?,?)").run(panel.id, node.id, panel.sequence, JSON.stringify(panel)); event.panel_id = panel.id; this.saveEvent(event);
+        }
+      });
+      withFailurePhase("usage_commit", () => { this.account(claim, metrics); claim.status = "succeeded"; claim.finished_at = this.now(); this.saveEvent(claim); }); return true;
     });
   }
   private visualBrief(state: Run["state"], script: ScriptPanel): string { return `Panel ${script.sequence_index}: ${script.visual_description}. Staging: ${script.image_prompt}. Saved appearance and object continuity overrides default costume condition/prop state: ${JSON.stringify({ characters: state.characters, objects: state.objects })}. Preserve immutable facial identity and palette. Illustrate these current injuries, clothing condition and carried objects. Do not restore destroyed objects. Dialogue is overlaid by the app, never drawn into the image.`; }

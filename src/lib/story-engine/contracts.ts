@@ -4,7 +4,17 @@ import { ImageApproachSchema, MetricsSchema, ScriptPanelSchema } from "../contra
 export const Id = z.uuid();
 const Key = z.string().regex(/^[a-z][a-z0-9_-]{0,59}$/);
 const Text = z.string().min(1).max(300);
-export const ErrorSchema = z.object({ code: z.string(), message: z.string(), request_id: z.string().nullable() });
+export const FailurePhaseSchema = z.enum(["provider_parse", "chapter_validation", "state_validation", "node_commit", "panel_commit", "usage_commit", "script_commit"]);
+export const FailureDiagnosticsSchema = z.object({
+  phase: FailurePhaseSchema,
+  kind: z.enum(["schema", "continuity", "storage", "unexpected"]),
+  error_type: z.enum(["ZodError", "EngineError", "SQLiteError", "TypeError", "RangeError", "SyntaxError", "UnknownError"]),
+  issues: z.array(z.object({ path: z.string().max(200), rule: z.string().max(60) }).strict()).max(12),
+  sqlite_code: z.number().int().optional(),
+}).strict();
+export type FailurePhase = z.infer<typeof FailurePhaseSchema>;
+export type FailureDiagnostics = z.infer<typeof FailureDiagnosticsSchema>;
+export const ErrorSchema = z.object({ code: z.string(), message: z.string(), request_id: z.string().nullable(), diagnostics: FailureDiagnosticsSchema.optional() });
 export const LimitsSchema = z.object({
   max_steps: z.number().int().min(1).max(2),
   max_image_calls: z.number().int().min(2).max(12),
