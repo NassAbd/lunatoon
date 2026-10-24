@@ -45,7 +45,7 @@ stateDiagram-v2
 
 Each image independently has `pending → running → complete|failed`. Node `script_ready` also represents unstarted reserved images; one successful sibling can display while another runs/fails. Failed images do not roll back validated dialogue/state. A later decision waits until existing requests have settled; a settled failed image does not prevent continuing the story.
 
-No background task is launched after a Next.js response. `POST nodes` awaits and commits the narrative before returning. The browser commits dialogue, yields for paint, then starts **two concurrent separate image POSTs**. Each image request awaits its own provider and atomic disk/DB commit before responding. Polls and reloads only read/reconcile; mounting a page never submits paid work. Reserved but unstarted work has an explicit **Resume** control.
+No background task is launched after a completed Next.js response. `POST nodes` awaits and commits the narrative before returning. The browser commits dialogue, yields for paint, then starts **two concurrent separate image POSTs**. Each image request owns its provider operation through completion and atomic disk/DB settlement. POC 05 can send real previews while that response body remains open; its terminal result follows settlement. Polls and reloads only read/reconcile; mounting a page never submits paid work. Reserved but unstarted work has an explicit **Resume** control.
 
 A four-minute persisted lease exceeds the SDK's three-minute timeout. A read after lease expiry marks an unresolved request interrupted, with unknown cost where usage is unavailable. There is no automatic retry. Before expiry, a restart may still display "running"; reload/status polling reconciles it at expiry. A fresh paid retry requires the user's action and another call slot. Claim tokens fence a late old response from overwriting a successful retry. Late usage can reconcile the old attempt's cost, without applying its story or replacing the newer image.
 
@@ -62,6 +62,24 @@ These are structural/identity protections, **not semantic proof** that generated
 Original Kael PNG, opening SVG, character/art guides and narrative reference are copied once per content hash into `data/references/`. Bible metadata stores MIME, purpose, relative path and SHA-256. Existing runs keep their snapshot when source documents change. Reference bytes are integrity-checked before use/serving. Device and station anchors are explicit; each stored panel brief combines its own beat/staging with saved characters/appearance/objects. Image generation uses the node's saved after-state, not a newer node's state. This compact experiment treats appearance updates as applying to the continuation's pair; it does not model within-panel timestamps.
 
 A and B retain the POC 02 SDK endpoints: text generation versus multipart edit with the **same owned original sheet** for each independent call. Neither depends on the previous generated panel. Reference mode only accepts the documented model allowlist, never silently falls back. Model access errors remain stage errors. Same-script replay explicitly reserves two image calls, preserves dialogue/state, and retains older local images/event metadata. It replaces the displayed pair; the UI does not add a comparison library.
+
+### POC 05 preview transport
+
+The saved reader requests `Accept: application/x-ndjson` on the existing image POST. `src/lib/story-engine/image-stream.ts` exports a runtime Zod boundary for three messages:
+
+| Message | Payload and meaning |
+| --- | --- |
+| `preview` | Persistent `panel_id` UUID, bounded JPEG data URL and server `elapsed_ms`; temporary display only |
+| `settled` | Validated saved snapshot after this request settles, including stage failures; it is the durable authority |
+| `error` | Safe application `code` and `message` when the request cannot produce a settled snapshot |
+
+Callers without this Accept header retain the previous JSON response. With NDJSON, reference edits on `gpt-image-2.5-flare` and its `2026-09-08` snapshot request `stream:true, partial_images:1` in the **same single paid operation**. Quality, dimensions, JPEG compression, original reference and independent concurrency stay the same. Other configured modes/models use their existing final-only request and emit a settled result through the same application transport; this is selected before the request, not an error-triggered alternate paid call.
+
+The server captures the provider request ID from response headers, validates partial/final event data and only treats `image_edit.completed` as completion. It can receive no partial before the final. A truncated or failed stream never promotes the last preview to a completed asset and never retries automatically. Valid returned usage is retained even if final image bytes fail validation. Stream cancellation propagates to the SDK; an aborted stream that ends without a final event is still a failure with unknown usage. A final result already received can use the normal durable receipt path. Existing claim tokens fence late results and late previews after recovery.
+
+Previews live only in the browser's transient state. They are absent from SQLite, stored image paths, refresh/restart restoration and reference memory. Only final JPEGs use the existing receipt/write/commit recovery sequence below. The client validates each wire message and refreshes authoritative status serially when independent requests settle. Partial-image counters and first-partial timing are optional metrics, so historical records require no migration.
+
+One partial adds a conservative 100-output-token reservation. Older pending reservations are topped up transactionally when necessary before the image claim; a failed budget check starts no provider request. Returned usage determines estimated spend without adding the preview allowance twice. See [cost accounting](api-cost-model.md). POC 05 implementation has mocked transport/browser evidence only; no paid request or live preview delivery has been verified this iteration.
 
 ## Files, serving, and recovery
 
@@ -96,7 +114,7 @@ JPEG validation checks size and marker bounds, not full raster decoding or a cry
 | `GET /api/runs/:run` | Snapshot/recovery, no paid call |
 | `POST .../:run/nodes` | Atomically reserve continuation; await its narrative |
 | `POST .../nodes/:node/script` | Resume planned operation or explicit failed-script retry |
-| `POST .../panels/:panel/image` | Claim/await just one reserved image or explicit failed-image retry |
+| `POST .../panels/:panel/image` | Claim/await one reserved image or explicit failed-image retry; optional NDJSON previews followed by saved status |
 | `POST .../nodes/:node/replay` | Idempotent two-image same-script reservation, selected A/B mode |
 | `GET .../assets/:asset` | Serve a DB-known local asset; no generation |
 

@@ -4,6 +4,8 @@ A local, desktop-first experiment in interactive webtoons. Select an action, add
 
 The light reading experience opens at `/`. Click **Begin the story** to create a local persistent, two-decision story at `/run/<uuid>`. The original POC 01/02 reader remains at `/experiment`. `SPECS.md` remains the long-term reference; there are no accounts, public sharing, story library, creator studio or deployment setup.
 
+In the saved reader, each submitted choice stays in the timeline and its two panels appear directly below it without navigation or automatic scrolling. Dialogue arrives first. Supported Flare reference edits request one real partial preview within each existing image call, followed independently by the saved final illustration. Other modes keep the existing final-only workflow and a fixed-size noir placeholder. Refresh/restart reads saved final assets without generating again.
+
 ## Run locally
 
 Use Node **24.14.0** (declared in `.node-version`) and npm. Dependencies are project-local.
@@ -186,3 +188,15 @@ Read [POC 04 findings](POC_04_RESULTS.md) before claiming story completion is fi
 A fresh real OpenAI run completed both decisions and all four reference illustrations without retries, then survived refresh and an actual server restart with identical saved state/images and zero new generation calls. Stage-specific request schemas now match ending and continuity requirements; next choices can connect a new consequence to an established motive. Existing ownership, identity and destruction invariants remain strict.
 
 See [POC 04.1 results](POC_04_1_RESULTS.md) for reproduced failures, regression coverage, the complete live sequence, measured latency, usage-based cost estimates and remaining visual/semantic limitations. This is one observed working journey, not a general reliability guarantee. The earlier historical `stage_failed` exception remains unknown. Library and platform expansion remain deferred.
+
+## POC 05: continuous reading and genuine previews
+
+The reader interruption came from moving the decision below its new chapter, inserting loading feedback above it, and forcing a scroll. Each decision now keeps a stable position, preserves the selected action/twist, and appends its chapter below. Both decisions and the ending stay on the same page. Panel dimensions remain reserved while previews and finals decode; reduced motion is respected. Developer details stays collapsed by default.
+
+For the documented `gpt-image-2.5-flare` reference-edit path, the saved reader requests `stream:true, partial_images:1`. A preview is transient and never treated as a saved illustration. Only the validated final enters SQLite/local files. A provider may send no preview; an interrupted stream remains failed/unknown until an explicit recovery action. There is no automatic alternate mode or paid retry. Model, quality, reference artwork and JPEG settings are unchanged.
+
+One partial adds a documented 100 output-token allowance ($0.003 at the verified rate), reserved before work; returned usage determines estimated spend. The low-quality Flare reference planning allowance is now $0.074 per image. This is a conservative budget estimate, not a fixed panel price. See the [cost model](docs/api-cost-model.md).
+
+Expanded diagnostics distinguish narrative response/validation, text-ready time, image dispatch, first preview receipt/display, final transfer, decode after load, visual completion (including fade) and total request flow. Measurements belong to their original operations; later replay/retry does not rewrite them. Reloading saved content creates no new generation benchmark.
+
+See [POC 05 results](POC_05_RESULTS.md) for before/after scroll measurements, tests and desktop screenshots. **POC 05 uses mocked provider tests only; no paid calls or live streaming test were run.** Streaming account access, preview latency and a provider speedup remain unverified. POC 04.1's successful live final-image run remains separate historical evidence.

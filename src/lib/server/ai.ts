@@ -8,6 +8,7 @@ import {
   type ImageApproach, type ImageResponse, type Metrics, type ScriptPanel, type StoryRequest, type StoryResponse,
 } from "../contracts";
 import { ART_VERSION, buildIllustrationPrompt, isReferenceModelSupported } from "../art-direction";
+import { supportsImagePreviews, type OnIllustrationPreview } from "../story-engine/image-stream";
 
 export function getModelConfig() {
   return {
@@ -52,7 +53,7 @@ export async function generateScript(client: OpenAI, request: StoryRequest, sign
 }
 
 export type VisualMemory = { identity: string; style: string; current: string; reference: Buffer; models: { image: string; quality: "low" | "medium" | "high" } };
-export async function generateIllustration(client: OpenAI, panel: ScriptPanel, signal?: AbortSignal, approach: ImageApproach = "text", memory?: VisualMemory): Promise<ImageResponse> {
+export async function generateIllustration(client: OpenAI, panel: ScriptPanel, signal?: AbortSignal, approach: ImageApproach = "text", memory?: VisualMemory, onPreview?: OnIllustrationPreview): Promise<ImageResponse> {
   const started = performance.now();
   const config = memory?.models ?? getModelConfig();
   const size = panel.layout_aspect === "vertical" ? "1024x1536" : panel.layout_aspect === "banner" ? "1536x1024" : "1024x1024";
@@ -67,8 +68,42 @@ export async function generateIllustration(client: OpenAI, panel: ScriptPanel, s
     output_compression: 85,
   };
   // The authored sheet is a fixed local PNG, never a client-provided URL or file path.
+  const editOptions = approach === "reference" ? { ...options, prompt: `${options.prompt}\nUse the attached original sheet as the authority for Kael's face, costume, colors and flat ink style; apply explicitly recorded appearance changes. Create the requested new composition; do not reproduce the sheet layout or add labels.`, image: await toFile(memory?.reference ?? await readFile(path.join(process.cwd(), "public", "kael-reference.png")), "kael-reference.png", { type: "image/png" }) } : null;
+  if (editOptions && onPreview && supportsImagePreviews(config.image)) {
+    const metrics: Metrics = { model: config.image, quality: config.quality, approach, prompt_version: ART_VERSION, duration_ms: 0, request_id: null, usage: null, partial_images_requested: 1, partial_images_received: 0 };
+    let encoded: string | null = null;
+    try {
+      const response = await client.images.edit({ ...editOptions, stream: true, partial_images: 1 }, { signal }).withResponse();
+      metrics.request_id = response.request_id;
+      for await (const event of response.data) {
+        if (event.type === "image_edit.completed") {
+          if (encoded !== null) throw new Error("Duplicate final image");
+          // Account returned usage even if the final image fails byte/format validation.
+          const usage = ImageStreamUsageSchema.parse(event.usage);
+          metrics.usage = { input_tokens: usage.input_tokens, output_tokens: usage.output_tokens, total_tokens: usage.total_tokens, input_text_tokens: usage.input_tokens_details.text_tokens, input_image_tokens: usage.input_tokens_details.image_tokens };
+          const completed = ImageCompletedEventSchema.parse(event);
+          encoded = completed.b64_json;
+        } else if (event.type === "image_edit.partial_image") {
+          if (encoded !== null) throw new Error("Preview after completed image");
+          const preview = ImagePartialEventSchema.parse(event);
+          metrics.partial_images_received = (metrics.partial_images_received ?? 0) + 1;
+          metrics.first_partial_ms ??= performance.now() - started;
+          onPreview({ image_url: `data:image/jpeg;base64,${preview.b64_json}`, elapsed_ms: performance.now() - started });
+        } else throw new Error("Unexpected image event");
+      }
+    } catch (error: unknown) {
+      metrics.duration_ms = Math.round(performance.now() - started);
+      if (error instanceof OpenAI.APIError) metrics.request_id ??= error.requestID ?? null;
+      const code = error instanceof OpenAI.APIError ? error.status === 429 ? "rate_limit_or_quota" : error.status === 403 || error.status === 404 ? "model_unavailable" : error.status === 401 ? "invalid_api_key" : "image_stream_failed" : "image_stream_failed";
+      throw new GenerationError(code, "This illustration stopped before it could be saved. No automatic retry was made; check its details before trying again.", 502, metrics);
+    }
+    metrics.duration_ms = Math.round(performance.now() - started);
+    // The SDK can end an aborted stream without throwing. A preview is never a final image.
+    if (!encoded) throw new GenerationError("incomplete_image_stream", "The illustration stream ended before its final image. No automatic retry was made; its cost may be unknown.", 502, metrics);
+    return { panel_id: panel.panel_id, image_url: `data:image/jpeg;base64,${encoded}`, metrics };
+  }
   const response = approach === "reference"
-    ? await client.images.edit({ ...options, prompt: `${options.prompt}\nUse the attached original sheet as the authority for Kael's face, costume, colors and flat ink style; apply explicitly recorded appearance changes. Create the requested new composition; do not reproduce the sheet layout or add labels.`, image: await toFile(memory?.reference ?? await readFile(path.join(process.cwd(), "public", "kael-reference.png")), "kael-reference.png", { type: "image/png" }) }, { signal })
+    ? await client.images.edit(editOptions!, { signal })
     : await client.images.generate(options, { signal });
   const metrics: Metrics = { model: config.image, quality: config.quality, approach, prompt_version: ART_VERSION, duration_ms: Math.round(performance.now() - started), request_id: response._request_id ?? null, usage: response.usage ? { input_tokens: response.usage.input_tokens, output_tokens: response.usage.output_tokens, total_tokens: response.usage.total_tokens, input_text_tokens: response.usage.input_tokens_details?.text_tokens, input_image_tokens: response.usage.input_tokens_details?.image_tokens } : null };
   const encoded = response.data?.[0]?.b64_json;
@@ -79,3 +114,11 @@ export async function generateIllustration(client: OpenAI, panel: ScriptPanel, s
     metrics,
   };
 }
+
+const encodedJPEG = z.string().min(4).max(28_000_000).regex(/^[A-Za-z0-9+/]+={0,2}$/).refine(value => {
+  const bytes = Buffer.from(value, "base64");
+  return bytes.length <= 20 * 1024 * 1024 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes.at(-2) === 0xff && bytes.at(-1) === 0xd9;
+});
+const ImagePartialEventSchema = z.object({ type: z.literal("image_edit.partial_image"), b64_json: encodedJPEG, output_format: z.literal("jpeg"), partial_image_index: z.number().int().min(0).max(2) });
+const ImageStreamUsageSchema = z.object({ input_tokens: z.number().int().nonnegative(), output_tokens: z.number().int().nonnegative(), total_tokens: z.number().int().nonnegative(), input_tokens_details: z.object({ text_tokens: z.number().int().nonnegative(), image_tokens: z.number().int().nonnegative() }) });
+const ImageCompletedEventSchema = z.object({ type: z.literal("image_edit.completed"), b64_json: encodedJPEG, output_format: z.literal("jpeg") });

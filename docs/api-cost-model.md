@@ -1,4 +1,4 @@
-# POC 03 — usage, estimated cost and local guards
+# Usage, estimated cost and local guards — POC 03–05
 
 Pricing source checked **2026-10-24**: [OpenAI Standard API pricing](https://developers.openai.com/api/docs/pricing). Capability check: [image guide](https://developers.openai.com/api/docs/guides/image-generation), [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs). POC 02's measured comparison remains historical evidence, not the price table or a representative cost benchmark.
 
@@ -28,9 +28,17 @@ Amounts are stored as integer **micro-USD**, rounded upward once per request. Ag
 - **Unknown cost** means a claimed attempt lacks valid usage or a verified price. Timeouts, disconnects, provider errors and lease interruptions can be billed even when no result appears. Each is recorded/counts against hard limits. Unpriced reservations and unknown-cost attempts are visible separately.
 - **Planning amount held** is an allowance reserved before a call, not measured usage or money charged. Failed attempts without usage retain that allowance. Known usage replaces its allowance even if image persistence or narrative validation fails.
 
-Current planning allowances: narrative 4,000 input + 3,000 output tokens; image 2,000 text input + 2,000 reference-input tokens for B only, plus 1,500/5,000/10,000 output tokens for low/medium/high. This gives $0.0064/script, $0.055/low A image, $0.071/low B image. These are deliberately explicit estimates, not measured panel prices, promises of sufficient tokens, or API-enforced limits. The narrative request caps output at 3,000 tokens. Image output sizes/quality are fixed by existing POC 02 parameters; no expensive quality escalation is automatic.
+Current planning allowances: narrative 4,000 input + 3,000 output tokens; image 2,000 text input + 2,000 reference-input tokens for B only, plus 1,500/5,000/10,000 output tokens for low/medium/high. POC 05 adds **100 output tokens** to supported Flare reference-image reservations for one requested partial image. This gives $0.0064/script, $0.055/low A image, and **$0.074/low Flare B image** (previously $0.071). Reference models without the implemented preview path retain the $0.071 low allowance. These are deliberately explicit estimates, not measured panel prices, promises of sufficient tokens, or API-enforced limits. The narrative request caps output at 3,000 tokens. Image output sizes/quality are fixed by existing POC 02 parameters; no expensive quality escalation is automatic.
 
-For illustration, the two-decision B story initially reserves $0.1484 for its first script and pair. After settlement it reserves the second chapter against known spend plus remaining held amounts. Defaults give room for four planned story images and up to two explicit image retries/replay calls; existing unknown charges may consume budget sooner.
+For illustration, a Flare B story initially reserves **$0.1544** for its first script and pair. After settlement it reserves the second chapter against known spend plus remaining held amounts. Defaults give room for four planned story images and up to two explicit image retries/replay calls; existing unknown charges may consume budget sooner.
+
+### POC 05 partial-image allowance
+
+The [official image guide](https://developers.openai.com/api/docs/guides/image-generation#partial-images-cost), checked **2026-10-24**, specifies 100 additional image-output tokens per partial image: **$0.003** at the verified $30/million rate. The implementation requests one partial within each existing independent reference edit; it does not make another generation request. A final image may arrive without a partial. The reservation conservatively holds the allowance even when no preview is delivered or a legacy JSON caller uses the final-only path.
+
+Returned completion usage remains the accounting source. Do **not** add the $0.003 planning estimate again to `usageCost`; this would double-count an allowance as if it were separate measured usage. Optional metrics record requested/received partial counts and first-partial elapsed time separately. If the stream ends before a completion event with usage, cost remains unknown and its reservation remains held. Returned valid usage is retained even if final image bytes fail validation.
+
+Older pending image records can retain the former reservation. `claimImage` checks a larger current verified estimate inside its existing SQLite transaction and tops up the same event before claiming it. If the additional amount exceeds the run budget, the request is blocked before provider work. Completed events and historical usage are not rewritten. This adds no call slot, retry or billing-cap promise.
 
 ## Hard limits, atomic reservation and retries
 
@@ -55,8 +63,12 @@ These are **application controls, not an absolute provider billing cap**. In-fli
 
 ## Timing and comparison
 
-Server event metrics preserve narrative and each image SDK/request duration. Persistent node elapsed time includes scheduling, idle time and recovery waits; it is not provider compute time. The saved reader reports browser text-ready and per-image/total **request-flow** times only for generation performed in the current visit. Its total ends after disk/DB settlement/status reads, not after guaranteed full image decoding. It is labeled accordingly and is not directly interchangeable with POC 02's decode-complete total. A reload has no new text-ready benchmark. Diagnostic downloads include all attempt metadata plus any current-visit browser observation.
+Server event metrics preserve narrative and each image SDK/request duration. `validation_ms` measures local chapter/state application validation, excluding SQLite commit time. For streamed images, duration extends through stream completion; `first_partial_ms` measures time until a real partial reaches the server. Persistent node elapsed time includes scheduling, idle time and recovery waits; it is not provider compute time.
+
+The saved reader reports browser text-ready and per-image/total **request-flow** times only for generation performed in the current visit. Its request total ends after disk/DB settlement/status reads. POC 05 separately records preview receipt/display and final asset transfer, decode and visual completion after its fade. These measures have different endpoints; neither request-flow total nor visual completion should be relabeled as provider compute time. Missing resource timing or preview events remain absent, not zero. A reload has no new generation benchmark. Diagnostic downloads include attempt metadata and current-visit observations.
 
 POC 02's unchanged reader retains its detailed request/validation/decode measurements and same-script comparison. Its one live comparison found 4.810s text-ready and 16.823s total for A, with 12.002s A vs 11.381s B concurrent image phases and higher B cost. These remain one dated sample; no speedup or 3-second target success is inferred for POC 03. This iteration adds immediate loading feedback separately from actual text readiness.
 
 POC 03 automated provider usage and delays are **synthetic fixtures**. No new live latency, image-quality result, price paid or API-access confirmation is claimed. See `POC_03_RESULTS.md`.
+
+POC 05 streaming checks are also **mocked SDK/HTTP and browser tests**. No paid call or live streaming validation has been performed in this iteration. Previous live final-image results do not establish preview availability, latency or billed usage for this project.

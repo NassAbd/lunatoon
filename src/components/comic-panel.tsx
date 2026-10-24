@@ -1,11 +1,12 @@
 import type { ComicPanel } from "@/lib/contracts";
 import { Icon } from "./icon";
 import { layoutDialogue } from "@/lib/dialogue-layout";
+import { ReaderIllustration, type OnImageDisplay } from "./reader-illustration";
 
-export function ComicPanelCard({ panel, reading = false }: { panel: ComicPanel; reading?: boolean }) {
+export function ComicPanelCard({ panel, reading = false, preview, onDisplay }: { panel: ComicPanel; reading?: boolean; preview?: string; onDisplay?: OnImageDisplay }) {
   return <article className="generated-panel" aria-label={`Continuation panel ${panel.sequence_index}`}>
     <div className={`panel-canvas aspect-${panel.layout_aspect}`}>
-      {panel.image_url
+      {reading ? <ReaderIllustration src={panel.image_url} preview={preview} description={panel.visual_description} error={panel.error} onDisplay={onDisplay} /> : panel.image_url
         // Data URLs are transient results from the local API; Next image optimization adds no value.
         // eslint-disable-next-line @next/next/no-img-element
         ? <img className="generated-image" src={panel.image_url} alt={panel.visual_description} />

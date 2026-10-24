@@ -5,6 +5,7 @@ import { stageError } from "./failure-diagnostics";
 import { EngineError } from "./errors";
 import { providerFailure, type StoryProvider } from "./provider";
 import { StoryStore } from "./store";
+import type { OnIllustrationPreview } from "./image-stream";
 
 export class StoryEngine {
   constructor(readonly store: StoryStore, private provider: StoryProvider) {}
@@ -38,7 +39,7 @@ export class StoryEngine {
     }
     return this.snapshot(runId);
   }
-  async image(runId: string, panelId: string, input: { operation_id: string; retry: boolean }, signal?: AbortSignal) {
+  async image(runId: string, panelId: string, input: { operation_id: string; retry: boolean }, signal?: AbortSignal, onPreview?: OnIllustrationPreview) {
     const snapshot = this.snapshot(runId); const panel = snapshot.panels.find((panel) => panel.id === panelId);
     if (!panel) throw new EngineError("not_found", "This panel does not belong to the saved run.", 404);
     const existing = snapshot.events.find((event) => event.operation_id === input.operation_id);
@@ -47,11 +48,15 @@ export class StoryEngine {
     const planned = existing ?? snapshot.events.filter((event) => event.panel_id === panelId).at(-1);
     this.supports(planned?.approach ?? snapshot.run.approach, planned?.model ?? snapshot.run.models.image);
     const reference = planned?.approach === "reference" ? this.store.readAsset(runId, "kael_reference").bytes : Buffer.alloc(0);
+    signal?.throwIfAborted();
     this.provider.prepare();
     const claim = this.store.claimImage(runId, panelId, input); if (!claim) return this.snapshot(runId);
     let metrics: Metrics | null = null;
     try {
-      const result = await this.provider.image(panel, snapshot, claim, reference, signal); metrics = result.metrics;
+      const result = await this.provider.image(panel, snapshot, claim, reference, signal, onPreview ? preview => {
+        const current = this.snapshot(runId).events.find(event => event.id === claim.id);
+        if (!signal?.aborted && current?.status === "running" && current.claim_token === claim.claim_token) onPreview(preview);
+      } : undefined); metrics = result.metrics;
       if (result.panel_id !== panel.script.panel_id) throw new EngineError("panel_mismatch", "The image result belongs to another panel.", 502);
       const relative = this.store.recordImageReceipt(claim, metrics);
       if (relative) { this.store.writeImage(relative, Buffer.from(result.image_url.split(",")[1], "base64")); this.store.finishImage(claim); }

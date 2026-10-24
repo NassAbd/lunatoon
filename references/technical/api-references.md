@@ -27,7 +27,7 @@ Reference mode is explicitly selected, not an extra hidden call. It is enabled o
 
 ## Concurrency, streaming, and cost
 
-The guide and edit reference document streaming and `partial_images` (0–3). They do not establish access or latency for a specific project's streaming requests. Streaming is **not implemented or live-tested** here. Two independently completed images already satisfy the useful progressive behavior without a new stream parser, partial-image billing uncertainty or additional UI states.
+The guide and edit reference document streaming and `partial_images` (0–3). They do not establish access or latency for a specific project's streaming requests. Streaming was not implemented in POC 02/03. POC 05 adds the narrow reference-edit preview path documented below; live streaming remains unverified.
 
 [Standard pricing](https://developers.openai.com/api/docs/pricing) was also fetched. Per 1M tokens, GPT-4.1 Mini is $0.40 input / $0.10 cached input / $1.60 output. Flare is $5 text input / $8 image input / $30 image output. The live comparison returned modality details and zero narrative cached tokens, allowing the dated report's estimate. Images API calls do not receive the Responses-only image caching discount. No Batch rates, guessed fixed per-image prices, discounts, taxes or account credits are applied. The UI keeps raw usage for arbitrary configured models instead of maintaining a generalized pricing engine.
 
@@ -49,3 +49,22 @@ The existing <3s text and <30s completion goals remain experimental. A user-obse
 The Structured Outputs guide, image generation guide and Standard pricing page above were fetched again for the persistent engine. POC 03 retains the same nonstreaming Responses/Images endpoints, A/B allowlist, independent calls and no automatic retries. Its separate chapter schema adds state updates/causal choices and uses a 3,000-token output cap. The original POC 02 contract and 2,200 cap remain unchanged.
 
 POC 03 stores owned references and generated JPEGs locally and adds a narrow expiring, versioned price table; the earlier browser-memory and unpriced-UI notes describe POC 02. See [cost accounting](../../docs/api-cost-model.md) and [local architecture](../../docs/story-engine-architecture.md). No new project access or live performance claim is made by these documentation checks.
+
+## POC 05 streaming addendum — checked 2026-10-24
+
+Fetched official sources:
+
+- [Flare model card](https://developers.openai.com/api/docs/models/gpt-image-2.5-flare): exact model and dated snapshot accept image input and support image edits.
+- [Image streaming guide](https://developers.openai.com/api/docs/guides/image-generation#streaming): `stream:true`, `partial_images` from 0 to 3; final output can arrive before all requested partials.
+- [Image edit streaming event schemas](https://developers.openai.com/api/reference/resources/images/edit-streaming-events): `image_edit.partial_image` carries `b64_json`, index and format/settings; `image_edit.completed` carries final bytes and usage with text/image input details.
+- [Output controls](https://developers.openai.com/api/docs/guides/image-generation#customize-image-output): JPEG, compression, portrait dimensions and existing quality settings remain supported.
+- [Cost and latency](https://developers.openai.com/api/docs/guides/image-generation#cost-and-latency): each partial costs 100 additional image-output tokens; direct Images edits receive no cached-input discount. At $30/million, one partial's planning allowance is $0.003.
+- [Limitations](https://developers.openai.com/api/docs/guides/image-generation#limitations): previews do not guarantee faster final completion or exact visual consistency.
+
+The [edit endpoint](https://developers.openai.com/api/reference/resources/images/methods/edit) Markdown fetch again returned **404**. The official OpenAPI endpoint spec for `POST https://api.openai.com/v1/images/edits` fetched successfully and supplies `text/event-stream`, multipart streaming examples and final usage. The separate guide/model/event pages also fetched successfully; no missing page content was inferred.
+
+The installed SDK supports the streaming edit overload and `.withResponse()` for response headers/request ID. Its stream iterator throws provider `data.error` failures, but can end silently on abort; the implementation therefore requires an explicit completed event. It retains safe errors and request IDs, suppresses raw provider exceptions, and preserves returned usage before final-byte validation. No automatic SDK retry or alternate request is introduced.
+
+Only the exact Flare alias/snapshot reference path enables previews in this iteration. It requests **one partial** inside each existing independent image call. Legacy JSON clients and other configured modes/models retain their existing final-only provider path. The app-facing NDJSON contract carries transient preview / durable settled snapshot / safe error messages; completed assets alone enter local persistence. See the architecture and cost documents for reservations, old pending-event top-ups and recovery.
+
+**Evidence boundary:** documentation and mocked SDK/HTTP/browser tests establish implemented request/event handling. No paid OpenAI call or live streaming delivery has been verified in POC 05. Historical successful reference edits establish only their dated nonstreaming behavior. Preview timing, actual partial count, final usage and project availability must be observed in a separately authorized bounded live test before claiming them.

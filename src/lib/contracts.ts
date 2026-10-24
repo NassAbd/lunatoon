@@ -69,6 +69,9 @@ export const MetricsSchema = z.object({
   sdk_ms: z.number().nonnegative().optional(),
   validation_ms: z.number().nonnegative().optional(),
   output_chars: z.number().nonnegative().optional(),
+  partial_images_requested: z.number().int().nonnegative().optional(),
+  partial_images_received: z.number().int().nonnegative().optional(),
+  first_partial_ms: z.number().nonnegative().optional(),
   client: z.object({ request_ms: z.number().nonnegative(), validation_ms: z.number().nonnegative(), decode_ms: z.number().nonnegative() }).optional(),
 });
 export const StoryResponseSchema = z.object({ script: ValidatedScriptSchema, metrics: MetricsSchema });

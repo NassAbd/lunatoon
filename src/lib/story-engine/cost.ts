@@ -1,5 +1,6 @@
 import type { Metrics } from "../contracts";
 import type { GenerationEvent } from "./contracts";
+import { supportsImagePreviews } from "./image-stream";
 
 export const PRICES = { version: "openai-standard-2026-10-24", checked_at: "2026-10-24", expires_at: "2026-11-23", source: "https://developers.openai.com/api/docs/pricing" };
 export function verifiedPrice(model: string, now = Date.now()): "script" | "image" | null {
@@ -14,7 +15,8 @@ export function reservation(event: Pick<GenerationEvent, "model" | "stage" | "ap
   if (kind !== event.stage) return null;
   if (kind === "script") return Math.ceil(4000 * 0.4 + 3000 * 1.6);
   const outputAllowance = { low: 1500, medium: 5000, high: 10000 }[event.quality];
-  return 2000 * 5 + (event.approach === "reference" ? 2000 * 8 : 0) + outputAllowance * 30;
+  const previewAllowance = event.approach === "reference" && supportsImagePreviews(event.model) ? 100 : 0;
+  return 2000 * 5 + (event.approach === "reference" ? 2000 * 8 : 0) + (outputAllowance + previewAllowance) * 30;
 }
 export function usageCost(event: Pick<GenerationEvent, "model" | "stage" | "price_version">, metrics: Metrics | null): { total: number | null; reference: number | null } {
   if (event.price_version !== PRICES.version || !metrics?.usage) return { total: null, reference: null };

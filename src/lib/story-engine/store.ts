@@ -155,7 +155,10 @@ export class StoryStore {
     return this.transaction(() => {
       if (!this.owns(claim)) { this.reconcileLate(claim.id, metrics); return false; }
       const node = this.node(claim.node_id); const run = this.run(claim.run_id);
-      const after = withFailurePhase("state_validation", () => applyChapter(node.before, chapter, node.step, run.limits.max_steps));
+      const validationStarted = performance.now();
+      let after: ReturnType<typeof applyChapter>;
+      try { after = withFailurePhase("state_validation", () => applyChapter(node.before, chapter, node.step, run.limits.max_steps)); }
+      finally { metrics.validation_ms = performance.now() - validationStarted; }
       if (node.step === 1 && node.choice_id === "destroy" && after.objects.find(object => object.id === "device")?.condition !== "destroyed") throw new EngineError("invalid_story_state", "Destroying the device must record its destroyed condition before the story can continue.", 422);
       node.after = after; node.chapter = chapter; node.status = "script_ready"; node.metrics = metrics; node.script_ready_at = this.now();
       withFailurePhase("node_commit", () => {
@@ -184,6 +187,13 @@ export class StoryStore {
         if (!input.retry || panel.status !== "failed") throw new EngineError("explicit_retry_required", "Only a failed image can be retried, with an explicit new paid operation ID.");
         const previous = this.events(runId).filter((event) => event.panel_id === panelId).at(-1);
         event = this.newEvent(run, node, "image", panel.sequence, input.operation_id, previous?.approach ?? run.approach, panel.id); this.reserve(run, [event]);
+      }
+      // Older pending records may predate the preview allowance. Reserve any increase atomically before the paid claim.
+      const estimate = reservation(event, this.now());
+      if (estimate != null && estimate > (event.reserved_micro_usd ?? 0)) {
+        event.reserved_micro_usd = estimate; event.price_version = PRICES.version;
+        const summary = summarize(this.events(runId).map(saved => saved.id === event.id ? event : saved));
+        if (summary.estimated_micro_usd + summary.held_micro_usd > Math.floor(run.limits.budget_usd * 1e6)) throw new EngineError("estimated_budget_limit", "The run's estimated budget cannot reserve this illustration. No image request was made.", 402);
       }
       panel.status = "running"; panel.error = null; panel.metrics = null; panel.operation_id = event.operation_id; this.savePanel(panel); node.status = "images_running"; this.saveNode(node); return this.claim(event);
     });

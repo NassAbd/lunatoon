@@ -285,3 +285,21 @@ html:has(.story-reader) { background: #FAFAF7; color-scheme: light; }
 .book-footer { text-align: center; color: #8c9483; font: italic 13px Georgia, serif; padding: 35px 0 45px; }
 @media (max-width: 720px) { .book-header { height: 76px; padding: 0 24px; } .book-navigation { font-size: 12px; } .book-flow { width: min(100% - 32px, 680px); } .book-title { padding: 36px 0 30px; } .book-title h1 { letter-spacing: -1.5px; } .book-narration { padding: 0 10px; font-size: 14px; line-height: 1.9; margin-top: 26px; } .book-invitation, .book-decision { padding: 0 6px 12px; } .story-reader h2 { font-size: 25px; } .book-choice { padding: 14px 16px; font-size: 13px; } .book-twist-label { font-size: 12px; } .book-recovery { padding: 19px; } }
 .book-recovery-choice { font-size: 13px; color: #746549; padding: 10px 13px; border-left: 2px solid #d5dcb8; background: #faf9f1; }
+
+/* Stable story steps keep the reader's choices in the reading strip. */
+.book-step-status { min-height: 76px; display: grid; place-items: center; padding: 16px 0 22px; }
+.book-step-status p { margin: 0; text-align: center; color: #6e7862; font-size: 12px; line-height: 1.8; }
+.book-decision[data-submitted="true"] .book-choice:not(.is-selected) { color: #737a6a; background: #f8f9f5; }
+.book-decision[data-submitted="true"] .book-primary { opacity: 1; background: #edf3df; border-color: #dbe4c5; color: #53633b; }
+.book-decision[data-submitted="true"] textarea { background: #fafbf7; color: #59634f; resize: none; }
+.story-reader .reading-placeholder { background: radial-gradient(ellipse at 45% 35%, #1b4247 0, #102a34 45%, #091b25 100%); }
+.story-reader .reading-placeholder::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(140deg, transparent 49.7%, #c2e77b12 50%, transparent 50.3%), repeating-linear-gradient(90deg, transparent 0 19%, #8fd9d208 19.1% 19.3%, transparent 19.4% 20%); }
+.story-reader .reading-placeholder .placeholder-mark { color: #d9f77c; border-color: #49695c; background: #233d36; }
+.story-reader .reading-placeholder p { color: #e5ecd9; }
+.story-reader .reading-placeholder > span:last-child { color: #a9c3bd; }
+.reader-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.reader-image:not(.is-ready) { opacity: 0; animation: none; }
+.reader-image.is-ready { animation: image-appear .65s ease-out both; }
+.preview-label { position: absolute; bottom: 3%; left: 50%; transform: translateX(-50%); padding: 7px 12px; border-radius: 20px; background: #0b202bdd; color: #eef7e3; font-size: 11px; white-space: nowrap; }
+.image-display-error { position: absolute; inset: 42% 10% auto; text-align: center; color: #edf2e0; font-size: 14px; background: #122c34; padding: 18px; }
+@media (prefers-reduced-motion: reduce) { .reader-image.is-ready { animation-duration: .01ms; } }
