@@ -196,3 +196,22 @@ textarea::placeholder { color: #858e8a; }
 @media (max-width: 1000px) { .site-header { padding: 0 25px; } .workspace { grid-template-columns: 325px minmax(0, 1fr); } .director-column { padding-left: 25px; padding-right: 25px; } h1 { font-size: 65px; } .reading-area { padding: 25px 23px 0; } .reader-toolbar { padding: 0 23px; } .chapter-label { display: none; } .waiting-state { padding: 16px 13px; gap: 12px; } .waiting-state > svg { display: none; } .diagnostics summary { flex-wrap: wrap; gap: 9px; } .metric { padding: 0 9px; } .metric strong { font-size: 21px; } .opening-caption { left: 17px; top: 20px; } .opening-caption p { font-size: 17px; } .opening-dialogue { right: 5%; padding: 11px 17px; } }
 @media (max-width: 720px) { .site-header { height: 70px; padding: 0 20px; } .header-caption, .header-divider, .local-badge { display: none; } .wordmark { font-size: 25px; } .workspace { display: flex; flex-direction: column; } .director-column { border-right: 0; padding: 30px 23px; min-width: 0; } .eyebrow { margin-bottom: 25px; } h1 { font-size: clamp(40px, 9.5vw, 66px); } h1 br { display: none; } h1 em { margin-left: 10px; } .story-logline br { display: none; } .story-meta { padding-bottom: 20px; } .context-block { padding-top: 20px; } .director-footer { display: none; } .reader-column { border-top: 1px solid var(--line); } .reader-toolbar { height: 55px; } .opening-panel { aspect-ratio: 1.1; } .opening-caption p { font-size: 22px; } .opening-dialogue p { font-size: 15px; } .reading-area { padding: 25px 20px 0; } .speech-bubble p { font-size: 15px; } .diagnostics summary { font-size: 8px; } .metrics-grid .metric strong { font-size: 24px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+
+/* POC 03 reuses the desktop reader and original panel/dialogue presentation. */
+.saved-start { padding-bottom: 22px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+.saved-reader .reader-column { min-width: 0; padding-bottom: 40px; }
+.saved-reader .comic-scroll { padding: 26px 50px; }
+.saved-opening { display: block; width: 100%; border-radius: 5px; }
+.saved-run-id { font-size: 10px; color: var(--muted); line-height: 1.8; overflow-wrap: anywhere; }
+.saved-run-id code { display: block; color: var(--cyan); }
+.saved-question { line-height: 1.7; color: #c8d0c0; }
+.saved-memory { font-size: 11px; line-height: 1.8; border-top: 1px solid var(--line); padding-top: 18px; margin-top: 24px; color: #b5beb0; }
+.saved-memory ul { padding-left: 17px; }
+.saved-secondary { background: #1a211a; border: 1px solid #3e4c34; color: #d5e8c1; border-radius: 4px; padding: 10px 12px; margin: 12px 0; font-size: 11px; }
+.saved-secondary:disabled { opacity: .5; }
+.saved-feedback { color: var(--lime); line-height: 1.8; font-size: 12px; }
+.saved-consequence { color: #afb8b1; line-height: 1.8; font-size: 12px; margin: 16px 0; }
+.saved-diagnostics, .saved-replay { margin: 20px 35px; padding: 18px; border: 1px solid var(--line); border-radius: 5px; font-size: 11px; line-height: 1.9; overflow-wrap: anywhere; }
+.saved-diagnostics summary, .saved-replay summary { color: var(--lime); }
+.saved-replay label { display: block; margin-top: 14px; }
+.saved-replay select { display: block; width: 100%; padding: 10px; margin-top: 8px; background: var(--surface); border: 1px solid var(--line); color: var(--text); }

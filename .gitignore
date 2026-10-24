@@ -35,6 +35,11 @@ next-env.d.ts
 playwright-report/
 test-results/
 test-results-live/
+data/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
 blob-report/
 
 # Local tools and hosting state
@@ -57,3 +62,5 @@ logs/
 *~
 .DS_Store
 Thumbs.db
+.next-engine/
+test-results-engine/

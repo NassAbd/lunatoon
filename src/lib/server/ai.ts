@@ -5,7 +5,7 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import {
   CHARACTER_IDENTITY, ScriptSchema, ValidatedScriptSchema,
-  type ImageApproach, type ImageResponse, type ScriptPanel, type StoryRequest, type StoryResponse,
+  type ImageApproach, type ImageResponse, type Metrics, type ScriptPanel, type StoryRequest, type StoryResponse,
 } from "../contracts";
 import { ART_VERSION, buildIllustrationPrompt, isReferenceModelSupported } from "../art-direction";
 
@@ -24,7 +24,7 @@ export function getClient() {
 }
 
 export class GenerationError extends Error {
-  constructor(public readonly code: string, message: string, public readonly status = 502) { super(message); }
+  constructor(public readonly code: string, message: string, public readonly status = 502, public readonly metrics: Metrics | null = null) { super(message); }
 }
 
 export async function generateScript(client: OpenAI, request: StoryRequest, signal?: AbortSignal): Promise<StoryResponse> {
@@ -51,14 +51,15 @@ export async function generateScript(client: OpenAI, request: StoryRequest, sign
   };
 }
 
-export async function generateIllustration(client: OpenAI, panel: ScriptPanel, signal?: AbortSignal, approach: ImageApproach = "text"): Promise<ImageResponse> {
+export type VisualMemory = { identity: string; style: string; current: string; reference: Buffer; models: { image: string; quality: "low" | "medium" | "high" } };
+export async function generateIllustration(client: OpenAI, panel: ScriptPanel, signal?: AbortSignal, approach: ImageApproach = "text", memory?: VisualMemory): Promise<ImageResponse> {
   const started = performance.now();
-  const config = getModelConfig();
+  const config = memory?.models ?? getModelConfig();
   const size = panel.layout_aspect === "vertical" ? "1024x1536" : panel.layout_aspect === "banner" ? "1536x1024" : "1024x1024";
   if (approach === "reference" && !isReferenceModelSupported(config.image)) throw new GenerationError("reference_unsupported", "The configured model has no verified reference-edit support in this experiment. Choose approach A or a documented GPT Image 2.5 model.", 400);
   const options = {
     model: config.image,
-    prompt: buildIllustrationPrompt(panel),
+    prompt: buildIllustrationPrompt(panel, memory),
     n: 1,
     size,
     quality: config.quality,
@@ -67,13 +68,14 @@ export async function generateIllustration(client: OpenAI, panel: ScriptPanel, s
   };
   // The authored sheet is a fixed local PNG, never a client-provided URL or file path.
   const response = approach === "reference"
-    ? await client.images.edit({ ...options, prompt: `${options.prompt}\nUse the attached original sheet as the authority for Kael's face, costume, colors and flat ink style. Create the requested new composition; do not reproduce the sheet layout or add labels.`, image: await toFile(await readFile(path.join(process.cwd(), "public", "kael-reference.png")), "kael-reference.png", { type: "image/png" }) }, { signal })
+    ? await client.images.edit({ ...options, prompt: `${options.prompt}\nUse the attached original sheet as the authority for Kael's face, costume, colors and flat ink style; apply explicitly recorded appearance changes. Create the requested new composition; do not reproduce the sheet layout or add labels.`, image: await toFile(memory?.reference ?? await readFile(path.join(process.cwd(), "public", "kael-reference.png")), "kael-reference.png", { type: "image/png" }) }, { signal })
     : await client.images.generate(options, { signal });
+  const metrics: Metrics = { model: config.image, quality: config.quality, approach, prompt_version: ART_VERSION, duration_ms: Math.round(performance.now() - started), request_id: response._request_id ?? null, usage: response.usage ? { input_tokens: response.usage.input_tokens, output_tokens: response.usage.output_tokens, total_tokens: response.usage.total_tokens, input_text_tokens: response.usage.input_tokens_details?.text_tokens, input_image_tokens: response.usage.input_tokens_details?.image_tokens } : null };
   const encoded = response.data?.[0]?.b64_json;
-  if (!encoded) throw new GenerationError("missing_image", "No illustration was returned. Try generating again.");
+  if (!encoded) throw new GenerationError("missing_image", "No illustration was returned. No automatic retry was made.", 502, metrics);
   return {
     panel_id: panel.panel_id,
     image_url: `data:image/jpeg;base64,${encoded}`,
-    metrics: { model: config.image, quality: config.quality, approach, prompt_version: ART_VERSION, duration_ms: Math.round(performance.now() - started), request_id: response._request_id ?? null, usage: response.usage ? { input_tokens: response.usage.input_tokens, output_tokens: response.usage.output_tokens, total_tokens: response.usage.total_tokens, input_text_tokens: response.usage.input_tokens_details?.text_tokens, input_image_tokens: response.usage.input_tokens_details?.image_tokens } : null },
+    metrics,
   };
 }

@@ -1,8 +1,8 @@
-# Lunatoon — POC 01
+# Lunatoon — local webtoon POCs
 
 A local, desktop-first experiment in interactive webtoons. Select an action, add an optional twist, and generate one two-panel continuation of **Neon Protocol**. The script appears before two independent illustration requests finish.
 
-This POC follows the supplied experiment prompt. `SPECS.md` remains the long-term reference. There is one base scene, one continuation per run, no routing step, and no accounts, persistence, sharing, library, or deployment setup.
+The original POC 01/02 reader remains at `/`. POC 03 adds a local persistent, two-decision story via **Start a persistent story** and `/run/<uuid>`. `SPECS.md` remains the long-term reference; there are no accounts, public sharing, story library, creator studio or deployment setup.
 
 ## Run locally
 
@@ -91,9 +91,9 @@ npm run build
 npm start
 ```
 
-## Persistence and experiment limits
+## Original POC 01/02 persistence and experiment limits
 
-Generated JPEGs are returned as data URLs and kept only in the current browser page's memory. Reloading loses the run. There are no shareable image URLs, external image storage, saved sessions, or database. The initial panel is a fixed repository SVG, labeled as such; it is not a generated result or benchmark. Independent image calls use a shared text character sheet and, in explicitly selected approach B, an authored reference image. Visual consistency remains a quality question to evaluate from actual outputs. Diagnostics show token usage when returned. The UI does not maintain pricing for arbitrary configurable models; any one-off cost estimate belongs in the dated experiment report and requires verified rates and modality usage.
+In the original reader at `/`, generated JPEGs are returned as data URLs and kept only in the current browser page's memory. Reloading loses the run. There are no shareable image URLs, external image storage, saved sessions, or database. The initial panel is a fixed repository SVG, labeled as such; it is not a generated result or benchmark. Independent image calls use a shared text character sheet and, in explicitly selected approach B, an authored reference image. Visual consistency remains a quality question to evaluate from actual outputs. Diagnostics show token usage when returned. The UI does not maintain pricing for arbitrary configurable models; any one-off cost estimate belongs in the dated experiment report and requires verified rates and modality usage.
 
 ## POC 02: visual continuity comparison
 
@@ -122,6 +122,41 @@ LUNATOON_RUN_PAID_COMPARISON=1 PLAYWRIGHT_CHANNEL=chrome \
 Use the actual printed server URL. The harness checks real endpoints, saves A/B screenshots, images and diagnostics under ignored `test-results-live/poc-02-live/`, and stops before B if A fails. Omitting the opt-in variable skips the paid test. Reference mode never falls back to another paid generation after a failed edit. Free browser runs use a separate artifact directory and do not erase the live comparison evidence.
 
 Rebuild the original static reference after deliberately editing its source with `npm run reference:build`. Inspect it before using it; no paid call is required for this local rasterization.
+
+## POC 03: persistent story engine
+
+`feat/persistent-story-engine` starts from synchronized POC 02 commit `0ac736f`. Choose A/text or B/reference in the original reader, then click **Start a persistent story**. Creation makes no AI calls. The selected mode and server model/limit settings are captured for that run.
+
+1. Bookmark `/run/<uuid>`, choose **Investigate its origin**, optionally add the cyborg-cat twist, and generate. The validated script/state is saved before two concurrent independent image requests start.
+2. Reload the same URL or restart the app. Saved dialogue, local images and immutable original references are reused with **zero generation calls**. Unstarted reserved work requires an explicit resume action; loading a page never submits paid work.
+3. Choose the next option based on the new event, source clue and facts. The second continuation uses saved facts and appearance, and ends the story.
+4. A failed image has its own explicit paid retry; successful siblings and script stay saved. A/B same-script replay remains explicit and consumes two image calls.
+5. Inspect **Run cost & latency diagnostics** for measured usage, estimated spend, unknown costs, separate reference-input tokens/cost, reservations and stage limits. Download diagnostics for all attempts. Current-visit browser request-flow timings are labeled separately from saved server timings and the original POC 02 decode-complete measurements.
+
+SQLite and assets live under ignored `data/`. **Back up the entire directory with the app stopped.** Use Node 24.14.0: the built-in SQLite API is experimental in that version. No additional service or npm library is required. Asset paths in the DB are relative; saved references are content-addressed and integrity checked.
+
+| Server setting | Default | Meaning for new saved runs |
+| --- | --- | --- |
+| `LUNATOON_DATA_DIR` | `./data` | Local DB, references and generated JPEGs |
+| `LUNATOON_MAX_STEPS` | `2` | One or two decisions; the last ends the story |
+| `LUNATOON_MAX_IMAGE_CALLS` | `6` | Hard attempted + reserved image-call limit, including retries/replays |
+| `LUNATOON_MAX_SCRIPT_CALLS` | `3` | Hard attempted + reserved narrative-call limit |
+| `LUNATOON_RUN_BUDGET_USD` | `0.30` | Estimated monetary guard; **not an absolute provider billing cap** |
+
+Reservations use a dated verified price table for known models. Unknown/expired pricing remains explicitly unpriced; hard call counts still apply. Failed or interrupted attempts can cost money without returned usage. No automatic SDK retry, model substitution, quality escalation or reference-to-text fallback is enabled. The old POC 02 experiment APIs remain outside saved-run accounting.
+
+The orchestration is request-driven: every handler awaits its own stage and persists before responding. Interrupted requests wait for a four-minute lease before recovery; no background worker or automatic generation is assumed after a response. A lost saved file is marked failed, not regenerated by refresh. See [architecture/recovery](docs/story-engine-architecture.md), [cost model and verified rates](docs/api-cost-model.md), and [POC 03 results](POC_03_RESULTS.md) for limitations and executed evidence.
+
+Run the new **free** production-server browser integration suite:
+
+```sh
+npm run test:engine:build
+PLAYWRIGHT_CHANNEL=chrome npm run test:engine:e2e
+```
+
+This suite runs a local fake OpenAI HTTP endpoint, the official SDK and an isolated production Next server on port 3110. It uses temporary SQLite/files, actually restarts its own app process, and checks dialogue-first rendering, independent images, reload/restart without generation, two decisions, operation deduplication, isolated retry, cross-run access and call limits. `.next-engine/` and `test-results-engine/` are ignored; it does not delete `data/` or the POC 02 live evidence. Keep port 3110 free. `LUNATOON_TEST_BUILD=1` selects the isolated build directory; normal dev/build/start commands retain `.next`.
+
+No POC 03 paid generation was executed in the recorded checks. Synthetic token usage/delays are test fixtures, not live cost or latency benchmarks. All original POC 02 tests and its separately opted-in paid harness remain intact.
 
 ## Verified API references
 

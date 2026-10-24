@@ -6,6 +6,7 @@ import Link from "next/link";
 import { CHOICES, INITIAL_CONTEXT, type ComicPanel, type ImageApproach, type Metrics, type StoryRequest, type StoryResponse } from "@/lib/contracts";
 import { fetchImage, fetchStory, RequestError } from "@/lib/api-client";
 import { runContinuation } from "@/lib/pipeline";
+import { StartSavedRun } from "./start-saved-run";
 import { ComicPanelCard } from "./comic-panel";
 import { Icon } from "./icon";
 import { yieldForTextPaint } from "@/lib/presentation";
@@ -125,6 +126,7 @@ export function Reader({ configured, models }: { configured: boolean; models: Mo
         <div className="story-meta"><span>NEW KYOTO, 2089</span><span className="meta-dot">·</span><span>DETECTIVE KAEL</span></div>
         <div className="context-block"><span className="section-label">THE STORY SO FAR</span><p>{INITIAL_CONTEXT}</p></div>
 
+        <StartSavedRun approach={approach} />
         <form onSubmit={generate}>
           <div className="section-heading"><span className="section-label">WHAT HAPPENS NEXT?</span><span className="step-label">01 / YOUR CHOICE</span></div>
           <fieldset disabled={busy} className="choice-group"><legend className="sr-only">Choose a narrative action</legend>

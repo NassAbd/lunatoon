@@ -14,7 +14,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "reference:build": "node scripts/build-reference.mjs",
-    "experiment:live": "playwright test --config=playwright.live.config.ts"
+    "experiment:live": "playwright test --config=playwright.live.config.ts",
+    "test:engine:build": "LUNATOON_TEST_BUILD=1 npm run build",
+    "test:engine:e2e": "playwright test --config=playwright.engine.config.ts"
   },
   "dependencies": {
     "next": "^16.0.0",

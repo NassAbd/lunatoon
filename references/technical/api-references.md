@@ -43,3 +43,9 @@ A's two calls are concurrent. B's two calls are also concurrent because each ref
 - Full `total`: submit through both images decoded, before decorative fade finishes. Replays are explicitly labeled **illustration-only** and excluded from full-run target comparison. Reused narrative time and tokens are not reported as new work.
 
 The existing <3s text and <30s completion goals remain experimental. A user-observed 5.58s text-ready value cannot be decomposed retrospectively without its server/request measurements.
+
+## POC 03 addendum — 2026-10-24
+
+The Structured Outputs guide, image generation guide and Standard pricing page above were fetched again for the persistent engine. POC 03 retains the same nonstreaming Responses/Images endpoints, A/B allowlist, independent calls and no automatic retries. Its separate chapter schema adds state updates/causal choices and uses a 3,000-token output cap. The original POC 02 contract and 2,200 cap remain unchanged.
+
+POC 03 stores owned references and generated JPEGs locally and adds a narrow expiring, versioned price table; the earlier browser-memory and unpriced-UI notes describe POC 02. See [cost accounting](../../docs/api-cost-model.md) and [local architecture](../../docs/story-engine-architecture.md). No new project access or live performance claim is made by these documentation checks.

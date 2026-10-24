@@ -15,7 +15,7 @@ export function shotDirection(sequence: number): string {
     : "An expressive close-up or tight action shot: Kael's face, amber eye and yellow collar are recognizable; reveal a reaction or clue caused by panel 1. Change camera distance, not character design. One new story beat.";
 }
 
-export function buildIllustrationPrompt(panel: ScriptPanel): string {
+export function buildIllustrationPrompt(panel: ScriptPanel, memory?: { identity: string; style: string; current: string }): string {
   const bubblePositions = [...new Set(layoutDialogue(panel.dialogues).map((bubble) => bubble.position))].join(", ");
-  return `Scene beat: ${panel.visual_description}\nAction and setting: ${panel.image_prompt}\nComposition: ${shotDirection(panel.sequence_index)}\nKeep faces, hands, the device and essential clues away from ${bubblePositions}; reserve a quiet 20% margin in those regions for dialogue added later by the app. No baked-in text.\nThe following canonical visual constraints override conflicting style or identity in the scene:\n${CHARACTER_IDENTITY}\n${ART_DIRECTION}`;
+  return `Scene beat: ${panel.visual_description}\nAction and setting: ${panel.image_prompt}\nComposition: ${shotDirection(panel.sequence_index)}\nKeep faces, hands, the device and essential clues away from ${bubblePositions}; reserve a quiet 20% margin in those regions for dialogue added later by the app. No baked-in text.\nThe following canonical visual constraints override conflicting style or identity in the scene:\n${memory?.identity ?? CHARACTER_IDENTITY}\n${memory?.style ?? ART_DIRECTION}${memory ? `\nCurrent saved continuity (injuries, clothing condition and object states override their original condition in the reference): ${memory.current}` : ""}`;
 }
