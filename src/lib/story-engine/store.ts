@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { createHash, randomUUID } from "node:crypto";
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
+import { chmodSync, closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { ART_DIRECTION } from "../art-direction";
@@ -11,6 +11,8 @@ import { EngineError } from "./errors";
 import { PRICES, reservation, summarize, usageCost } from "./cost";
 import { applyChapter, initialState, validateStoryTemplate } from "./state";
 import { SCHEMA_SQL, SCHEMA_VERSION } from "./schema";
+import { assertContentAvailable, isContentDeleted, safeDatabaseFile, withContentWriteLock } from "../content-management/gate";
+import { writeManagedAsset } from "../content-management/files";
 
 const firstOptions = ["activate", "destroy", "investigate"];
 export type TemplateAssetInput = { id: string; bytes: Buffer; mime: string; purpose: string };
@@ -29,7 +31,8 @@ export class StoryStore {
   constructor(directory: string, options: { now?: () => number; leaseMs?: number } = {}) {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     this.directory = realpathSync(directory); this.now = options.now ?? Date.now; this.leaseMs = options.leaseMs ?? 240_000;
-    this.db = new DatabaseSync(path.join(this.directory, "stories.sqlite"), { timeout: 5000 });
+    const filename = safeDatabaseFile(this.directory, "stories.sqlite"); const existed = existsSync(filename);
+    this.db = new DatabaseSync(filename, { timeout: 5000 }); if (!existed) chmodSync(filename, 0o600);
     this.db.exec("PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;");
     const version = Number(this.db.prepare("PRAGMA user_version").get()?.user_version ?? 0);
     if (version > SCHEMA_VERSION) { this.db.close(); throw new EngineError("schema_version", "The local database was created by a newer version. Preserve it and use the matching application.", 500); }
@@ -38,10 +41,9 @@ export class StoryStore {
   close() { if (this.db.isOpen) this.db.close(); }
   private transaction<T>(work: () => T): T {
     if (this.db.isTransaction) return work();
-    this.db.exec("BEGIN IMMEDIATE");
-    try { const result = work(); this.db.exec("COMMIT"); return result; } catch (error) { this.db.exec("ROLLBACK"); throw error; }
+    return withContentWriteLock(this.directory, work, this.db);
   }
-  private run(id: string) { return data(this.db.prepare("SELECT document FROM story_runs WHERE id=?").get(id), RunSchema); }
+  private run(id: string) { assertContentAvailable(this.directory, "run", id); return data(this.db.prepare("SELECT document FROM story_runs WHERE id=?").get(id), RunSchema); }
   private node(id: string) { return data(this.db.prepare("SELECT document FROM story_nodes WHERE id=?").get(id), NodeSchema); }
   private panel(id: string) { return data(this.db.prepare("SELECT document FROM comic_panels WHERE id=?").get(id), PanelSchema); }
   private event(id: string) { return data(this.db.prepare("SELECT document FROM generation_events WHERE id=?").get(id), EventSchema); }
@@ -108,6 +110,8 @@ export class StoryStore {
   }
   createRun(input: { operation_id: string; approach: ImageApproach; template_id?: string; template_version?: number }, models: Models, limits: Limits, bundle?: TemplateInput): Run {
     return this.transaction(() => {
+      assertContentAvailable(this.directory, "run_operation", input.operation_id);
+      if (bundle) assertContentAvailable(this.directory, "template", bundle.template.id);
       if (!bundle && (input.template_id != null || input.template_version != null)) throw new EngineError("template_not_found", "Select an available local story template.", 404);
       const prepared = bundle ? this.prepareTemplate(bundle) : null;
       if (prepared && (input.template_id != null && input.template_id !== prepared.bible.template!.id || input.template_version != null && input.template_version !== prepared.bible.template!.version)) throw new EngineError("template_conflict", "The selected template version does not match its saved foundation.", 400);
@@ -119,7 +123,7 @@ export class StoryStore {
         const previous = this.db.prepare("SELECT id FROM stories WHERE json_extract(document,'$.template.id')=? AND json_extract(document,'$.template.version')=?").all(prepared.bible.template!.id, prepared.bible.template!.version);
         if (previous.some(row => row.id !== prepared.bible.id)) throw new EngineError("template_version_conflict", "This template version is already immutable. Save changes as a new version.", 409);
         for (const file of prepared.files) {
-          if (!existsSync(path.join(this.directory, file.asset.path))) this.writeAtomic(file.asset.path, file.bytes);
+          if (!existsSync(path.join(this.directory, file.asset.path))) writeManagedAsset(this.directory, { owner_kind: "template", owner_id: prepared.bible.template!.id, path: file.asset.path, bytes: file.bytes });
           if (hash(readFileSync(this.safePath(file.asset.path))) !== file.asset.sha256) throw new EngineError("reference_corrupt", "A saved immutable story asset changed. Restore it before generating.", 500);
         }
         bible = prepared.bible;
@@ -186,11 +190,16 @@ export class StoryStore {
       node.status = "script_running"; node.error = null; node.metrics = null; this.saveNode(node); return this.claim(event);
     });
   }
-  private owns(event: GenerationEvent): boolean { const current = this.event(event.id); return current.status === "running" && current.claim_token === event.claim_token; }
+  private owns(event: GenerationEvent): boolean {
+    if (isContentDeleted(this.directory, "run", event.run_id)) return false;
+    const row = this.db.prepare("SELECT document FROM generation_events WHERE id=?").get(event.id);
+    if (!row) return false; const current = data(row, EventSchema);
+    return current.status === "running" && current.claim_token === event.claim_token;
+  }
   private account(event: GenerationEvent, metrics: Metrics | null) { const cost = usageCost(event, metrics); event.metrics = metrics; event.estimated_micro_usd = cost.total; event.reference_input_micro_usd = cost.reference; }
   finishScript(claim: GenerationEvent, chapter: Chapter, metrics: Metrics): boolean {
     return this.transaction(() => {
-      if (!this.owns(claim)) { this.reconcileLate(claim.id, metrics); return false; }
+      if (!this.owns(claim)) { this.reconcileLate(claim, metrics); return false; }
       const node = this.node(claim.node_id); const run = this.run(claim.run_id);
       const bible = data(this.db.prepare("SELECT document FROM stories WHERE id=?").get(run.story_id), BibleSchema);
       const validationStarted = performance.now();
@@ -239,19 +248,30 @@ export class StoryStore {
   }
   recordImageReceipt(claim: GenerationEvent, metrics: Metrics): string | null {
     return this.transaction(() => {
-      if (!this.owns(claim)) { this.reconcileLate(claim.id, metrics); return null; }
+      if (!this.owns(claim)) { this.reconcileLate(claim, metrics); return null; }
       this.account(claim, metrics); claim.asset_path = `images/${claim.run_id}/${claim.id}.jpg`; this.saveEvent(claim); return claim.asset_path;
     });
   }
   private validJPEG(bytes: Buffer) { return bytes.length <= 20 * 1024 * 1024 && bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes.at(-2) === 0xff && bytes.at(-1) === 0xd9; }
   writeImage(relative: string, bytes: Buffer) {
     if (!this.validJPEG(bytes)) throw new EngineError("invalid_image", "The provider did not return a valid bounded JPEG.", 502);
-    this.writeAtomic(relative, bytes);
+    const match = /^images\/([a-f0-9-]{36})\/[a-f0-9-]{36}\.jpg$/.exec(relative);
+    if (!match) throw new EngineError("invalid_asset_path", "Invalid local image path.", 400);
+    writeManagedAsset(this.directory, { owner_kind: "run", owner_id: match[1], path: relative, bytes });
+  }
+  writeClaimedImage(claim: GenerationEvent, bytes: Buffer): boolean {
+    return this.transaction(() => {
+      if (!this.owns(claim)) return false;
+      const event = this.event(claim.id);
+      if (event.asset_path !== `images/${claim.run_id}/${claim.id}.jpg`) return false;
+      this.writeImage(event.asset_path, bytes); return true;
+    });
   }
   finishImage(claim: GenerationEvent): boolean {
     return this.transaction(() => {
+      if (!this.owns(claim)) return false;
       const event = this.event(claim.id);
-      if (!this.owns(claim) || !event.asset_path || !existsSync(path.join(this.directory, event.asset_path))) return false;
+      if (!event.asset_path || !existsSync(path.join(this.directory, event.asset_path))) return false;
       if (!this.validJPEG(readFileSync(this.safePath(event.asset_path)))) return false;
       const panel = this.panel(event.panel_id!); panel.status = "complete"; panel.image_path = event.asset_path; panel.error = null; panel.metrics = event.metrics; this.savePanel(panel);
       event.status = "succeeded"; event.finished_at = this.now(); this.saveEvent(event); this.refreshNode(event.node_id); return true;
@@ -268,7 +288,7 @@ export class StoryStore {
   }
   fail(claim: GenerationEvent, error: Failure, metrics: Metrics | null = null, interrupted = false) {
     this.transaction(() => {
-      if (!this.owns(claim)) { if (metrics) this.reconcileLate(claim.id, metrics); return; }
+      if (!this.owns(claim)) { if (metrics) this.reconcileLate(claim, metrics); return; }
       const event = this.event(claim.id); this.account(event, metrics ?? event.metrics); event.error = error; event.status = interrupted ? "interrupted" : "failed"; event.finished_at = this.now(); this.saveEvent(event);
       const node = this.node(event.node_id);
       if (event.stage === "script") {
@@ -277,7 +297,12 @@ export class StoryStore {
       } else { const panel = this.panel(event.panel_id!); panel.status = "failed"; panel.error = error; panel.metrics = event.metrics; this.savePanel(panel); this.refreshNode(node.id); }
     });
   }
-  private reconcileLate(id: string, metrics: Metrics) { const event = this.event(id); if (event.status === "interrupted") { this.account(event, metrics); this.saveEvent(event); } }
+  private reconcileLate(claim: GenerationEvent, metrics: Metrics) {
+    if (isContentDeleted(this.directory, "run", claim.run_id)) return;
+    const row = this.db.prepare("SELECT document FROM generation_events WHERE id=?").get(claim.id);
+    if (!row) return; const event = data(row, EventSchema);
+    if (event.status === "interrupted") { this.account(event, metrics); this.saveEvent(event); }
+  }
   recoverExpired(runId: string) {
     this.transaction(() => {
       for (const panel of this.snapshot(runId).panels.filter(panel => panel.status === "complete")) {

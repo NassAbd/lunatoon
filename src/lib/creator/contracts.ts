@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { MetricsSchema } from "../contracts";
 import { Id, StoryFoundationSchema, StoryTemplateSchema } from "../story-engine/contracts";
+import { OpeningSnapshotSchema, openingStreamSchema } from "./opening-contracts";
 
 const Key = z.string().regex(/^[a-z][a-z0-9_-]{0,59}$/);
 const configuration = z.string().trim().max(300);
@@ -24,10 +25,10 @@ export const CreatorErrorSchema = z.object({
   issues: z.array(z.object({ path: z.string().max(200), rule: z.string().max(60) }).strict()).max(12),
 }).strict();
 export const CreatorAssetSchema = z.object({
-  id: Key, draft_id: Id, mime: z.enum(["image/png", "image/svg+xml"]),
+  id: Key, draft_id: Id, mime: z.enum(["image/png", "image/svg+xml", "image/jpeg"]),
   width: z.number().int().min(1).max(4096), height: z.number().int().min(1).max(4096),
   sha256: z.string().regex(/^[a-f0-9]{64}$/), purpose: z.string().trim().min(1).max(200),
-  kind: z.enum(["reference", "artwork"]), created_at: z.number(),
+  kind: z.enum(["reference", "artwork", "opening"]), created_at: z.number(),
 }).strict();
 export const CreatorDraftSchema = z.object({
   id: Id, operation_id: Id, template_id: Key, status: z.enum(["draft", "ready"]),
@@ -49,8 +50,10 @@ export const CreatorSummarySchema = z.object({
 }).strict();
 export const CreatorSnapshotSchema = z.object({
   draft: CreatorDraftSchema, attempts: z.array(CreatorAttemptSchema), assets: z.array(CreatorAssetSchema),
-  latest_template: StoryTemplateSchema.nullable(), summary: CreatorSummarySchema,
+  latest_template: StoryTemplateSchema.nullable(), summary: CreatorSummarySchema, opening: OpeningSnapshotSchema.nullable().default(null),
 }).strict();
+export const OpeningStreamEventSchema = openingStreamSchema(CreatorSnapshotSchema);
+export type OpeningStreamEvent = z.infer<typeof OpeningStreamEventSchema>;
 export type GenerateFoundationInput = z.infer<typeof GenerateFoundationSchema>;
 export type FoundationPrompt = Pick<GenerateFoundationInput, "prompt" | "title" | "genre" | "main_character" | "visual_style" | "atmosphere">;
 export type SaveTemplateInput = z.infer<typeof SaveTemplateSchema>;

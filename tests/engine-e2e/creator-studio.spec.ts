@@ -49,7 +49,7 @@ async function captureDesktop(page: Page, name: string, target?: string) {
 test.afterEach(async ({ request }) => { await control(request, {}); });
 
 for (const referenceCount of [0, 1, 3]) {
-  test(`Creator Describe → Generate → edit → save → play completes with ${referenceCount} owned reference images`, async ({ page, request }) => {
+  test(`Creator Describe → Generate → edit → save → play completes with ${referenceCount} owned reference images`, async ({ page, request, browser }) => {
     test.setTimeout(90000);
     await control(request, { imageDelay: 650, scriptDelay: 200 });
     const before = await stats(request);
@@ -114,19 +114,21 @@ for (const referenceCount of [0, 1, 3]) {
     await page.getByLabel("Choice 1", { exact: true }).fill("Trace the moonlit silver fold on Ada's chart");
     if (referenceCount !== 1) await captureDesktop(page, `creator-edit-${referenceCount}-refs`, ".studio-preview");
     expect(await stats(request)).toEqual(afterFoundation);
-    await page.getByRole("button", { name: "Save & make playable", exact: true }).click();
+    await page.getByRole("button", { name: "Save & Illustrate", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Ready to play", exact: true })).toBeVisible();
     const saved = await draft(request, draftId);
     expect(saved.draft.status).toBe("ready"); expect(saved.latest_template?.title).toBe(editedTitle);
     expect(saved.latest_template?.reference_asset_ids).toEqual(withReferences.draft.reference_asset_ids);
     expect(saved.latest_template?.initial_decision.options[0].label).toBe("Trace the moonlit silver fold on Ada's chart");
     expect(saved.latest_template?.description).toContain("An edited story");
+    const afterOpening = await stats(request);
+    expect(afterOpening.images - afterFoundation.images).toBe(2);
     if (referenceCount === 0) await expect(page.getByText("Illustrations use this story’s written visual guide. No reference images attached.", { exact: true })).toBeVisible();
     if (referenceCount === 3) await captureDesktop(page, "creator-saved-story", ".studio-ready");
     await page.reload();
     await expect(page.getByRole("heading", { name: "Ready to play", exact: true })).toBeVisible();
-    expect(await stats(request)).toEqual(afterFoundation);
-    await page.getByRole("button", { name: "Begin the story", exact: true }).click();
+    expect(await stats(request)).toEqual(afterOpening);
+    await page.getByRole("button", { name: "Play your story", exact: true }).click();
     await expect(page).toHaveURL(/\/run\/[a-f0-9-]+$/);
     const runUrl = page.url(); const runId = runUrl.split("/").at(-1)!;
     const initial = await readRun(request, runId);
@@ -134,7 +136,7 @@ for (const referenceCount of [0, 1, 3]) {
     expect(initial.run.approach).toBe(referenceCount ? "reference" : "text");
     await expect(page.getByRole("heading", { level: 1, name: editedTitle, exact: true })).toBeVisible();
     await expect(page.getByRole("radio")).toHaveCount(3);
-    expect(await stats(request)).toEqual(afterFoundation);
+    expect(await stats(request)).toEqual(afterOpening);
     const first = page.locator(".book-decision[data-step='1']");
     await first.locator("input[value='trace_crease']").check();
     await first.getByLabel("Add a little of your imagination").fill("The tower bell rings once through the storm.");
@@ -161,19 +163,19 @@ for (const referenceCount of [0, 1, 3]) {
     const generated = await stats(request);
     expect(generated.foundations - before.foundations).toBe(1);
     expect(generated.scripts - before.scripts).toBe(2);
-    expect(generated.images - before.images).toBe(4);
+    expect(generated.images - before.images).toBe(6);
     expect(JSON.stringify(generated.contexts.slice(before.contexts.length))).not.toMatch(/Kael|Mara|Ivo|New Kyoto|tide_lantern|seed_compass/);
     for (const record of generated.imageReferences.slice(before.imageReferences.length)) expect(record.hashes.toSorted()).toEqual(ownedHashes.toSorted());
-    expect(generated.endpoints.slice(before.endpoints.length).filter(endpoint => ["edits", "generations"].includes(endpoint))).toEqual(Array(4).fill(referenceCount ? "edits" : "generations"));
+    expect(generated.endpoints.slice(before.endpoints.length).filter(endpoint => ["edits", "generations"].includes(endpoint))).toEqual(Array(6).fill(referenceCount ? "edits" : "generations"));
     if (referenceCount === 0) {
       await expect(page.locator("#replay-mode option[value='reference']")).toBeDisabled();
-      const updated = await request.post(`/api/creator/drafts/${draftId}/save`, { data: { operation_id: randomUUID(), foundation: { ...saved.draft.foundation!, title: `${editedTitle} · revised` }, reference_asset_ids: [] } });
+      const updated = await request.post(`/api/creator/drafts/${draftId}/save`, { data: { operation_id: randomUUID(), mode: "illustrate", foundation: { ...saved.draft.foundation!, title: `${editedTitle} · revised` }, reference_asset_ids: [] } });
       expect(updated.ok()).toBe(true);
       const versionTwo = CreatorSnapshotSchema.parse(await updated.json());
       expect(versionTwo.latest_template?.version).toBe(2);
       expect((await readRun(request, runId)).bible.template).toEqual(saved.latest_template);
       await page.goto(`/studio?draft=${draftId}`);
-      await page.getByRole("button", { name: "Begin the story", exact: true }).click();
+      await page.getByRole("button", { name: "Play your story", exact: true }).click();
       await expect(page).toHaveURL(/\/run\/[a-f0-9-]+$/);
       const newRun = await readRun(request, page.url().split("/").at(-1)!);
       expect(newRun.bible.template?.version).toBe(2); expect(newRun.nodes).toHaveLength(0);
@@ -182,10 +184,16 @@ for (const referenceCount of [0, 1, 3]) {
     await page.reload(); await expect(page.locator(".generated-image.is-ready")).toHaveCount(4);
     expect(await stats(request)).toEqual(generated);
     if (referenceCount === 3) {
-      await page.goto("about:blank"); expect((await request.post(`${runtime().mockURL}/__restart`, { timeout: 20000 })).ok()).toBe(true);
-      await page.goto(runUrl); await expect(page.locator(".generated-image.is-ready")).toHaveCount(4);
-      expect((await readRun(request, runId)).bible).toEqual(initial.bible);
-      expect(await stats(request)).toEqual(generated);
+      // All generation is complete. Close the finished browser visit so its
+      // speculative sockets cannot hold Next's graceful shutdown open.
+      await page.waitForLoadState("networkidle"); await page.context().close();
+      expect((await request.post(`${runtime().mockURL}/__restart`, { timeout: 20000 })).ok()).toBe(true);
+      const restored = await browser.newPage({ viewport: { width: 1024, height: 1100 } });
+      try {
+        await restored.goto(runUrl); await expect(restored.locator(".generated-image.is-ready")).toHaveCount(4);
+        expect((await readRun(request, runId)).bible).toEqual(initial.bible);
+        expect(await stats(request)).toEqual(generated);
+      } finally { await restored.close(); }
     }
   });
 }
@@ -219,9 +227,9 @@ test("a lost generation response recovers the newer saved foundation without rep
   await page.getByLabel("Story title", { exact: true }).fill("Ada's manual title after recovery");
   await page.getByRole("button", { name: "Check saved result", exact: true }).click();
   await expect(page.getByLabel("Story title", { exact: true })).toHaveValue("Ada's manual title after recovery");
-  await page.getByRole("button", { name: "Save & make playable", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Ready to play", exact: true })).toBeVisible();
-  expect((await draft(request, draftId)).latest_template?.title).toBe("Ada's manual title after recovery");
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Draft saved" })).toBeVisible();
+  expect((await draft(request, draftId)).draft.foundation?.title).toBe("Ada's manual title after recovery");
   await page.reload();
   await expect(page.getByLabel("Story title", { exact: true })).toHaveValue("Ada's manual title after recovery");
   expect(await stats(request)).toEqual(after);

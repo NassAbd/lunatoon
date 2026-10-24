@@ -37,15 +37,15 @@ function DecodedImage({ src, description, kind, onDisplay }: { src: string; desc
   // eslint-disable-next-line @next/next/no-img-element
   return <img ref={element} className={`${kind === "final" ? "generated-image" : "preview-image"} reader-image ${ready ? "is-ready" : ""}`} src={src} alt={description} onLoad={event => void loaded(event.currentTarget)} onError={() => setFailed(true)} onAnimationEnd={visible} />;
 }
-function WaitingCopy() {
+function WaitingCopy({ savedContent = "dialogue" }: { savedContent?: "dialogue" | "caption" }) {
   const [longWait, setLongWait] = useState(false);
   useEffect(() => {
     const timer = window.setTimeout(() => setLongWait(true), 20_000);
     return () => window.clearTimeout(timer);
   }, []);
-  return <span>{longWait ? "Taking a little longer. Your dialogue is saved." : "Keep reading. The scene will appear here."}</span>;
+  return <span>{longWait ? `Taking a little longer. Your ${savedContent} is saved.` : "Keep reading. The scene will appear here."}</span>;
 }
-export function ReaderIllustration({ src, preview, description, error, onDisplay }: { src?: string; preview?: string; description: string; error?: string; onDisplay?: OnImageDisplay }) {
+export function ReaderIllustration({ src, preview, description, error, onDisplay, savedContent = "dialogue" }: { src?: string; preview?: string; description: string; error?: string; onDisplay?: OnImageDisplay; savedContent?: "dialogue" | "caption" }) {
   return <>
     <div className="image-placeholder reading-placeholder generation-placeholder" data-state={error ? "failed" : "pending"} aria-hidden={Boolean(src)}>
       {/* Authored decorative geometry, not a generated preview or story event. */}
@@ -60,7 +60,7 @@ export function ReaderIllustration({ src, preview, description, error, onDisplay
       <div className="generation-copy">
         <span className="placeholder-mark"><Icon name={error ? "break" : "moon"} size={24} /></span>
         <p>{error ? "This illustration couldn’t be finished" : src ? "Loading your saved illustration…" : "Illustrating this moment…"}</p>
-        {error ? <span>Your dialogue is still here.</span> : src ? <span>Your artwork is saved.</span> : <WaitingCopy />}
+        {error ? <span>Your {savedContent} is still here.</span> : src ? <span>Your artwork is saved.</span> : <WaitingCopy savedContent={savedContent} />}
       </div>
     </div>
     {preview && !error && <DecodedImage key={preview} src={preview} description={`Preview: ${description}`} kind="preview" onDisplay={onDisplay} />}

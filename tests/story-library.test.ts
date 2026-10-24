@@ -6,6 +6,7 @@ import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { listSavedRuns } from "../src/lib/story-library";
 import { SCHEMA_SQL, SCHEMA_VERSION } from "../src/lib/story-engine/schema";
+import { MANAGEMENT_SQL } from "../src/lib/content-management/gate";
 
 const directories: string[] = [];
 const connections: DatabaseSync[] = [];
@@ -43,6 +44,13 @@ afterEach(() => {
 });
 
 describe("read-only saved story summaries", () => {
+  it("hides tombstoned readings before pagination without resuming cleanup", () => {
+    const { directory, db } = fixture(); db.exec(MANAGEMENT_SQL);
+    const surviving = addRun(db); const deleting = addRun(db, { created_at: now + 1000 });
+    db.prepare("INSERT INTO deletion_targets(kind,id,job_id) VALUES('run',?,?)").run(deleting, randomUUID());
+    expect(listSavedRuns({ directory, limit: 1 })).toMatchObject({ has_next: false, runs: [{ id: surviving }] });
+    expect(db.prepare("SELECT COUNT(*) AS count FROM story_runs").get()?.count).toBe(2);
+  });
   it("returns an empty page without creating missing directories or database files", () => {
     const directory = temporary();
     const missing = path.join(directory, "not-created");

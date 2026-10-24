@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getStoryTemplate, getTemplateBundle, readTemplateAsset } from "../src/lib/story-templates/server";
+import * as creator from "../src/lib/creator/store";
+import { LAST_LIGHTKEEPER_TEMPLATE } from "../src/lib/story-templates/catalog";
+
+afterEach(() => vi.restoreAllMocks());
 
 describe("owned template assets", () => {
   it("resolves a validated version and loads only its authored asset descriptors", () => {
@@ -18,5 +22,15 @@ describe("owned template assets", () => {
     expect(() => readTemplateAsset("last-lightkeeper", 1, "../../.env.local")).toThrow();
     expect(() => readTemplateAsset("last-lightkeeper", 1, "kael_reference")).toThrow();
     expect(() => readTemplateAsset("absent", 1, "reference")).toThrow();
+  });
+  it("does not expose an unpublished Creator opening through reader routes", () => {
+    const pending = { ...LAST_LIGHTKEEPER_TEMPLATE, id: "creator_pending", status: "draft" as const };
+    vi.spyOn(creator, "getSavedTemplate").mockReturnValue(pending);
+    vi.spyOn(creator, "getSavedTemplateBundle").mockReturnValue({ template: pending, assets: [] });
+    const asset = vi.spyOn(creator, "readSavedTemplateAsset");
+    expect(getStoryTemplate(pending.id, pending.version)).toBeNull();
+    expect(getTemplateBundle(pending.id, pending.version)).toBeNull();
+    expect(() => readTemplateAsset(pending.id, pending.version, pending.cover_asset_id)).toThrow(/not ready/);
+    expect(asset).not.toHaveBeenCalled();
   });
 });

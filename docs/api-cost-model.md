@@ -73,9 +73,17 @@ Reference-array support and rates were checked on 2026-10-24 against the [Images
 
 Creator Studio uses a separate durable attempt ledger in `creator.sqlite`. Each draft snapshots the configured narrative model and defaults to **three attempts / $0.05 estimated budget**. The verified GPT-4.1 mini planning allowance is 4,000 input plus 5,000 output tokens, or **$0.0096 per attempt**; the request's output limit is 5,000 tokens. Actual usage uses the same captured price version and cached-token calculation as reader narratives. Unknown models or expired prices remain unpriced; the three-call hard limit still applies. These are per-draft controls, not installation-wide billing limits.
 
-Generating a foundation is an explicit narrative call. Editing, safe reference uploads, saving templates, listing stories and opening existing content make no generation calls. Uploaded images are not sent during foundation generation; their image-input costs arise only when a reader explicitly generates reference-edited panels.
+Generating a foundation is an explicit narrative call. Editing, safe reference uploads, **Save draft**, preparing a template version, listing stories and opening existing content make no generation calls. Uploaded images are not sent during foundation generation. In POC 08.1, **Save & Illustrate** explicitly prepares the version and then requests its opening images; those calls, and later reader continuations, can incur reference-input costs.
 
 Failed JSON/schema/continuity validation retains returned request IDs, timing and usage. Connection failures or interrupted requests can retain unknown cost and their planning hold. Retrying them requires an explicit action and acknowledgement of the possible prior charge; no automatic retry or alternate model is used. Reader calls are accounted separately against each run's own stored limits, so the foundation amount is not counted twice in story-generation totals.
+
+### POC 08.1: version-owned opening illustrations
+
+Opening attempts have their own ledger and limits captured per saved version: default **8 image calls / $1 estimated budget**, configurable with `LUNATOON_OPENING_MAX_IMAGE_CALLS` (1–12) and `LUNATOON_OPENING_BUDGET_USD` (positive, maximum $5). Each concurrent claim atomically reserves the existing image planning allowance against this version’s remaining budget. Defaults preserve the configured model and quality. No paid request starts on a status read or refresh.
+
+At the verified low-quality planning settings, one image reserves $0.055 in text mode, $0.074 with one reference, or $0.106 with three references, including the possible preview allowance. Four three-reference openings therefore reserve $0.424; this is an illustration allowance, not a measured price or an invoice. Returned usage determines the estimate and separates reference input tokens/cost. Unknown or expired pricing remains unpriced, with hard call limits still enforced.
+
+Completed canonical opening assets can be reused across reader sessions and proven-identical new versions without new image calls. Reuse does not copy the originating cost into the new version or every reading: the original attempt retains its accounting. Foundation, opening-version and reading-run totals remain separate. See [Creator persistence and recovery](creator-content-management.md). No new paid calls, live costs or speed measurements were made in POC 08.1.
 
 ## Timing and comparison
 

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { BibleSchema, Id, NodeSchema, PanelSchema, RunSchema, type Bible, type Panel, type Run, type StoryNode } from "./contracts";
 import { EngineError } from "./errors";
 import { SCHEMA_VERSION } from "./schema";
+import { assertContentAvailable } from "../content-management/gate";
 
 export type StoryExport = { html: string; filename: string };
 const CONTENT_POLICY = "default-src 'none'; script-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'";
@@ -26,6 +27,7 @@ type ExportRecords = { run: Run; bible: Bible; nodes: StoryNode[]; panels: Panel
 function load(runId: string, directory?: string): ExportRecords {
   if (!Id.safeParse(runId).success) throw new EngineError("invalid_id", "Choose a saved local story.", 400);
   const requested = path.resolve(directory ?? process.env.LUNATOON_DATA_DIR ?? path.join(process.cwd(), "data"));
+  assertContentAvailable(requested, "run", runId);
   const database = path.join(requested, "stories.sqlite");
   if (!existsSync(database)) throw new EngineError("not_found", "This saved story was not found.", 404);
   const root = realpathSync(requested); const db = new DatabaseSync(database, { readOnly: true, timeout: 5000 });
@@ -132,5 +134,6 @@ export async function exportCompletedStory(runId: string, options: { directory?:
   const title = escape(records.bible.title);
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${CONTENT_POLICY}"><meta name="referrer" content="no-referrer"><title>${title} — Lunatoon</title><style>${STYLE}</style></head><body><main><header><p class="brand">Lunatoon</p><h1>${title}</h1>${template ? `<p>${escape(template.genre)}</p><p>${escape(template.description)}</p>` : ""}</header><section aria-label="Story opening">${openingFigures.join("")}</section>${chapters.join("")}<section class="ending" aria-label="Story ending"><p class="label">THE END</p><h2>A story only you could tell.</h2><ol aria-label="Your choices">${recap}</ol><p class="note">A completed story exported from Lunatoon. This file can be read offline; it contains no interactive generation.</p></section></main></body></html>`;
   const slug = records.bible.title.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "story";
+  assertContentAvailable(records.root, "run", runId);
   return { html, filename: `${slug}-lunatoon.html` };
 }

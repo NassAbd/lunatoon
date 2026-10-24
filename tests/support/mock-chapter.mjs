@@ -19,7 +19,7 @@ export function mockChapter(context) {
   };
 }
 
-export function mockFoundation(input = {}) {
+export function mockFoundation(input = {}, openingCount = 2) {
   return {
     title: input.title || "The Star Atlas", genre: input.genre || "Celestial Adventure",
     description: "A cartographer unfolds a silent star chart and chooses a way home before the sky closes.",
@@ -38,7 +38,12 @@ export function mockFoundation(input = {}) {
       relationships: ["Ada wants to find a safe way home before the storm closes in."], unresolved_threads: ["Can Ada recover a route from the faded star chart?"],
     },
     initial_decision: { question: "How should Ada find the missing route?", options: [{ id: "trace_crease", label: "Trace the chart's silver crease in moonlight" }, { id: "watch_tower", label: "Align the chart with the visible bell tower" }, { id: "open_roof", label: "Open the observatory roof to follow the wind" }] },
-    opening_beats: [{ caption: "Ada waits under the observatory's glass roof. Clouds have hidden the north star.", alt: "Ada holds her faded indigo chart under a glass observatory roof" }, { caption: "One silver crease still catches the moon. Beyond it, the bell tower stands clear.", alt: "Moonlight catches a silver fold in Ada's chart beside the distant bell tower" }],
+    opening_beats: [
+      { caption: "Ada waits under the observatory's glass roof. Clouds have hidden the north star.", alt: "Ada holds her faded indigo chart under a glass observatory roof" },
+      { caption: "One silver crease still catches the moon. Beyond it, the bell tower stands clear.", alt: "Moonlight catches a silver fold in Ada's chart beside the distant bell tower" },
+      { caption: "She brings the chart to the window, keeping the distant bell tower in sight.", alt: "Ada's cobalt poncho and silver spectacles at the observatory window, chart in hand" },
+      { caption: "A gust rattles the roof. Ada must choose how to find the missing route.", alt: "The storm presses against the glass roof while Ada studies her folded chart" },
+    ].slice(0, Math.max(1, Math.min(4, openingCount))),
     choice_effects: [],
   };
 }
@@ -114,7 +119,9 @@ function orchardChapter(context) {
     ] }, is_ending: ending,
   };
 }
-export const jpegBase64 = "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAABQb/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCMABmX/9k=";
+// Original opaque 32×48 color fixture. A 1×1 JPEG scaled into Chrome's
+// composited image layer can show the underlying placeholder in screenshots.
+export const jpegBase64 = "/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAwACADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAf/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAYH/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AnwCMZ8AAAAAAAAAA/9k=";
 
 function hammerChapter(context) {
   const chapter = mockChapter({ ...context, choice: "Investigate its origin" });

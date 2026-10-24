@@ -61,7 +61,7 @@ export class StoryEngine {
       } : undefined); metrics = result.metrics;
       if (result.panel_id !== panel.script.panel_id) throw new EngineError("panel_mismatch", "The image result belongs to another panel.", 502);
       const relative = this.store.recordImageReceipt(claim, metrics);
-      if (relative) { this.store.writeImage(relative, Buffer.from(result.image_url.split(",")[1], "base64")); this.store.finishImage(claim); }
+      if (relative) { if (this.store.writeClaimedImage(claim, Buffer.from(result.image_url.split(",")[1], "base64"))) this.store.finishImage(claim); }
     } catch (error: unknown) { if (error instanceof GenerationError) metrics ??= error.metrics; this.store.fail(claim, providerFailure(error), metrics); }
     return this.snapshot(runId);
   }

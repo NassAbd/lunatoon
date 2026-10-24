@@ -2,7 +2,8 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { consumeImageResponse } from "../src/lib/image-stream-client";
+import { consumeImageResponse, consumeIllustrationResponse } from "../src/lib/image-stream-client";
+import { z } from "zod";
 import { StoryStore } from "../src/lib/story-engine/store";
 import type { Snapshot } from "../src/lib/story-engine/contracts";
 import { operation } from "./engine-fixtures";
@@ -39,4 +40,11 @@ it("rejects malformed or post-completion messages instead of applying stale data
 });
 it("accepts a final JSON response from the compatible nonstreaming route", async () => {
   expect(await consumeImageResponse(Response.json(snapshot), () => { throw new Error("Unexpected preview"); })).toEqual(snapshot);
+});
+it("uses the same strict preview transport for a distinct durable opening snapshot", async () => {
+  const schema = z.object({ version: z.number().int(), saved: z.boolean() }).strict();
+  const opening = { version: 2, saved: true }; const seen: unknown[] = [];
+  expect(await consumeIllustrationResponse(streamed([JSON.stringify(preview) + "\n", JSON.stringify({ type: "settled", snapshot: opening }) + "\n"]), event => seen.push(event), schema)).toEqual(opening);
+  expect(seen).toEqual([preview]);
+  await expect(consumeIllustrationResponse(streamed([JSON.stringify({ type: "settled", snapshot }) + "\n"]), () => undefined, schema)).rejects.toThrow();
 });

@@ -5,9 +5,9 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import {
   CHARACTER_IDENTITY, ScriptSchema, ValidatedScriptSchema,
-  type ImageApproach, type ImageResponse, type Metrics, type ScriptPanel, type StoryRequest, type StoryResponse,
+  type ImageApproach, type ImageResponse, type Metrics, type StoryRequest, type StoryResponse,
 } from "../contracts";
-import { ART_VERSION, buildIllustrationPrompt, isReferenceModelSupported } from "../art-direction";
+import { ART_VERSION, buildIllustrationPrompt, isReferenceModelSupported, type IllustrationScene } from "../art-direction";
 import { supportsImagePreviews, type OnIllustrationPreview } from "../story-engine/image-stream";
 
 export function getModelConfig() {
@@ -53,11 +53,11 @@ export async function generateScript(client: OpenAI, request: StoryRequest, sign
 }
 
 export type ReferenceImage = { bytes: Buffer; mime: string; name?: string };
-export type VisualMemory = { identity: string; style: string; current: string; reference?: Buffer; references?: ReferenceImage[]; protagonist?: string; models: { image: string; quality: "low" | "medium" | "high" } };
-export async function generateIllustration(client: OpenAI, panel: ScriptPanel, signal?: AbortSignal, approach: ImageApproach = "text", memory?: VisualMemory, onPreview?: OnIllustrationPreview): Promise<ImageResponse> {
+export type VisualMemory = { identity: string; style: string; current: string; reference?: Buffer; references?: ReferenceImage[]; protagonist?: string; prompt_version?: string; models: { image: string; quality: "low" | "medium" | "high" } };
+export async function generateIllustration(client: OpenAI, panel: IllustrationScene, signal?: AbortSignal, approach: ImageApproach = "text", memory?: VisualMemory, onPreview?: OnIllustrationPreview): Promise<ImageResponse> {
   const started = performance.now();
   const config = memory?.models ?? getModelConfig();
-  const promptVersion = memory?.protagonist ? "story-visual-08" : ART_VERSION;
+  const promptVersion = memory?.prompt_version ?? (memory?.protagonist ? "story-visual-08" : ART_VERSION);
   const size = panel.layout_aspect === "vertical" ? "1024x1536" : panel.layout_aspect === "banner" ? "1536x1024" : "1024x1024";
   if (approach === "reference" && !isReferenceModelSupported(config.image)) throw new GenerationError("reference_unsupported", "The configured model has no verified reference-edit support in this experiment. Choose approach A or a documented GPT Image 2.5 model.", 400);
   const options = {

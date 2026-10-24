@@ -19,12 +19,17 @@ function readBundledAsset(asset: BundledStorySource["assets"][number]) {
 
 export function getStoryTemplate(id: string, version?: number): StoryTemplate | null {
   const entry = BUNDLED_STORIES.find(entry => entry.template.id === id && (version === undefined || entry.template.version === version));
-  return entry ? validateStoryTemplate(entry.template) : getSavedTemplate(id, version);
+  if (entry) return validateStoryTemplate(entry.template);
+  const saved = getSavedTemplate(id, version);
+  return saved?.status === "ready" ? saved : null;
 }
 
 export function getTemplateBundle(id: string, version?: number): TemplateBundle | null {
   const entry = BUNDLED_STORIES.find(entry => entry.template.id === id && (version === undefined || entry.template.version === version));
-  if (!entry) return getSavedTemplateBundle(id, version);
+  if (!entry) {
+    const saved = getSavedTemplateBundle(id, version);
+    return saved?.template.status === "ready" ? saved : null;
+  }
   const template = validateStoryTemplate(entry.template);
   const assets = entry.assets.map(readBundledAsset);
   return { template, assets };
@@ -32,7 +37,10 @@ export function getTemplateBundle(id: string, version?: number): TemplateBundle 
 
 export function readTemplateAsset(id: string, version: number, assetId: string) {
   const entry = BUNDLED_STORIES.find(entry => entry.template.id === id && entry.template.version === version);
-  if (!entry) return readSavedTemplateAsset(id, version, assetId);
+  if (!entry) {
+    if (getStoryTemplate(id, version)?.status !== "ready") throw new EngineError("asset_not_found", "This story artwork is not ready to read.", 404);
+    return readSavedTemplateAsset(id, version, assetId);
+  }
   const asset = entry?.assets.find(asset => asset.id === assetId);
   if (!asset) throw new EngineError("asset_not_found", "This story artwork was not found.", 404);
   return readBundledAsset(asset);

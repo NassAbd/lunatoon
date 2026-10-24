@@ -20,7 +20,7 @@ for (const world of [
   { id: "last-lightkeeper", title: "The Last Lightkeeper", character: "mara", firstChoice: "inspect_lens", twist: "The reflections answer Mara in three quiet pulses.", legacy: false },
   { id: "glass-orchard", title: "The Glass Orchard", character: "ivo", firstChoice: "open_hatch", twist: "A single leaf trembles as water knocks beneath the hatch.", legacy: false },
 ]) {
-  test(`${world.title} completes through the shared reader with isolated memory and owned reference bytes`, async ({ page, request }) => {
+  test(`${world.title} completes through the shared reader with isolated memory and owned reference bytes`, async ({ page, request, browser }) => {
     await control(request, { scriptDelay: 400, imageDelay: 1000, reverseImages: true });
     const before = await stats(request);
     await page.goto(`/story/${world.id}`);
@@ -108,12 +108,17 @@ for (const world of [
     await expect(page.locator(".generated-image.is-ready")).toHaveCount(4);
     expect(await stats(request)).toEqual(generated);
     if (!world.legacy) {
-      // Graceful restart after all streams have settled; saved URLs are reads only.
-      await page.goto("about:blank");
+      // Release the finished visit's speculative browser sockets before graceful
+      // shutdown, then verify durable content in a fresh browser context.
+      await page.waitForLoadState("networkidle");
+      await page.context().close();
       expect((await request.post(`${runtime().mockURL}/__restart`, { timeout: 20000 })).ok()).toBe(true);
-      await page.goto(url);
-      await expect(page.locator(".generated-image.is-ready")).toHaveCount(4);
-      expect(await stats(request)).toEqual(generated);
+      const restored = await browser.newPage({ viewport: { width: 1024, height: 1000 } });
+      try {
+        await restored.goto(url);
+        await expect(restored.locator(".generated-image.is-ready")).toHaveCount(4);
+        expect(await stats(request)).toEqual(generated);
+      } finally { await restored.close(); }
     }
     const reloaded = await readRun(request, runId);
     expect(reloaded.bible).toEqual(initial.bible);

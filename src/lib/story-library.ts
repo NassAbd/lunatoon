@@ -3,6 +3,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { SCHEMA_VERSION } from "./story-engine/schema";
+import { hasDeletionTables } from "./content-management/gate";
 
 export const SavedRunSummarySchema = z.object({
   id: z.uuid(),
@@ -36,7 +37,7 @@ const RowSchema = SavedRunSummarySchema.omit({ status: true, completed_panels: t
 
 // Only project the listing contract: private state, instructions, images, events
 // and diagnostics stay in the existing engine. This never invokes recovery.
-const LIST_SQL = `
+const listSQL = (filterDeleted: boolean) => `
 WITH page_runs AS (
   SELECT id, story_id,
     json_extract(document, '$.created_at') AS created_at,
@@ -45,6 +46,7 @@ WITH page_runs AS (
     json_extract(document, '$.limits.max_steps') AS max_steps,
     json_extract(document, '$.status') AS run_status
   FROM story_runs
+  ${filterDeleted ? "WHERE NOT EXISTS (SELECT 1 FROM deletion_targets d WHERE d.kind='run' AND d.id=story_runs.id)" : ""}
   ORDER BY created_at DESC, id DESC
   LIMIT ? OFFSET ?
 )
@@ -71,7 +73,7 @@ export function listSavedRuns(options: { page?: number; limit?: number; director
   const db = new DatabaseSync(filename, { readOnly: true, timeout: 1000 });
   try {
     if (db.prepare("PRAGMA user_version").get()?.user_version !== SCHEMA_VERSION) throw new Error("Saved stories use an unsupported database version.");
-    const rows = db.prepare(LIST_SQL).all(limit + 1, (page - 1) * limit);
+    const rows = db.prepare(listSQL(hasDeletionTables(db))).all(limit + 1, (page - 1) * limit);
     const runs = rows.slice(0, limit).map(raw => {
       const row = RowSchema.parse(raw);
       const total = row.max_steps * 2;

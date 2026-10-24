@@ -1,10 +1,14 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CreatorSnapshotSchema, type CreatorSnapshot, type FoundationPrompt } from "@/lib/creator/contracts";
 import type { StoryFoundation } from "@/lib/story-engine/contracts";
 import { FoundationEditor } from "./foundation-editor";
 import { LibraryLaunch } from "./library-launch";
+import { CreatorOpening } from "./creator-opening";
+import type { OpeningPanel } from "@/lib/creator/opening-contracts";
+import { consumeIllustrationResponse } from "@/lib/image-stream-client";
+import { useRouter } from "next/navigation";
 
 const emptyPrompt: FoundationPrompt = { prompt: "", title: "", genre: "", main_character: "", visual_style: "", atmosphere: "" };
 async function snapshotRequest(url: string, init?: RequestInit) {
@@ -20,11 +24,15 @@ const json = (body: unknown): RequestInit => ({ method: "POST", headers: { "Cont
 const money = (micro: number) => `$${(micro / 1e6).toFixed(5)}`;
 
 export function CreatorStudio({ initial, referenceSupported }: { initial: CreatorSnapshot | null; referenceSupported: boolean }) {
+  const router = useRouter();
   const [snapshot, setSnapshot] = useState(initial);
   const [input, setInput] = useState<FoundationPrompt>(initial?.draft.last_input ?? emptyPrompt);
   const [foundation, setFoundation] = useState<StoryFoundation | null>(initial?.draft.foundation ?? null);
   const [busy, setBusy] = useState(""); const [error, setError] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
+  const [notice, setNotice] = useState(initial?.draft.foundation && !initial.latest_template ? "Draft saved. No illustrations were requested." : ""); const [previews, setPreviews] = useState<Record<string, string>>({});
+  const openingOperations = useRef(new Map<string, string>()); const openingLock = useRef(false);
+  const readQueue = useRef<Promise<unknown>>(Promise.resolve()); const openingVersion = useRef(initial?.opening?.version);
   const draft = useRef(initial?.draft.id); const creating = useRef<Promise<string> | null>(null);
   const createOperation = useRef<string | null>(null);
   const generateOperation = useRef<{ fingerprint: string; id: string } | null>(null);
@@ -36,8 +44,52 @@ export function CreatorStudio({ initial, referenceSupported }: { initial: Creato
   const refs = snapshot?.assets.filter(asset => snapshot.draft.reference_asset_ids.includes(asset.id)) ?? [];
   const adopt = (next: CreatorSnapshot, replace = false) => {
     setSnapshot(next); draft.current = next.draft.id;
+    openingVersion.current = next.opening?.version;
     if (replace) setFoundation(next.draft.foundation);
   };
+  function clearPreview(id: string) { setPreviews(current => { const copy = { ...current }; delete copy[id]; return copy; }); }
+  function readSaved() {
+    const id = draft.current;
+    const next = readQueue.current.catch(() => undefined).then(async () => {
+      if (!id) throw new Error("Save a draft before checking its illustrations.");
+      const saved = await snapshotRequest(`/api/creator/drafts/${id}`); adopt(saved); return saved;
+    });
+    readQueue.current = next; return next;
+  }
+  const openingRunning = busy === "illustrating" || snapshot?.opening?.panels.some(panel => panel.status === "running");
+  useEffect(() => {
+    if (!openingRunning) return;
+    const timer = window.setInterval(() => { void readSaved().catch(() => setError("Saved illustration status could not be checked. Refresh to check it before explicitly retrying.")); }, 1200);
+    return () => window.clearInterval(timer);
+    // This effect only reads durable status. It never schedules paid work.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openingRunning]);
+  async function illustrate(saved: CreatorSnapshot, panels: OpeningPanel[], retry = false, acknowledgeUnknown = false) {
+    if (!saved.opening || openingLock.current || !panels.length) return;
+    openingLock.current = true; setBusy("illustrating"); setError("");
+    const version = saved.opening.version;
+    try {
+      await Promise.all(panels.map(async panel => {
+        const previous = saved.opening!.attempts.filter(attempt => attempt.panel_id === panel.id).at(-1);
+        const key = `${version}:${panel.id}:${retry ? previous?.id ?? "retry" : "initial"}`;
+        let operation = openingOperations.current.get(key);
+        if (!operation) { operation = crypto.randomUUID(); openingOperations.current.set(key, operation); }
+        clearPreview(panel.id);
+        try {
+          const response = await fetch(`/api/creator/drafts/${saved.draft.id}/opening/${version}/${panel.id}/image`, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" }, body: JSON.stringify({ operation_id: operation, retry, acknowledge_unknown: acknowledgeUnknown }) });
+          const settled = await consumeIllustrationResponse(response, event => {
+            if (event.panel_id !== panel.id) throw new Error("The illustration preview did not match this saved opening scene.");
+            if (openingVersion.current === version) setPreviews(current => ({ ...current, [panel.id]: event.image_url }));
+          }, CreatorSnapshotSchema);
+          if (settled.opening?.panels.find(item => item.id === panel.id)?.status !== "complete") clearPreview(panel.id);
+        } catch (error) { clearPreview(panel.id); setError(error instanceof Error ? error.message : "This illustration connection was interrupted. Check saved status before retrying."); }
+        finally {
+          // Serialized authoritative reads avoid rolling back a faster sibling.
+          await readSaved().catch(() => setError("Saved status could not be checked. Refresh before explicitly retrying."));
+        }
+      }));
+    } finally { openingLock.current = false; setBusy(""); router.refresh(); }
+  }
   async function ensureDraft() {
     if (draft.current) return draft.current;
     if (!creating.current) {
@@ -100,21 +152,24 @@ export function CreatorStudio({ initial, referenceSupported }: { initial: Creato
     catch (error) { setError(error instanceof Error ? error.message : "This reference could not be removed."); }
     finally { setBusy(""); }
   }
-  async function save() {
+  async function save(mode: "draft" | "illustrate") {
     if (!foundation) return;
-    setBusy("saving"); setError("");
+    setBusy("saving"); setError(""); setNotice("");
     try {
-      const id = await ensureDraft(); const body = { foundation, reference_asset_ids: refs.map(ref => ref.id) };
+      const id = await ensureDraft(); const body = { foundation, reference_asset_ids: refs.map(ref => ref.id), mode };
       const fingerprint = JSON.stringify(body);
       if (saveOperation.current?.fingerprint !== fingerprint) saveOperation.current = { fingerprint, id: crypto.randomUUID() };
-      adopt(await snapshotRequest(`/api/creator/drafts/${id}/save`, json({ ...body, operation_id: saveOperation.current.id })), true);
+      const saved = await snapshotRequest(`/api/creator/drafts/${id}/save`, json({ ...body, operation_id: saveOperation.current.id }));
+      adopt(saved, true);
+      if (mode === "draft") { setNotice("Draft saved. No illustrations were requested."); router.refresh(); }
+      else { setPreviews({}); await illustrate(saved, saved.opening?.panels.filter(panel => panel.status === "pending") ?? []); }
     } catch (error) { setError(error instanceof Error ? error.message : "The story needs a little more work before saving."); }
     finally { setBusy(""); }
   }
-  const disabled = Boolean(busy) || active;
+  const disabled = Boolean(busy) || active || Boolean(openingRunning);
   const attemptLimit = Boolean(snapshot && snapshot.summary.calls >= snapshot.draft.limits.max_calls);
   return <div className="studio-workspace">
-    <div className="studio-steps" aria-label="Creation steps"><span>01 Describe</span><span>02 Configure</span><span>03 Preview</span><span>04 Save & play</span></div>
+    <div className="studio-steps" aria-label="Creation steps"><span>01 Describe</span><span>02 Edit</span><span>03 Save</span><span>04 Illustrate</span><span>05 Play</span></div>
     <div className="studio-create-grid">
       <section className="studio-card" aria-labelledby="describe-heading"><p className="book-eyebrow">START WITH A SPARK</p><h2 id="describe-heading">What world is waiting?</h2>
         <label className="studio-field"><span id="story-description-label">Describe your story</span><textarea aria-labelledby="story-description-label" rows={6} minLength={20} maxLength={4000} value={input.prompt} disabled={disabled} placeholder="A young cartographer discovers that the stars are disappearing. Her oldest map holds a light that refuses to go out…" onChange={event => setInput({ ...input, prompt: event.target.value })} /></label>
@@ -134,16 +189,18 @@ export function CreatorStudio({ initial, referenceSupported }: { initial: Creato
         <label className={`studio-upload ${disabled || refs.length >= 3 ? "is-disabled" : ""}`}>Add reference images<input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={disabled || refs.length >= 3} onChange={event => { const files = Array.from(event.target.files ?? []); event.target.value = ""; void upload(files); }} /></label>
         {busy === "uploading" && <p className="studio-muted" role="status">Checking and saving your reference images…</p>}
         <p className="studio-muted">PNG, JPEG or WebP · 5 MiB each · up to 4096 px per edge / 16 megapixels · still images only. Stored privately on this local installation.</p>
-        <p className="studio-reference-note">{refs.length ? `${refs.length} of 3 references attached. Reference editing adds image-input usage during reading.` : "No references? Your story will use its written visual guide in text-only illustration mode."}</p>
+        <p className="studio-reference-note">{refs.length ? `${refs.length} of 3 references attached. These guide the opening and later illustrations; they do not determine the number of scenes. Reference editing adds image-input usage.` : "No references? Your story will use its written visual guide in text-only illustration mode."}</p>
       </aside>
     </div>
     {error && <p className="studio-alert" role="alert">{error}</p>}
+    {notice && <p className="studio-saved-notice" role="status">{notice}</p>}
     {foundation && <section className="studio-card studio-preview" aria-labelledby="preview-heading"><div className="studio-preview-header"><div><p className="book-eyebrow">YOUR STORY FOUNDATION</p><h2 id="preview-heading">Make it your own</h2><p className="studio-muted">Edit the details, then save a local version. Existing reading sessions always keep the version they began with.</p></div><span className="studio-status">Draft</span></div>
-      <div className="studio-cover-placeholder" aria-label="Decorative cover placeholder"><span aria-hidden="true">☾</span><div><p className="book-eyebrow">YOUR ORIGINAL WORLD</p><h3>{foundation.title}</h3><p>Artwork placeholder · illustrations arrive during reading</p></div></div>
+      <div className="studio-cover-placeholder" aria-label="Decorative cover placeholder"><span aria-hidden="true">☾</span><div><p className="book-eyebrow">YOUR ORIGINAL WORLD</p><h3>{foundation.title}</h3><p>Draft cover · your opening illustrations are created after you save</p></div></div>
       <FoundationEditor foundation={foundation} onChange={setFoundation} disabled={disabled} />
-      <div className="studio-save"><button className="book-primary" disabled={disabled} onClick={() => void save()}>{busy === "saving" ? "Saving your story…" : "Save & make playable"}</button><p className="studio-muted">Saving makes no AI calls. Your opening uses labeled authored placeholders; the shared reader generates the four continuation panels.</p></div>
+      <div className="studio-save"><div className="studio-save-actions"><button type="button" className="book-secondary" disabled={disabled} onClick={() => void save("draft")}>Save draft</button><button type="button" className="book-primary" disabled={disabled} onClick={() => void save("illustrate")}>{busy === "saving" ? "Saving your story…" : "Save & Illustrate"}</button></div><p className="studio-muted">Save draft makes no AI calls. Save & Illustrate saves a version and requests up to {foundation.opening_beats.length} opening illustrations using your saved visual guide{refs.length ? ` and ${refs.length} ${refs.length === 1 ? "reference" : "references"}` : ""}. Image generation may incur API charges. Unchanged completed artwork can be reused.</p></div>
     </section>}
-    {snapshot?.latest_template && <section className="studio-card studio-ready" aria-labelledby="ready-heading"><div><p className="book-eyebrow">SAVED ON THIS INSTALLATION · VERSION {snapshot.latest_template.version}</p><h2 id="ready-heading">Ready to play</h2><h3>{snapshot.latest_template.title}</h3><p className="studio-muted">Your story is in the local library. Two decisions, four illustrations, and an ending shaped by you.</p><Link href="/#creator-stories">View in the library →</Link></div><LibraryLaunch key={`${snapshot.latest_template.id}:${snapshot.latest_template.version}`} template={snapshot.latest_template} referenceSupported={referenceSupported} /></section>}
-    {snapshot && <details className="book-developer studio-diagnostics"><summary>Developer details</summary><div className="book-details-body"><p>Foundation generation: {snapshot.summary.calls}/{snapshot.draft.limits.max_calls} calls · estimated spend {money(snapshot.summary.estimated_micro_usd)} · planning amount held {money(snapshot.summary.held_micro_usd)} · draft budget {money(snapshot.draft.limits.budget_usd * 1e6)}.</p><p>Measured tokens: {snapshot.summary.measured_input_tokens} input / {snapshot.summary.measured_output_tokens} output. Unknown-cost attempts: {snapshot.summary.unknown_cost_attempts}. Unpriced attempts: {snapshot.summary.unpriced_attempts}. These estimates are not a provider billing cap. Reading uses separate per-run limits.</p><p>Model: {snapshot.draft.model}. No automatic paid retries. Uploads stay local until they are supplied to an explicit reader image-edit request.</p><ul>{snapshot.attempts.map(attempt => <li key={attempt.id}>{attempt.status} · {attempt.metrics?.duration_ms ?? "unknown"} ms · {attempt.metrics?.request_id ?? "No provider request ID"}{attempt.error ? ` · ${attempt.error.code}` : ""}</li>)}</ul></div></details>}
+    {snapshot?.opening && <CreatorOpening key={`${snapshot.opening.template_id}:${snapshot.opening.version}`} snapshot={snapshot} busy={busy === "illustrating"} referenceSupported={referenceSupported} previews={previews} onRetry={(panel, acknowledged) => void illustrate(snapshot, [panel], true, acknowledged)} onStart={() => void illustrate(snapshot, snapshot.opening!.panels.filter(panel => panel.status === "pending"))} onVisible={clearPreview} />}
+    {snapshot?.latest_template?.status === "ready" && !snapshot.opening && <section className="studio-card studio-ready" aria-labelledby="ready-heading"><div><p className="book-eyebrow">SAVED ON THIS INSTALLATION · VERSION {snapshot.latest_template.version}</p><h2 id="ready-heading">Ready to play</h2><h3>{snapshot.latest_template.title}</h3><p className="studio-muted">This earlier saved version retains its original opening artwork. Save & Illustrate to create an illustrated new version.</p><Link href="/#creator-stories">View in the library →</Link></div><LibraryLaunch key={`${snapshot.latest_template.id}:${snapshot.latest_template.version}`} template={snapshot.latest_template} referenceSupported={referenceSupported} label="Play your story" /></section>}
+    {snapshot && <details className="book-developer studio-diagnostics"><summary>Developer details</summary><div className="book-details-body"><p>Foundation generation: {snapshot.summary.calls}/{snapshot.draft.limits.max_calls} calls · estimated spend {money(snapshot.summary.estimated_micro_usd)} · planning amount held {money(snapshot.summary.held_micro_usd)} · draft budget {money(snapshot.draft.limits.budget_usd * 1e6)}.</p><p>Measured tokens: {snapshot.summary.measured_input_tokens} input / {snapshot.summary.measured_output_tokens} output. Unknown-cost attempts: {snapshot.summary.unknown_cost_attempts}. Unpriced attempts: {snapshot.summary.unpriced_attempts}. These estimates are not a provider billing cap. Reading uses separate per-run limits.</p><p>Model: {snapshot.draft.model}. No automatic paid retries. Uploads are sent only during an explicit opening or reader image-edit request.</p><ul>{snapshot.attempts.map(attempt => <li key={attempt.id}>{attempt.status} · {attempt.metrics?.duration_ms ?? "unknown"} ms · {attempt.metrics?.request_id ?? "No provider request ID"}{attempt.error ? ` · ${attempt.error.code}` : ""}</li>)}</ul></div></details>}
   </div>;
 }
