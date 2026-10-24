@@ -25,6 +25,10 @@ async function remember(page: Page, decisionIndex: number) {
     };
     window.scrollTo({ top: decision.getBoundingClientRect().top + scrollY - 100, behavior: "instant" });
   }, decisionIndex);
+  // Settle the reader's offscreen saved-choice compaction after this deliberate
+  // test scroll, before measuring generation. reader-finale.spec.ts separately
+  // verifies the compaction itself preserves the visible panel and DOM.
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
 }
 async function measure(page: Page, phase: string): Promise<Measurement> {
   return page.evaluate(label => {

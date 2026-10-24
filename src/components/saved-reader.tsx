@@ -8,10 +8,11 @@ import { isReferenceModelSupported } from "@/lib/art-direction";
 import { yieldForTextPaint } from "@/lib/presentation";
 import { ComicPanelCard } from "./comic-panel";
 import { StoryHeader, StoryOpening } from "./story-book";
-import { Icon } from "./icon";
+import { ReaderFinale } from "./reader-finale";
 import { ReaderDecision, type ReaderSubmission } from "./reader-decision";
 import { consumeImageResponse } from "@/lib/image-stream-client";
 import { recordImageDisplay, type ImageDisplayTiming, type ReaderObservation } from "@/lib/reader-timing";
+import "@/app/reader-polish.css";
 
 const usd = (micro: number) => `$${(micro / 1e6).toFixed(6)}`;
 const seconds = (ms: number | null | undefined) => ms == null ? "—" : `${(ms / 1000).toFixed(3)}s`;
@@ -129,6 +130,8 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
           <p>Planning amount held: {usd(snapshot.summary.held_micro_usd)}. Estimated budget: {usd(snapshot.run.limits.budget_usd * 1e6)}. This application guard is not a provider billing cap.</p>
           <p>Image calls: {snapshot.summary.image_calls} attempted + {snapshot.summary.image_slots_reserved} reserved / {snapshot.run.limits.max_image_calls}. Narrative: {snapshot.summary.script_calls} attempted + {snapshot.summary.script_slots_reserved} reserved / {snapshot.run.limits.max_script_calls}.</p>
           <p>{snapshot.run.models.story} · {snapshot.run.models.image} · {snapshot.run.models.quality}</p>
+          <p>Timing boundaries: narrative response includes server work and transfer; text ready follows browser paint. Asset transfer measures response bytes only. Decoded → visible includes React scheduling and the reveal, not provider compute. Missing preview timings mean no preview was observed, not zero latency.</p>
+          {snapshot.panels.filter(panel => panel.metrics).map(panel => <p key={`delivery-${panel.id}`}>Chapter {snapshot.nodes.find(node => node.id === panel.node_id)?.step}, panel {panel.sequence}: upstream previews {panel.metrics?.partial_images_received ?? "not recorded"} / {panel.metrics?.partial_images_requested ?? "not recorded"} requested · first upstream preview {seconds(panel.metrics?.first_partial_ms)}.</p>)}
           {observation ? <p>Browser observation this visit: text ready {seconds(observation.browser_text_ready_ms)} · total request flow {seconds(observation.browser_total_ms)}. {Object.entries(observation.image_request_ms).map(([id, ms]) => <span key={id}>Image {snapshot.panels.find(p => p.id === id)?.sequence}: {seconds(ms)}. </span>)}</p> : <p>Reloaded saved data. No new browser text-ready measurement and no generation calls from loading this page.</p>}
           {Object.values(observations).map(item => <div key={item.node_id}><p>Browser continuation: narrative response {seconds(item.narrative_response_ms)} · text paint {seconds(item.browser_text_ready_ms)} · visual completion {seconds(item.browser_visual_complete_ms)} (includes image decode and fade).</p>{Object.entries(item.images).map(([id, image]) => <p key={id}>Panel {snapshot.panels.find(panel => panel.id === id)?.sequence}: request start +{seconds(image.request_start_ms)} · first preview received +{seconds(image.first_preview_received_ms)} · first preview visible +{seconds(image.first_preview_visible_ms)} · asset transfer {seconds(image.asset_transfer_ms)} · decode after load {seconds(image.decode_after_load_ms)} · decoded +{seconds(image.decoded_ms)} · visible +{seconds(image.visual_complete_ms)}.</p>)}</div>)}
           {snapshot.nodes.map(n => <p key={n.id}>Chapter {n.step}: server narrative {seconds(n.metrics?.duration_ms)} · validation {seconds(n.metrics?.validation_ms)} · durable elapsed {seconds(n.completed_at == null ? null : n.completed_at - n.created_at)} (includes browser scheduling or recovery waits) · saved script {n.script_ready_at ? new Date(n.script_ready_at).toISOString() : "pending"}. {snapshot.panels.filter(p => p.node_id === n.id).map(p => <span key={p.id}>Image {p.sequence}: {seconds(p.metrics?.duration_ms)}. </span>)}</p>)}
@@ -165,7 +168,7 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
       {latest?.status === "script_failed" && <div className="book-recovery" role="alert"><h2>This part of the story couldn’t be written.</h2><p>Your last choice and earlier story are safe. You can try this part again.</p><p className="book-recovery-choice">{latest.choice}{latest.instruction && ` · ${latest.instruction}`}</p><button className="book-primary" disabled={busy || running} onClick={() => void writeChapter(undefined, latest.id)}>Try this part again</button><small>Another attempt may incur a charge. Your spending limits still apply.</small></div>}
       {pending.length > 0 && !busy && <div className="book-recovery"><p>Your words are saved. Let’s bring the remaining illustrations to life.</p><button className="book-primary" disabled={running} onClick={() => void work(async () => { await images(pending); })}>Finish the illustrations</button><small>Only unfinished illustrations will be requested.</small></div>}
       {error && <div className="book-recovery" role="alert"><p>{/limit|budget/i.test(error) ? "This story has reached a generation or spending limit. Your progress is saved; check Developer details for the remaining allowance." : "We couldn’t finish that request. Your saved story is safe. Check its status before trying again."}</p><button className="book-secondary" disabled={busy} onClick={() => void work(async () => { await refresh(); })}>Check saved progress</button></div>}
-      {snapshot.run.status === "ended" && <div className="book-ending"><Icon name="moon" size={26} /><p className="book-eyebrow">THE END</p><h2>A story only you could tell.</h2><p>Every choice left its mark.<br />Your story is saved here, whenever you want to return.</p><Link href="/" className="book-secondary">Read a new story<Icon name="arrow" size={16} /></Link></div>}
+      <ReaderFinale snapshot={snapshot} />
       {developerDetails}
       <footer className="book-footer">A little moonlight. A different story.</footer>
     </main>

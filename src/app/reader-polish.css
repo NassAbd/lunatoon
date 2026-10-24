@@ -1,0 +1,41 @@
+.saved-reader [hidden] { display: none !important; }
+.book-choice-memory { border-left: 2px solid #bdd480; padding: 6px 0 6px 22px; margin: 0 0 30px; }
+.book-choice-memory .book-eyebrow { margin-bottom: 9px; }
+.book-choice-memory h2 { font-size: 23px; margin-bottom: 14px; }
+.book-choice-memory details { color: #656e5c; font-size: 13px; line-height: 1.8; }
+.book-choice-memory summary { width: fit-content; cursor: pointer; }
+.book-choice-memory details p { margin: 13px 0 0; overflow-wrap: anywhere; }
+.book-saved-twist { white-space: pre-wrap; }
+.book-chapter-heading::before { content: ""; display: block; width: 38px; height: 1px; background: #c8d4ad; margin: 0 auto 26px; }
+.book-chapter-heading { animation: reader-ink-in 180ms ease-out both; }
+.saved-reader .speech-bubble { background: #fffef5; box-shadow: 1px 3px 0 #07191d45; }
+.saved-reader .bubble-speaker { letter-spacing: .8px; }
+.book-brand > span:first-child { transition: transform 180ms ease-out; }
+.book-brand:is(:hover, :focus-visible) > span:first-child { transform: rotate(-12deg); }
+.book-ending { margin-top: 20px; padding: 42px 22px 24px; animation: reader-ink-in 220ms ease-out both; }
+.book-ending-mark { display: flex; align-items: center; justify-content: center; gap: 20px; color: #7e9446; margin-bottom: 28px; }
+.book-ending-mark > span { width: 64px; height: 1px; background: #dce4cb; }
+.book-choice-recap { list-style: none; padding: 0; margin: 32px 0 26px; text-align: left; border-block: 1px solid #e1e5d9; }
+.book-choice-recap li { display: flex; align-items: baseline; gap: 20px; padding: 22px 8px; }
+.book-choice-recap li + li { border-top: 1px solid #e8e9e5; }
+.book-choice-recap li > div { min-width: 0; }
+.book-recap-number { flex-shrink: 0; color: #839164; font-size: 11px; letter-spacing: 1px; }
+.book-choice-recap h3 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: 21px; line-height: 1.45; margin: 0; overflow-wrap: anywhere; }
+.book-choice-recap p { color: #646c5d; font-size: 13px; line-height: 1.8; margin: 9px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.book-choice-recap .book-recap-no-twist { color: #7c8375; }
+.book-ending > .book-ending-saved { font-size: 13px; min-height: 47px; margin-bottom: 15px; }
+.book-ending-actions { max-width: 440px; margin: auto; }
+.book-ending-actions > div { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 12px; }
+.book-ending-actions .book-primary { text-decoration: none; }
+.book-ending > .book-ending-note { font-size: 12px; margin: 20px 0 0; }
+.image-display-error p { margin: 0 0 14px; line-height: 1.7; }
+.image-display-error button { border: 1px solid #a1b87d; background: #d9f77c; color: #202124; padding: 10px 14px; border-radius: 6px; font-size: 12px; }
+@keyframes reader-ink-in { from { opacity: .65; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .book-chapter-heading, .book-ending { animation: none; }
+  .book-brand > span:first-child { transition: none; transform: none !important; }
+}
+@media (max-width: 720px) {
+  .book-ending { padding-inline: 6px; }
+  .book-choice-memory { padding-left: 16px; }
+}

@@ -21,16 +21,29 @@ function DecodedImage({ src, description, kind, onDisplay }: { src: string; desc
   useEffect(() => {
     // A cached server-rendered asset can load before hydration attaches onLoad.
     // Decoding either path once also avoids duplicate display observations.
-    if (element.current?.complete) void loaded(element.current);
-  }, [loaded]);
+    if (!failed && element.current?.complete) void loaded(element.current);
+  }, [loaded, failed]);
   function visible() {
     if (!timing.current || reported.current) return;
     reported.current = true; onDisplay?.(kind, { ...timing.current, phase: "visible", at: performance.now() });
   }
-  if (failed) return <div className="image-display-error" role="status">This illustration couldn’t load. Your saved story is safe.</div>;
+  function reloadAsset() {
+    // Re-mount only this saved image. This never calls a generation endpoint.
+    decoding.current = false; timing.current = null; reported.current = false;
+    setReady(false); setFailed(false);
+  }
+  if (failed) return <div className="image-display-error" role="status"><p>{kind === "final" ? "This illustration couldn’t load. Your saved story is safe." : "The preview couldn’t load. Waiting for the final artwork."}</p>{kind === "final" && <button type="button" onClick={reloadAsset}>Load saved illustration again</button>}</div>;
   // Local saved assets and transient real previews need no Next image optimizer.
   // eslint-disable-next-line @next/next/no-img-element
   return <img ref={element} className={`${kind === "final" ? "generated-image" : "preview-image"} reader-image ${ready ? "is-ready" : ""}`} src={src} alt={description} onLoad={event => void loaded(event.currentTarget)} onError={() => setFailed(true)} onAnimationEnd={visible} />;
+}
+function WaitingCopy() {
+  const [longWait, setLongWait] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setLongWait(true), 20_000);
+    return () => window.clearTimeout(timer);
+  }, []);
+  return <span>{longWait ? "Taking a little longer. Your dialogue is saved." : "Keep reading. The scene will appear here."}</span>;
 }
 export function ReaderIllustration({ src, preview, description, error, onDisplay }: { src?: string; preview?: string; description: string; error?: string; onDisplay?: OnImageDisplay }) {
   return <>
@@ -46,8 +59,8 @@ export function ReaderIllustration({ src, preview, description, error, onDisplay
       </svg>
       <div className="generation-copy">
         <span className="placeholder-mark"><Icon name={error ? "break" : "moon"} size={24} /></span>
-        <p>{error ? "This illustration couldn’t be finished" : "Illustrating this moment…"}</p>
-        <span>{error ? "Your dialogue is still here." : "Keep reading. The scene will appear here."}</span>
+        <p>{error ? "This illustration couldn’t be finished" : src ? "Loading your saved illustration…" : "Illustrating this moment…"}</p>
+        {error ? <span>Your dialogue is still here.</span> : src ? <span>Your artwork is saved.</span> : <WaitingCopy />}
       </div>
     </div>
     {preview && !error && <DecodedImage key={preview} src={preview} description={`Preview: ${description}`} kind="preview" onDisplay={onDisplay} />}

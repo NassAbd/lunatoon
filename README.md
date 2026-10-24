@@ -6,6 +6,8 @@ The light library opens at `/`. Click **Begin the story** to create a local pers
 
 In the saved reader, four immediately available authored opening beats lead into the first decision. Each submitted choice stays in the timeline and its two panels appear directly below it without navigation or automatic scrolling. Dialogue arrives first. Supported Flare reference edits request one optional real partial preview within each existing image call, followed independently by the saved final illustration. The provider may send no preview; the POC 05.1 live sample sent only finals. A fixed-size, clearly decorative noir placeholder supports the wait. Refresh/restart reads saved final assets without generating again.
 
+Completed decisions become compact saved-choice cards once fully offscreen and unfocused; their question and custom twist remain accessible. The reader preserves the visible chapter position during compaction. The ending recaps the actual saved decisions, distinguishes unfinished illustrations from a fully saved story, and links to the library, saved sessions and a new run. If a saved image fails to load, **Load saved illustration again** retries only its local file request. Developer details remain collapsed and distinguish upstream previews, browser transfer/decode and reveal timing. See [POC 07 streaming research](docs/POC_07_IMAGE_STREAMING.md) and [POC 07 results](POC_07_RESULTS.md). No new paid generation or speedup is claimed for this iteration.
+
 Saved sessions are for this **local single-user installation**. The catalogue uses bounded read-only SQLite queries and never starts generation or recovery. Do not expose this unauthenticated local app or private `data/` directory as a public service.
 
 ## Run locally
