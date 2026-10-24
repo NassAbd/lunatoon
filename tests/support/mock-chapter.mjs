@@ -1,6 +1,8 @@
 // Deterministic provider output for integration tests; never calls a paid service.
 export function mockChapter(context) {
+  if (context.choice === "Destroy the device") return hammerChapter(context);
   const ending = context.step === context.max_steps;
+  if (ending && context.state.objects.some(object => object.id === "device" && object.condition === "destroyed")) return hammerEnding(context);
   const first = ending ? "The cat's TL-9 route leads to Aster Transit Lab. Kael disconnects its tracking relay with his cut hand." : "Kael reads the Aster Transit Lab maker's seal; a cyborg cat opens the TL-9 maintenance hatch.";
   const second = ending ? "Kael's torn yellow cuff frames the now-dark relay. The cat escapes safely and city surveillance stops." : "Kael catches his right cuff on the hatch, cutting his hand. The cat points toward the lab's relay.";
   return {
@@ -14,3 +16,25 @@ export function mockChapter(context) {
   };
 }
 export const jpegBase64 = "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAABQb/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCMABmX/9k=";
+
+function hammerChapter(context) {
+  const chapter = mockChapter({ ...context, choice: "Investigate its origin" });
+  chapter.event = { action: "Kael smashes the device with a maintenance hammer.", consequence: "The core goes dark and surveillance cameras turn away.", source_clue: null };
+  chapter.panels[0].visual_description = "Wide shot: Kael drives a hammer into the black device on the platform.";
+  chapter.panels[1].visual_description = "Close-up: shattered cyan core beside the hammer; the cameras turn away.";
+  chapter.panels.forEach((panel, i) => { panel.image_prompt = (i ? "SCENE_TWO Expressive close-up: " : "SCENE_ONE Wide establishing: ") + panel.visual_description; panel.dialogues[0].text = i ? "The cameras stopped. Now I choose." : "You don't get to follow me."; });
+  chapter.story_state_updates.facts_added = [{ id: "device_destroyed", text: "Kael destroyed the device with a hammer." }, { id: "tracking_stopped", text: "The cameras turned away as the shattered core went dark." }];
+  chapter.story_state_updates.appearance_changes = [{ character_id: "kael", injuries_added: [], clothing_condition: null, objects_added: [], objects_removed: ["device"] }];
+  chapter.story_state_updates.object_updates = [{ id: "device", name: context.state.objects.find(object => object.id === "device").name, condition: "destroyed", holder: null }];
+  chapter.next_decision = { question: "With the core shattered and the cameras blind, what does Kael do?", options: [{ id: "leave_station", label: "Leave the broken core and escape the blind cameras", uses_fact_ids: ["device_destroyed", "tracking_stopped"] }, { id: "inspect_fragments", label: "Examine the fragments while the cameras are blind", uses_fact_ids: ["device_destroyed", "tracking_stopped"] }] };
+  return chapter;
+}
+function hammerEnding(context) {
+  // Build the normal ending shape without recursing through the destroyed state.
+  const chapter = mockChapter({ ...context, state: { ...context.state, objects: [] } });
+  chapter.event = { action: "Kael leaves the shattered device and exits beneath the blind cameras.", consequence: "He escapes the station without a tracking signal.", source_clue: null };
+  chapter.panels.forEach((panel, i) => { panel.visual_description = i ? "Close-up: Kael's amber eye catches dawn as the station recedes; the broken core stays behind." : "Wide shot: Kael leaves the fragments and hammer on the platform, walking beneath blind cameras."; panel.image_prompt = (i ? "SCENE_TWO: " : "SCENE_ONE: ") + panel.visual_description; panel.dialogues[0].text = i ? "For once, the city doesn't know my next move." : "A broken core. Blind cameras. My way out."; });
+  chapter.story_state_updates.facts_added = [{ id: "station_escaped", text: "Kael escaped while the cameras were blind." }, { id: "fragments_left", text: "The shattered device remains abandoned on the platform." }];
+  chapter.story_state_updates.used_fact_ids = ["device_destroyed", "tracking_stopped"];
+  return chapter;
+}

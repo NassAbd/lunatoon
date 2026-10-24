@@ -16,7 +16,7 @@ test("one paid comparison: one shared script, two text images, two reference edi
       requests.push(data);
     }
   });
-  await page.goto("/");
+  await page.goto("/experiment");
   await page.getByRole("radio", { name: /Investigate its origin/ }).check();
   await page.getByLabel("MAKE IT YOURS").fill("A mysterious cyborg cat suddenly appears.");
   await page.getByLabel("VISUAL CONTINUITY EXPERIMENT").selectOption("text");

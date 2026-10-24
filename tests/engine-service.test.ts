@@ -8,7 +8,7 @@ import { StoryEngine } from "../src/lib/story-engine/service";
 import type { StoryProvider } from "../src/lib/story-engine/provider";
 import type { NarrativeContext } from "../src/lib/story-engine/contracts";
 import { reservation, usageCost, PRICES } from "../src/lib/story-engine/cost";
-import { chapterFixture, operation, measuredMetrics, imageMetrics, jpegBase64 } from "./engine-fixtures";
+import { chapterFixture, hammerChapterFixture, operation, measuredMetrics, imageMetrics, jpegBase64 } from "./engine-fixtures";
 
 const models = { story: "gpt-4.1-mini", image: "gpt-image-2.5-flare", quality: "low" as const };
 const limits = { max_steps: 2, max_image_calls: 6, max_script_calls: 3, budget_usd: .3 };
@@ -42,6 +42,22 @@ describe("persistent orchestration with a mocked provider", () => {
     expect(restored.panels.map(p => p.image_path)).toEqual(imagePaths);
     expect(reopened.readAsset(s.run.id, p.id).bytes.toString("base64")).toBe(jpegBase64);
     expect(s.counts()).toEqual({ scripts: 1, images: 2 });
+  });
+  it("rejects a destroy continuation that leaves the device intact, retaining the billable attempt", async () => {
+    const s = setup(); const saved = await s.engine.decide(s.run.id, { operation_id: operation(), choice_id: "destroy", instruction: "Destroy it with a hammer." });
+    expect(saved.nodes[0].status).toBe("script_failed"); expect(saved.summary.script_calls).toBe(1);
+    expect(saved.summary.estimated_micro_usd).toBe(912); expect(saved.panels).toHaveLength(0); expect(s.counts().images).toBe(0);
+  });
+  it("persists hammer destruction without an origin reveal, charges once and deduplicates the operation", async () => {
+    const s = setup(); s.provider.script = async () => { const chapter = hammerChapterFixture(); chapter.event.source_clue = null; return { chapter, metrics: measuredMetrics }; };
+    const input = { operation_id: operation(), choice_id: "destroy", instruction: "Destroy it with a hammer." };
+    let saved = await s.engine.decide(s.run.id, input);
+    expect(saved.nodes[0].status).toBe("script_ready"); expect(saved.panels).toHaveLength(2);
+    expect(saved.run.state.objects[0].condition).toBe("destroyed");
+    expect(saved.summary.script_calls).toBe(1); expect(saved.summary.estimated_micro_usd).toBe(912);
+    await s.engine.decide(s.run.id, input); saved = await s.illustrate();
+    expect(saved.summary.script_calls).toBe(1); expect(saved.summary.image_calls).toBe(2);
+    expect(saved.panels.every(p => p.status === "complete")).toBe(true);
   });
   it("continues from two saved causal facts and appearance, ends in two decisions and never mixes runs", async () => {
     const s = setup(); await s.decide(); await s.illustrate();

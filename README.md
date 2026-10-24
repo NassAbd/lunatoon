@@ -2,7 +2,7 @@
 
 A local, desktop-first experiment in interactive webtoons. Select an action, add an optional twist, and generate one two-panel continuation of **Neon Protocol**. The script appears before two independent illustration requests finish.
 
-The original POC 01/02 reader remains at `/`. POC 03 adds a local persistent, two-decision story via **Start a persistent story** and `/run/<uuid>`. `SPECS.md` remains the long-term reference; there are no accounts, public sharing, story library, creator studio or deployment setup.
+The light reading experience opens at `/`. Click **Begin the story** to create a local persistent, two-decision story at `/run/<uuid>`. The original POC 01/02 reader remains at `/experiment`. `SPECS.md` remains the long-term reference; there are no accounts, public sharing, story library, creator studio or deployment setup.
 
 ## Run locally
 
@@ -43,6 +43,8 @@ Model availability and image access depend on your API project. Image access may
 Source contracts: `src/lib/contracts.ts`. Server-only SDK calls: `src/lib/server/ai.ts`. Client sequencing: `src/lib/pipeline.ts`.
 
 ## Measure a live experiment
+
+The original experiment UI is at `/experiment`. Paid calls require explicit authorization; the free tests below use mocks.
 
 1. Choose **Activate the device** and click **Generate Continuation**.
 2. Verify two sets of dialogue appear on placeholders before the illustrations. Each illustration should appear when its request finishes.
@@ -93,7 +95,7 @@ npm start
 
 ## Original POC 01/02 persistence and experiment limits
 
-In the original reader at `/`, generated JPEGs are returned as data URLs and kept only in the current browser page's memory. Reloading loses the run. There are no shareable image URLs, external image storage, saved sessions, or database. The initial panel is a fixed repository SVG, labeled as such; it is not a generated result or benchmark. Independent image calls use a shared text character sheet and, in explicitly selected approach B, an authored reference image. Visual consistency remains a quality question to evaluate from actual outputs. Diagnostics show token usage when returned. The UI does not maintain pricing for arbitrary configurable models; any one-off cost estimate belongs in the dated experiment report and requires verified rates and modality usage.
+In the original reader at `/experiment`, generated JPEGs are returned as data URLs and kept only in the current browser page's memory. Reloading loses the run. There are no shareable image URLs, external image storage, saved sessions, or database. The initial panel is a fixed repository SVG, labeled as such; it is not a generated result or benchmark. Independent image calls use a shared text character sheet and, in explicitly selected approach B, an authored reference image. Visual consistency remains a quality question to evaluate from actual outputs. Diagnostics show token usage when returned. The UI does not maintain pricing for arbitrary configurable models; any one-off cost estimate belongs in the dated experiment report and requires verified rates and modality usage.
 
 ## POC 02: visual continuity comparison
 
@@ -125,7 +127,7 @@ Rebuild the original static reference after deliberately editing its source with
 
 ## POC 03: persistent story engine
 
-`feat/persistent-story-engine` starts from synchronized POC 02 commit `0ac736f`. Choose A/text or B/reference in the original reader, then click **Start a persistent story**. Creation makes no AI calls. The selected mode and server model/limit settings are captured for that run.
+`feat/persistent-story-engine` starts from synchronized POC 02 commit `0ac736f`. Click **Begin the story** on the home page. Optional A/text or B/reference settings are under collapsed **Developer details**. Creation makes no AI calls. The selected mode and server model/limit settings are captured for that run.
 
 1. Bookmark `/run/<uuid>`, choose **Investigate its origin**, optionally add the cyborg-cat twist, and generate. The validated script/state is saved before two concurrent independent image requests start.
 2. Reload the same URL or restart the app. Saved dialogue, local images and immutable original references are reused with **zero generation calls**. Unstarted reserved work requires an explicit resume action; loading a page never submits paid work.
@@ -164,3 +166,11 @@ No POC 03 paid generation was executed in the recorded checks. Synthetic token u
 - [GPT-4.1 Mini: Responses and Structured Outputs support](https://developers.openai.com/api/docs/models/gpt-4.1-mini)
 - [Image generation API: parameters and limits](https://developers.openai.com/api/docs/guides/image-generation)
 - [GPT Image 2.5 Flare](https://developers.openai.com/api/docs/models/gpt-image-2.5-flare)
+
+## POC 03.1: narrative reliability and reading UX
+
+The persistent reader uses a warm off-white surface, a central comic column and choices after the relevant panels. Click **Continue the story** after selecting an option; the optional instruction invites a creative twist. Dialogue still appears before two independently completing images. Retry/loading states use plain English. Cost accounting, run memory, models, A/B replay and diagnostic downloads remain available under **Developer details**, closed by default. The original dark experiment and its opted-in live harness now use `/experiment`.
+
+The hammer/destruction failure was caused by a mandatory origin-reveal rule and exact source-name substring matching, unrelated to continuity. Source clues are now required-but-nullable in strict Structured Outputs; they are creative guidance. Identity, object ownership, destroyed-prop continuity, fact IDs, chapter order and ending constraints remain hard checks. Choosing destruction must record the device as destroyed. No database reset or automatic paid retry occurs; previously failed runs retain their usage history and need an explicit retry within their existing limits.
+
+See [POC 03.1 results](POC_03_1_RESULTS.md) for regression evidence, limitations and desktop screenshots. No paid tests were run for this corrective iteration.

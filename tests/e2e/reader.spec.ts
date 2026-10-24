@@ -20,7 +20,7 @@ test("shows script before images; the second panel can arrive first", async ({ p
     await (panel.panel_id === "panel_1" ? firstGate : secondGate);
     await route.fulfill({ json: { panel_id: panel.panel_id, image_url: `data:image/jpeg;base64,${jpeg}`, metrics: metricsFixture } });
   });
-  await page.goto("/");
+  await page.goto("/experiment");
   await page.getByRole("radio", { name: /Investigate its origin/ }).check();
   await page.getByLabel("MAKE IT YOURS").fill("A cyborg cat appears.");
   await page.getByRole("button", { name: "Generate Continuation" }).click();
@@ -48,7 +48,7 @@ test("keeps a successful illustration and reports a sibling failure", async ({ p
       ? route.fulfill({ status: 429, json: { error: { code: "rate_limit_or_quota", message: "OpenAI rate limit reached.", request_id: "req_error" }, duration_ms: 120 } })
       : route.fulfill({ json: { panel_id: panel.panel_id, image_url: `data:image/jpeg;base64,${jpeg}`, metrics: metricsFixture } });
   });
-  await page.goto("/");
+  await page.goto("/experiment");
   await page.getByRole("button", { name: "Generate Continuation" }).click();
   await expect(page.getByRole("article", { name: "Continuation panel 2" }).locator("img")).toBeVisible();
   await expect(page.getByText("panel_1 · rate_limit_or_quota", { exact: false })).toBeVisible();
@@ -58,7 +58,7 @@ test("keeps a successful illustration and reports a sibling failure", async ({ p
 
 test("surfaces a missing key without inventing a continuation", async ({ page }) => {
   await page.route("**/api/story", (route) => route.fulfill({ status: 503, json: { error: { code: "missing_api_key", message: "Add OPENAI_API_KEY to .env.local and restart the server.", request_id: null }, duration_ms: 1 } }));
-  await page.goto("/");
+  await page.goto("/experiment");
   await page.getByRole("button", { name: "Generate Continuation" }).click();
   await expect(page.getByText("Narrative · missing_api_key", { exact: false })).toBeVisible();
   await expect(page.getByRole("article", { name: /Continuation panel/ })).toHaveCount(0);
@@ -66,7 +66,7 @@ test("surfaces a missing key without inventing a continuation", async ({ page })
 });
 
 test("desktop and narrow screens have no horizontal overflow", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/experiment");
   for (const width of [1440, 1024, 390]) {
     await page.setViewportSize({ width, height: 1100 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `No horizontal overflow at ${width}px`).toBe(true);
@@ -90,7 +90,7 @@ test("A/B replay preserves the exact script, avoids a second narrative call, and
     images.push(data);
     return route.fulfill({ json: { panel_id: data.panel.panel_id, image_url: `data:image/jpeg;base64,${jpeg}`, metrics: { ...metricsFixture, approach: data.approach, quality: "low" } } });
   });
-  await page.goto("/");
+  await page.goto("/experiment");
   await page.getByLabel("VISUAL CONTINUITY EXPERIMENT").selectOption("text");
   await page.getByRole("button", { name: "Generate Continuation", exact: true }).click();
   await expect(page.getByText("YOUR CHOICE BECAME A STORY.", { exact: true })).toBeVisible();
@@ -115,7 +115,7 @@ test("dialogue-first dispatch still proceeds when requestAnimationFrame is suspe
     const panel = route.request().postDataJSON().panel as { panel_id: string };
     return route.fulfill({ json: { panel_id: panel.panel_id, image_url: `data:image/jpeg;base64,${jpeg}`, metrics: metricsFixture } });
   });
-  await page.goto("/");
+  await page.goto("/experiment");
   await page.getByRole("button", { name: "Generate Continuation", exact: true }).click();
   await expect(page.getByText("YOUR CHOICE BECAME A STORY.", { exact: true })).toBeVisible();
   expect(images).toBe(2);
@@ -126,7 +126,7 @@ test("two bubbles in the same band are separated and remain readable", async ({ 
   response.script.panels[0].dialogues.push({ ...response.script.panels[0].dialogues[0], id: "other", position: "top-right", text: "That signal belongs to the station." });
   await page.route("**/api/story", (route) => route.fulfill({ json: response }));
   await page.route("**/api/image", (route) => route.fulfill({ status: 429, json: { error: { code: "test_limit", message: "Mocked image failure.", request_id: null }, duration_ms: 1 } }));
-  await page.goto("/");
+  await page.goto("/experiment");
   await page.getByRole("button", { name: "Generate Continuation", exact: true }).click();
   const bubbles = page.locator(".continuation .generated-panel").first().locator(".speech-bubble");
   await expect(bubbles).toHaveCount(2);

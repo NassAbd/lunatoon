@@ -28,7 +28,7 @@ const UpdatesSchema = z.object({
 export const DecisionSchema = z.object({ question: z.string().max(200), options: z.array(z.object({ id: Key, label: z.string().min(1).max(100), uses_fact_ids: z.array(Key).max(4) }).strict()).max(3) }).strict();
 export const ChapterSchema = z.object({
   panels: z.array(ScriptPanelSchema).length(2),
-  event: z.object({ action: Text, consequence: Text, source_clue: z.object({ source: z.string().min(3).max(100), evidence: Text }).strict() }).strict(),
+  event: z.object({ action: Text, consequence: Text, source_clue: z.object({ source: z.string().min(3).max(100), evidence: Text }).strict().nullable() }).strict(),
   story_state_updates: UpdatesSchema,
   next_decision: DecisionSchema,
   is_ending: z.boolean(),

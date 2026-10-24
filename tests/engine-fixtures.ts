@@ -22,3 +22,19 @@ export function chapterFixture(context?: NarrativeContext): Chapter {
     is_ending: ending,
   };
 }
+
+// Reproduces the hammer choice without forcing a maker/origin revelation.
+export function hammerChapterFixture(): Chapter {
+  const chapter = chapterFixture();
+  chapter.event = { action: "Kael smashes the device with a maintenance hammer.", consequence: "Its cyan core goes dark and the cameras turn away.", source_clue: { source: "Transit maintenance hammer", evidence: "A steel hammer lies beside the shattered housing." } };
+  chapter.panels.forEach((panel, index) => {
+    panel.visual_description = index === 0 ? "Wide shot: Kael drives a steel hammer into the black device on the platform." : "Close-up: shattered cyan core beneath Kael's yellow cuff; cameras turn away.";
+    panel.image_prompt = panel.visual_description;
+    panel.dialogues[0].text = index === 0 ? "You don't get to follow me." : "The cameras stopped. Now I choose.";
+  });
+  chapter.story_state_updates.facts_added = [{ id: "device_destroyed", text: "Kael smashed the device with a hammer; its core is destroyed." }, { id: "tracking_stopped", text: "The cameras turned away when the device's core went dark." }];
+  chapter.story_state_updates.appearance_changes = [{ character_id: "kael", injuries_added: [], clothing_condition: null, objects_added: [], objects_removed: ["device"] }];
+  chapter.story_state_updates.object_updates = [{ id: "device", name: "Palm-sized black square device with cyan core", condition: "destroyed", holder: null }];
+  chapter.next_decision = { question: "With the core shattered and the cameras blind, what does Kael do?", options: [{ id: "leave_station", label: "Leave the broken core and escape the blind cameras", uses_fact_ids: ["device_destroyed", "tracking_stopped"] }, { id: "inspect_fragments", label: "Examine the fragments while the cameras are blind", uses_fact_ids: ["device_destroyed", "tracking_stopped"] }] };
+  return chapter;
+}

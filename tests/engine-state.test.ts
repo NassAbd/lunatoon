@@ -35,3 +35,40 @@ it("rejects contradictory object holder and carried-object records", () => {
   const proposed = chapterFixture(); proposed.story_state_updates.object_updates = [{ id: "device", name: initialState().objects[0].name, condition: "missing", holder: null }];
   expect(() => applyChapter(initialState(), proposed, 1, 2)).toThrow(/holder/);
 });
+
+it("accepts Destroy the device / Destroy it with a hammer without a fact containing the exact source phrase", async () => {
+  const { hammerChapterFixture } = await import("./engine-fixtures");
+  const chapter = hammerChapterFixture();
+  const after = applyChapter(initialState(), chapter, 1, 2);
+  expect(after.objects[0]).toMatchObject({ condition: "destroyed", holder: null });
+  expect(after.characters[0].carried_objects).not.toContain("device");
+  expect(after.facts.map(f => f.id)).toContain("tracking_stopped");
+});
+
+it("allows no origin revelation but still requires strict chapter JSON and preserves old clue records", async () => {
+  const { hammerChapterFixture } = await import("./engine-fixtures");
+  const { ChapterSchema } = await import("../src/lib/story-engine/contracts");
+  const chapter = hammerChapterFixture(); chapter.event.source_clue = null;
+  expect(applyChapter(initialState(), chapter, 1, 2).objects[0].condition).toBe("destroyed");
+  expect(ChapterSchema.safeParse(chapterFixture()).success).toBe(true);
+  const malformed = { ...chapter, event: { action: chapter.event.action, consequence: chapter.event.consequence } };
+  expect(ChapterSchema.safeParse(malformed).success).toBe(false);
+});
+
+it("does not allow destroyed props to become restorable through a missing state or skip chronology", async () => {
+  const { hammerChapterFixture } = await import("./engine-fixtures");
+  const before = applyChapter(initialState(), hammerChapterFixture(), 1, 2);
+  const chapter = chapterFixture(); chapter.story_state_updates.object_updates = [{ ...before.objects[0], condition: "missing" }];
+  expect(() => applyChapter(before, chapter, 1, 2)).toThrow(/destroyed/);
+  expect(() => applyChapter(initialState(), chapterFixture(), 0, 2)).toThrow(/chronology/);
+});
+
+it("sends a strict required-but-nullable source clue in the official SDK schema", async () => {
+  const { zodTextFormat } = await import("openai/helpers/zod");
+  const { ChapterSchema } = await import("../src/lib/story-engine/contracts");
+  const format = zodTextFormat(ChapterSchema, "neon_reliability");
+  const schema = format.schema as { additionalProperties: boolean; properties: { event: { required: string[]; properties: { source_clue: unknown } } } };
+  expect(format.strict).toBe(true); expect(schema.additionalProperties).toBe(false);
+  expect(schema.properties.event.required).toContain("source_clue");
+  expect(JSON.stringify(schema.properties.event.properties.source_clue)).toContain('"type":"null"');
+});

@@ -155,6 +155,7 @@ export class StoryStore {
       if (!this.owns(claim)) { this.reconcileLate(claim.id, metrics); return false; }
       const node = this.node(claim.node_id); const run = this.run(claim.run_id);
       const after = applyChapter(node.before, chapter, node.step, run.limits.max_steps);
+      if (node.step === 1 && node.choice_id === "destroy" && after.objects.find(object => object.id === "device")?.condition !== "destroyed") throw new EngineError("invalid_story_state", "Destroying the device must record its destroyed condition before the story can continue.", 422);
       node.after = after; node.chapter = chapter; node.status = "script_ready"; node.metrics = metrics; node.script_ready_at = this.now(); this.saveNode(node);
       run.state = after; run.step = node.step; run.status = chapter.is_ending ? "ended" : "active"; run.updated_at = this.now(); this.saveRun(run);
       for (const script of chapter.panels) {
