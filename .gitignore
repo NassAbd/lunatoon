@@ -1,0 +1,58 @@
+# Environment files and local credentials
+.env*
+*.env
+!.env.example
+.direnv/
+*.pem
+*.key
+*.p12
+*.pfx
+.aws/
+.ssh/
+.netrc
+.npmrc
+
+# Dependencies
+node_modules/
+.npm-cache/
+.pnpm-store/
+
+# Build outputs, generated types, and caches
+.next/
+out/
+dist/
+build/
+coverage/
+.nyc_output/
+.turbo/
+.cache/
+*.tsbuildinfo
+next-env.d.ts
+.eslintcache
+.stylelintcache
+
+# Local test artifacts
+playwright-report/
+test-results/
+blob-report/
+
+# Local tools and hosting state
+.vercel/
+.netlify/
+.codex/
+.agents/
+.idea/
+.vscode/
+
+# Logs, operating-system files, and temporary files
+logs/
+*.log
+*.pid
+*.pid.lock
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
