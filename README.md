@@ -200,3 +200,9 @@ One partial adds a documented 100 output-token allowance ($0.003 at the verified
 Expanded diagnostics distinguish narrative response/validation, text-ready time, image dispatch, first preview receipt/display, final transfer, decode after load, visual completion (including fade) and total request flow. Measurements belong to their original operations; later replay/retry does not rewrite them. Reloading saved content creates no new generation benchmark.
 
 See [POC 05 results](POC_05_RESULTS.md) for before/after scroll measurements, tests and desktop screenshots. **POC 05 uses mocked provider tests only; no paid calls or live streaming test were run.** Streaming account access, preview latency and a provider speedup remain unverified. POC 04.1's successful live final-image run remains separate historical evidence.
+
+## POC 05.1: causal choices and live streaming check
+
+Next choices now need one genuine consequence from the current chapter; the second chapter uses saved consequences without an arbitrary two-fact quota. Prompt, strict request schema and validation agree. Unknown references, identity, ownership, destroyed objects and chronological constraints remain protected, with separate diagnostic rules for missing or unknown causal references.
+
+One fresh live **Activate the device** story completed both decisions and all four reference illustrations, then survived reload and server restart without new calls. All four image streams returned finals **without partial previews**; live preview display remains unverified. The experiment used two narrative/four image calls, estimated at $0.089825 from returned usage. All three opening choices have mocked two-decision regression coverage; this is not a statistical reliability claim. See [POC 05.1 results](POC_05_1_RESULTS.md) for timings, screenshots, continuity limitations and 96 unit/SDK plus 17 browser test results.

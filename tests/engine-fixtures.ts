@@ -38,3 +38,44 @@ export function hammerChapterFixture(): Chapter {
   chapter.next_decision = { question: "With the core shattered and the cameras blind, what does Kael do?", options: [{ id: "leave_station", label: "Leave the broken core and escape the blind cameras", uses_fact_ids: ["device_destroyed", "tracking_stopped"] }, { id: "inspect_fragments", label: "Examine the fragments while the cameras are blind", uses_fact_ids: ["device_destroyed", "tracking_stopped"] }] };
   return chapter;
 }
+
+// Synthetic choice-specific responses; these are not recovered live payloads.
+export function choiceChapterFixture(choice: "activate" | "destroy" | "investigate", ending = false): Chapter {
+  const chapter = choice === "destroy" ? hammerChapterFixture() : chapterFixture();
+  if (choice === "activate") {
+    chapter.event = { action: "Kael activates the device.", consequence: "The device opens the station's locked escape gate.", source_clue: null };
+    chapter.story_state_updates.facts_added = [{ id: "escape_gate_opened", text: "Activating the device opened the station's escape gate." }];
+    chapter.story_state_updates.appearance_changes = [];
+    chapter.story_state_updates.object_updates = [{ id: "device", name: "Palm-sized black square device with cyan core", condition: "active", holder: "kael" }];
+    chapter.next_decision = { question: "The escape gate is open. What does Kael do?", options: [{ id: "take_gate", label: "Escape through the open gate", uses_fact_ids: ["escape_gate_opened"] }, { id: "close_gate", label: "Close the gate to block pursuit", uses_fact_ids: ["escape_gate_opened"] }] };
+    chapter.panels[0].visual_description = "Wide shot: Kael activates the black device beside the locked station gate.";
+    chapter.panels[1].visual_description = "Close-up: Kael sees the gate unlock, still holding the active device.";
+    chapter.panels[0].dialogues[0].text = "Let's see what you do.";
+    chapter.panels[1].dialogues[0].text = "An exit. Now I control the way through.";
+  } else if (choice === "investigate") {
+    chapter.event = { action: "Kael checks the maker's seal as a cyborg cat arrives.", consequence: "The cat reads the seal and unlocks a safe maintenance route.", source_clue: { source: "Aster Transit Lab", evidence: "Its maintenance seal matches the cat's reader." } };
+    chapter.story_state_updates.facts_added = [{ id: "maintenance_route_unlocked", text: "The cyborg cat used the device's maker seal to unlock a safe maintenance route." }];
+    chapter.story_state_updates.characters_added = [{ id: "relay_cat", name: "Relay", visual_anchor: "Small graphite cyborg cat with white ear tips and a cyan collar", injuries: [], clothing_condition: "Bare metal body and cyan collar", carried_objects: [] }];
+    chapter.next_decision = { question: "The cyborg cat opened a safe route. What does Kael do?", options: [{ id: "follow_route", label: "Follow the cat through the unlocked route", uses_fact_ids: ["maintenance_route_unlocked"] }, { id: "secure_route", label: "Secure the open route for others", uses_fact_ids: ["maintenance_route_unlocked"] }] };
+    chapter.panels[0].visual_description = "Wide shot: Kael inspects the maker seal while a cyborg cat reads it.";
+    chapter.panels[1].visual_description = "Close-up: the cat unlocks a maintenance hatch beside Kael's torn cuff.";
+    chapter.panels[0].dialogues[0].text = "You recognize this mark?";
+    chapter.panels[1].dialogues[0].text = "A safe route. Lead the way.";
+  } else {
+    chapter.next_decision.options.forEach(option => { option.uses_fact_ids = ["tracking_stopped"]; });
+  }
+  chapter.panels.forEach(panel => { panel.image_prompt = panel.visual_description; });
+  if (ending) {
+    const anchor = chapter.next_decision.options[0].uses_fact_ids[0];
+    const route = choice === "activate" ? "open escape gate" : choice === "destroy" ? "station while its cameras remain blind" : "maintenance route alongside the cyborg cat";
+    chapter.event = { action: `Kael leaves through the ${route}.`, consequence: "He reaches safety beyond the station's surveillance.", source_clue: null };
+    chapter.story_state_updates = { facts_added: [{ id: "kael_reached_safety", text: `Kael escaped through the ${route}.` }], used_fact_ids: [anchor], characters_added: [], appearance_changes: [], object_updates: [], relationships_added: [], unresolved_threads: [] };
+    chapter.next_decision = { question: "", options: [] }; chapter.is_ending = true;
+    chapter.panels.forEach((panel, index) => {
+      panel.visual_description = index === 0 ? `Wide shot: Kael leaves through the ${route}.` : "Close-up: Kael relaxes in safety beyond the station.";
+      panel.image_prompt = panel.visual_description;
+      panel.dialogues[0].text = index === 0 ? "This way is clear." : "I'm safe. This night is over.";
+    });
+  }
+  return chapter;
+}

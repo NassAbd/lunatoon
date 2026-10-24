@@ -8,7 +8,7 @@ import { StoryEngine } from "../src/lib/story-engine/service";
 import type { StoryProvider } from "../src/lib/story-engine/provider";
 import type { NarrativeContext } from "../src/lib/story-engine/contracts";
 import { reservation, usageCost, PRICES } from "../src/lib/story-engine/cost";
-import { chapterFixture, hammerChapterFixture, operation, measuredMetrics, imageMetrics, jpegBase64 } from "./engine-fixtures";
+import { chapterFixture, choiceChapterFixture, hammerChapterFixture, operation, measuredMetrics, imageMetrics, jpegBase64 } from "./engine-fixtures";
 
 const models = { story: "gpt-4.1-mini", image: "gpt-image-2.5-flare", quality: "low" as const };
 const limits = { max_steps: 2, max_image_calls: 6, max_script_calls: 3, budget_usd: .3 };
@@ -236,4 +236,62 @@ it("rejects a replayed opening at the second decision and recovers only through 
   expect(saved.panels.slice(0, 2)).toEqual(first.panels);
   expect(saved.summary).toMatchObject({ script_calls: 3, image_calls: 4, unknown_cost_attempts: 0 });
   expect(narrativeCalls).toBe(3); expect(s.counts().images).toBe(4);
+});
+
+it.each([
+  { choice: "activate", instruction: "", condition: "active" },
+  { choice: "destroy", instruction: "Destroy it with a hammer.", condition: "destroyed" },
+  { choice: "investigate", instruction: "A mysterious cyborg cat suddenly appears.", condition: "intact" },
+] as const)("persists the distinct $choice path and completes a second decision from its saved consequence", async ({ choice, instruction, condition }) => {
+  const s = setup(); const contexts: NarrativeContext[] = []; let narrativeCalls = 0;
+  s.provider.script = async context => {
+    narrativeCalls++; contexts.push(context);
+    return { chapter: choiceChapterFixture(choice, context.step === 2), metrics: measuredMetrics };
+  };
+  const firstInput = { operation_id: operation(), choice_id: choice, instruction };
+  let saved = await s.engine.decide(s.run.id, firstInput);
+  expect(saved.nodes[0].status).toBe("script_ready");
+  expect(saved.run.state.objects[0].condition).toBe(condition);
+  expect(saved.summary).toMatchObject({ script_calls: 1, image_calls: 0 });
+  expect(contexts[0].instruction).toBe(instruction);
+  if (choice === "investigate") expect(saved.run.state.characters.map(character => character.id)).toContain("relay_cat");
+  const first = await s.illustrate();
+  await s.engine.decide(s.run.id, firstInput);
+  expect(narrativeCalls).toBe(1); expect(s.counts().images).toBe(2);
+  const option = first.nodes[0].chapter!.next_decision.options[0];
+  saved = await s.engine.decide(s.run.id, { operation_id: operation(), choice_id: option.id, instruction: "" });
+  expect(contexts[1].state).toEqual(first.run.state);
+  expect(contexts[1].choice).toBe(option.label);
+  expect(contexts[1].recent_panels).toHaveLength(2);
+  expect(saved.run.state.objects).toEqual(first.run.state.objects);
+  expect(saved.run.state.characters).toEqual(first.run.state.characters);
+  expect(saved.run.status).toBe("ended"); expect(saved.run.step).toBe(2);
+  expect(saved.nodes[1].chapter).toMatchObject({ is_ending: true, next_decision: { options: [] }, story_state_updates: { unresolved_threads: [] } });
+  saved = await s.illustrate();
+  expect(saved.panels.map(panel => panel.status)).toEqual(["complete", "complete", "complete", "complete"]);
+  expect(saved.panels.slice(0, 2)).toEqual(first.panels);
+  s.engine.snapshot(s.run.id);
+  expect(narrativeCalls).toBe(2); expect(s.counts().images).toBe(4);
+});
+
+it("retains safe reference-rule diagnostics and failure costs until an explicit corrected narrative retry", async () => {
+  const s = setup(); let narrativeCalls = 0; let corrected = false;
+  s.provider.script = async () => {
+    narrativeCalls++;
+    const chapter = choiceChapterFixture("activate");
+    if (!corrected) chapter.next_decision.options[0].uses_fact_ids = ["private_unknown_id"];
+    return { chapter, metrics: { ...measuredMetrics, request_id: "req_mock_unknown_reference" } };
+  };
+  const input = { operation_id: operation(), choice_id: "activate", instruction: "" };
+  let saved = await s.engine.decide(s.run.id, input);
+  expect(saved.nodes[0].error).toMatchObject({ code: "invalid_story_state", request_id: "req_mock_unknown_reference", diagnostics: { phase: "state_validation", issues: [{ path: "next_decision.options.0.uses_fact_ids", rule: "unknown_fact_reference" }] } });
+  expect(JSON.stringify(saved.nodes[0].error)).not.toContain("private_unknown_id");
+  expect(saved.summary).toMatchObject({ script_calls: 1, image_calls: 0, image_slots_reserved: 0, estimated_micro_usd: 912, unknown_cost_attempts: 0 });
+  expect(saved.panels).toEqual([]); expect(saved.run.step).toBe(0);
+  await s.engine.decide(s.run.id, input); s.engine.snapshot(s.run.id);
+  expect(narrativeCalls).toBe(1);
+  corrected = true;
+  saved = await s.engine.script(s.run.id, saved.nodes[0].id, { operation_id: operation(), retry: true });
+  expect(saved.nodes[0].status).toBe("script_ready"); expect(narrativeCalls).toBe(2);
+  expect(saved.summary).toMatchObject({ script_calls: 2, image_calls: 0, estimated_micro_usd: 1824 });
 });

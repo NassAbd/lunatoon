@@ -27,7 +27,7 @@ export const CharacterSchema = z.object({ id: Key, name: Text, visual_anchor: z.
 export const ObjectSchema = z.object({ id: Key, name: Text, condition: z.enum(["intact", "active", "damaged", "destroyed", "missing"]), holder: Key.nullable() }).strict();
 export const StateSchema = z.object({ facts: z.array(FactSchema).max(20), characters: z.array(CharacterSchema).min(1).max(6), objects: z.array(ObjectSchema).min(1).max(8), relationships: z.array(Text).max(12), unresolved_threads: z.array(Text).max(8) }).strict();
 const UpdatesSchema = z.object({
-  facts_added: z.array(FactSchema).min(2).max(4),
+  facts_added: z.array(FactSchema).min(1).max(4),
   used_fact_ids: z.array(Key).max(6),
   characters_added: z.array(CharacterSchema).max(2),
   appearance_changes: z.array(z.object({ character_id: Key, injuries_added: z.array(Text).max(3), clothing_condition: Text.nullable(), objects_added: z.array(Key).max(3), objects_removed: z.array(Key).max(3) }).strict()).max(4),
@@ -54,10 +54,10 @@ export function chapterRequestSchema(step: number, maxSteps: number, continuityF
     event: ChapterSchema.shape.event,
     story_state_updates: UpdatesSchema.extend({
       unresolved_threads: ending ? UpdatesSchema.shape.unresolved_threads.max(0) : UpdatesSchema.shape.unresolved_threads,
-      used_fact_ids: step > 1 ? z.array(z.enum(continuityFactIds)).min(2).max(6) : UpdatesSchema.shape.used_fact_ids,
+      used_fact_ids: step > 1 ? z.array(z.enum(continuityFactIds)).min(1).max(6) : UpdatesSchema.shape.used_fact_ids,
     }),
     panels: ChapterSchema.shape.panels,
-    next_decision: DecisionSchema.extend({ options: ending ? DecisionSchema.shape.options.max(0) : DecisionSchema.shape.options.min(2) }),
+    next_decision: DecisionSchema.extend({ options: ending ? DecisionSchema.shape.options.max(0) : z.array(DecisionSchema.shape.options.element.extend({ uses_fact_ids: z.array(Key).min(1).max(4) })).min(2).max(3) }),
   }).strict();
 }
 export const AssetSchema = z.object({ id: z.string(), path: z.string(), sha256: z.string(), mime: z.string(), purpose: z.string() });

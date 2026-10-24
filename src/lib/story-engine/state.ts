@@ -4,8 +4,8 @@ import { ChapterSchema, StateSchema, type Chapter, type StoryState } from "./con
 import { withFailurePhase } from "./failure-diagnostics";
 import { EngineError } from "./errors";
 
-function requireState(valid: boolean, message: string): asserts valid {
-  if (!valid) throw new EngineError("invalid_story_state", message, 422);
+function requireState(valid: boolean, message: string, issue?: { path: string; rule: string }): asserts valid {
+  if (!valid) throw new EngineError("invalid_story_state", message, 422, issue ? { phase: "state_validation", kind: "continuity", error_type: "EngineError", issues: [issue] } : undefined);
 }
 export function initialState(): StoryState {
   return { facts: [{ id: "device_knows_kael", text: "The device knows Kael's name." }, { id: "city_ai_silent", text: "The city's AI is silent while cameras track Kael." }], characters: [{ id: "kael", name: "Kael", visual_anchor: CHARACTER_IDENTITY, injuries: [], clothing_condition: "Mustard-yellow trench coat wet from rain", carried_objects: ["device"] }], objects: [{ id: "device", name: "Palm-sized black square device with cyan core", condition: "intact", holder: "kael" }], relationships: ["Kael distrusts the city AI."], unresolved_threads: ["Who sent the device and why does it know Kael?"] };
@@ -24,10 +24,10 @@ export function applyChapter(before: StoryState, proposed: Chapter, step: number
   requireState(new Set(updates.facts_added.map((fact) => fact.id)).size === updates.facts_added.length, "New fact IDs must be unique.");
   for (const fact of updates.facts_added) requireState(!facts.has(fact.id), "A new fact must not replace or contradict an existing fact ID.");
   const used = new Set(updates.used_fact_ids);
-  for (const id of used) requireState(facts.has(id), "The chapter used a fact not present in this run's saved context.");
+  for (const id of used) requireState(facts.has(id), "The chapter used a fact not present in this run's saved context.", { path: "story_state_updates.used_fact_ids", rule: "unknown_fact_reference" });
   if (step > 1) {
     const openingFacts = new Set(initialState().facts.map(fact => fact.id));
-    requireState([...used].filter(id => !openingFacts.has(id)).length >= 2, "The second continuation must use at least two facts established by the first decision.");
+    requireState([...used].some(id => !openingFacts.has(id)), "The second continuation must use a consequence established by the first decision.", { path: "story_state_updates.used_fact_ids", rule: "missing_saved_consequence" });
   }
   const after = structuredClone(before);
   after.facts.push(...updates.facts_added);
@@ -38,7 +38,11 @@ export function applyChapter(before: StoryState, proposed: Chapter, step: number
     requireState(new Set(chapter.next_decision.options.map((option) => option.id)).size === chapter.next_decision.options.length, "Next option IDs must be unique.");
     // A choice can connect the new consequence to an earlier motive or clue.
     // References must exist in this run and include a consequence of this chapter.
-    for (const option of chapter.next_decision.options) requireState(new Set(option.uses_fact_ids).size >= 2 && option.uses_fact_ids.some(id => addedIds.has(id)) && option.uses_fact_ids.every((id) => after.facts.some((fact) => fact.id === id)), "Each next decision must use two established facts, including a new consequence.");
+    for (const [index, option] of chapter.next_decision.options.entries()) {
+      const path = `next_decision.options.${index}.uses_fact_ids`;
+      requireState(option.uses_fact_ids.every(id => after.facts.some(fact => fact.id === id)), "A next decision references facts not established in this run.", { path, rule: "unknown_fact_reference" });
+      requireState(option.uses_fact_ids.some(id => addedIds.has(id)), "Each next decision must reference a new consequence of this chapter.", { path, rule: "missing_new_fact_reference" });
+    }
   }
   for (const character of updates.characters_added) {
     requireState(!after.characters.some((old) => old.id === character.id), "Character identity anchors are immutable once established.");
