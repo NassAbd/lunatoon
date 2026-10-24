@@ -36,7 +36,9 @@ export function applyChapter(before: StoryState, proposed: Chapter, step: number
   else {
     requireState(chapter.next_decision.options.length >= 2 && chapter.next_decision.question.trim().length >= 8, "Provide two or three meaningful next options.");
     requireState(new Set(chapter.next_decision.options.map((option) => option.id)).size === chapter.next_decision.options.length, "Next option IDs must be unique.");
-    for (const option of chapter.next_decision.options) requireState(new Set(option.uses_fact_ids.filter((id) => addedIds.has(id))).size >= 2 && option.uses_fact_ids.every((id) => after.facts.some((fact) => fact.id === id)), "Each next decision must use two newly established facts.");
+    // A choice can connect the new consequence to an earlier motive or clue.
+    // References must exist in this run and include a consequence of this chapter.
+    for (const option of chapter.next_decision.options) requireState(new Set(option.uses_fact_ids).size >= 2 && option.uses_fact_ids.some(id => addedIds.has(id)) && option.uses_fact_ids.every((id) => after.facts.some((fact) => fact.id === id)), "Each next decision must use two established facts, including a new consequence.");
   }
   for (const character of updates.characters_added) {
     requireState(!after.characters.some((old) => old.id === character.id), "Character identity anchors are immutable once established.");

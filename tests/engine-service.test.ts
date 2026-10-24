@@ -179,3 +179,61 @@ it("uses verified prices only, expires planning prices and separates measured us
   expect(usageCost({ model: models.image, stage: "image", price_version: null }, imageMetrics).total).toBeNull();
   expect(usageCost({ model: models.story, stage: "script", price_version: PRICES.version }, { ...measuredMetrics, usage: { input_tokens: 2, output_tokens: 1, total_tokens: 3, cached_input_tokens: 10 } }).total).toBeNull();
 });
+
+it("rejects a replayed opening at the second decision and recovers only through an explicit valid ending", async () => {
+  const { applyChapter } = await import("../src/lib/story-engine/state");
+  const s = setup(); let narrativeCalls = 0; let corrected = false;
+  s.provider.script = async context => {
+    narrativeCalls++;
+    const chapter = corrected ? chapterFixture(context) : hammerChapterFixture();
+    if (corrected) {
+      chapter.event = { action: "Kael examines the shattered fragments.", consequence: "The inert core confirms he can leave without being tracked.", source_clue: null };
+      chapter.story_state_updates.facts_added = [{ id: "fragments_inert", text: "The shattered fragments are inert and cannot restore the tracking signal." }, { id: "kael_departed_safely", text: "Kael leaves the station while the cameras remain blind." }];
+      chapter.story_state_updates.used_fact_ids = ["device_destroyed", "tracking_stopped"];
+      chapter.panels.forEach((panel, index) => {
+        panel.visual_description = index === 0 ? "Kael examines inert fragments beside his hammer." : "Kael leaves the station beneath inactive cameras.";
+        panel.image_prompt = panel.visual_description;
+        panel.dialogues[0].text = index === 0 ? "The core is gone. It cannot track me now." : "This time, I choose where I go.";
+      });
+    }
+    return { chapter, metrics: { ...measuredMetrics, request_id: corrected ? "req_mock_corrected_ending" : "req_mock_replayed_opening" } };
+  };
+  await s.engine.decide(s.run.id, { operation_id: operation(), choice_id: "destroy", instruction: "Destroy it with a hammer." });
+  const first = await s.illustrate();
+  const secondDecision = { operation_id: operation(), choice_id: "inspect_fragments", instruction: "Check the broken fragments, then leave safely." };
+  let saved = await s.engine.decide(s.run.id, secondDecision);
+  const failedNode = saved.nodes[1];
+  expect(failedNode.status).toBe("script_failed");
+  expect(failedNode.error).toMatchObject({ code: "invalid_story_state", request_id: "req_mock_replayed_opening", diagnostics: { phase: "state_validation", kind: "continuity" } });
+  expect(failedNode.metrics?.usage).toEqual(measuredMetrics.usage);
+  expect(saved.run.state).toEqual(first.run.state);
+  expect(saved.run.step).toBe(1); expect(saved.run.status).toBe("active");
+  expect(saved.panels).toEqual(first.panels);
+  expect(saved.events.filter(event => event.node_id === failedNode.id && event.stage === "image").map(event => event.status)).toEqual(["cancelled", "cancelled"]);
+  expect(saved.summary).toMatchObject({ script_calls: 2, image_calls: 2, image_slots_reserved: 0, unknown_cost_attempts: 0, estimated_micro_usd: first.summary.estimated_micro_usd + 912 });
+  await s.engine.decide(s.run.id, secondDecision);
+  s.engine.snapshot(s.run.id);
+  expect(narrativeCalls).toBe(2); expect(s.counts().images).toBe(2);
+
+  const disguisedReplay = hammerChapterFixture();
+  disguisedReplay.is_ending = true; disguisedReplay.next_decision = { question: "", options: [] };
+  disguisedReplay.story_state_updates.unresolved_threads = [];
+  disguisedReplay.story_state_updates.used_fact_ids = ["device_destroyed", "tracking_stopped"];
+  expect(() => applyChapter(first.run.state, disguisedReplay, 2, 2)).toThrow(/existing fact ID/);
+
+  corrected = true;
+  const retry = { operation_id: operation(), retry: true };
+  await Promise.all([s.engine.script(s.run.id, failedNode.id, retry), s.engine.script(s.run.id, failedNode.id, retry)]);
+  saved = s.engine.snapshot(s.run.id);
+  expect(saved.run.status).toBe("ended"); expect(saved.run.step).toBe(2);
+  expect(saved.run.state.objects).toEqual(first.run.state.objects);
+  expect(saved.panels.slice(0, 2)).toEqual(first.panels);
+  expect(saved.panels.slice(2).map(panel => panel.status)).toEqual(["pending", "pending"]);
+  expect(narrativeCalls).toBe(3); expect(s.counts().images).toBe(2);
+  saved = await s.illustrate();
+  expect(saved.nodes[1].status).toBe("complete"); expect(saved.nodes[1].chapter?.is_ending).toBe(true);
+  expect(saved.panels.map(panel => panel.status)).toEqual(["complete", "complete", "complete", "complete"]);
+  expect(saved.panels.slice(0, 2)).toEqual(first.panels);
+  expect(saved.summary).toMatchObject({ script_calls: 3, image_calls: 4, unknown_cost_attempts: 0 });
+  expect(narrativeCalls).toBe(3); expect(s.counts().images).toBe(4);
+});

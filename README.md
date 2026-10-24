@@ -175,8 +175,14 @@ The hammer/destruction failure was caused by a mandatory origin-reveal rule and 
 
 See [POC 03.1 results](POC_03_1_RESULTS.md) for regression evidence, limitations and desktop screenshots. No paid tests were run for this corrective iteration.
 
-## POC 04 diagnostic checkpoint — P0 gate remains blocked
+## POC 04 diagnostic checkpoint (historical)
 
 `feat/platform-experience` currently adds safe narrative failure diagnostics, not a new platform UI. Failed attempts now retain their local phase, static field/rule codes, error type and available request ID under **Developer details → Request accounting details** and in diagnostic downloads. Raw rejected narrative/error content and credentials are not added to these details. Historical errors without metadata remain readable.
 
-Read [POC 04 findings](POC_04_RESULTS.md) before claiming story completion is fixed: the previous live second-decision exception was discarded, so its precise cause remains unconfirmed. Controlled mocked failures and successful four-panel/restart flows pass; no new paid calls were made. Narrative/state invariants and existing run limits are unchanged. Opening, library, preview-story and branding work are deferred until the actual P0 root cause is identified and its regression passes.
+Read [POC 04 findings](POC_04_RESULTS.md) before claiming story completion is fixed: the previous live second-decision exception was discarded, so its precise cause remains unconfirmed. Controlled mocked failures and successful four-panel/restart flows pass; no new paid calls were made. Narrative/state invariants and existing run limits are unchanged. At that checkpoint, opening, library, preview-story and branding work were deferred. The later live investigation is recorded below.
+
+## POC 04.1: complete live story verified
+
+A fresh real OpenAI run completed both decisions and all four reference illustrations without retries, then survived refresh and an actual server restart with identical saved state/images and zero new generation calls. Stage-specific request schemas now match ending and continuity requirements; next choices can connect a new consequence to an established motive. Existing ownership, identity and destruction invariants remain strict.
+
+See [POC 04.1 results](POC_04_1_RESULTS.md) for reproduced failures, regression coverage, the complete live sequence, measured latency, usage-based cost estimates and remaining visual/semantic limitations. This is one observed working journey, not a general reliability guarantee. The earlier historical `stage_failed` exception remains unknown. Library and platform expansion remain deferred.

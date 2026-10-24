@@ -43,6 +43,23 @@ export const ChapterSchema = z.object({
   next_decision: DecisionSchema,
   is_ending: z.boolean(),
 }).strict();
+// Constrain each paid request to the topology already required by applyChapter.
+// Saved chapters keep the shared schema so older runs need no migration.
+export function chapterRequestSchema(step: number, maxSteps: number, continuityFactIds: string[] = []) {
+  const ending = step === maxSteps;
+  // Structured Outputs follows property order: plan the event and memory first,
+  // then describe panels against that plan. This is guidance, not semantic proof.
+  return z.object({
+    is_ending: z.literal(ending),
+    event: ChapterSchema.shape.event,
+    story_state_updates: UpdatesSchema.extend({
+      unresolved_threads: ending ? UpdatesSchema.shape.unresolved_threads.max(0) : UpdatesSchema.shape.unresolved_threads,
+      used_fact_ids: step > 1 ? z.array(z.enum(continuityFactIds)).min(2).max(6) : UpdatesSchema.shape.used_fact_ids,
+    }),
+    panels: ChapterSchema.shape.panels,
+    next_decision: DecisionSchema.extend({ options: ending ? DecisionSchema.shape.options.max(0) : DecisionSchema.shape.options.min(2) }),
+  }).strict();
+}
 export const AssetSchema = z.object({ id: z.string(), path: z.string(), sha256: z.string(), mime: z.string(), purpose: z.string() });
 export const BibleSchema = z.object({ id: z.string(), title: z.literal("Neon Protocol"), opening: z.string(), character_bible: z.string(), art_direction: z.string(), device_anchor: z.string(), setting_anchor: z.string(), assets: z.array(AssetSchema) });
 export const RunSchema = z.object({ id: Id, operation_id: Id, story_id: z.string(), step: z.number().int(), status: z.enum(["active", "ended"]), state: StateSchema, limits: LimitsSchema, models: ModelsSchema, approach: ImageApproachSchema, created_at: z.number(), updated_at: z.number() });

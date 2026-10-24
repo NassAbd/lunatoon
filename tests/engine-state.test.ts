@@ -72,3 +72,22 @@ it("sends a strict required-but-nullable source clue in the official SDK schema"
   expect(schema.properties.event.required).toContain("source_clue");
   expect(JSON.stringify(schema.properties.event.properties.source_clue)).toContain('"type":"null"');
 });
+
+it("lets a next choice combine a new consequence with opening context while rejecting unknown or disconnected facts", async () => {
+  const { hammerChapterFixture } = await import("./engine-fixtures");
+  const chapter = hammerChapterFixture();
+  chapter.next_decision.options[1].uses_fact_ids = ["tracking_stopped", "city_ai_silent"];
+  expect(applyChapter(initialState(), chapter, 1, 2).objects[0].condition).toBe("destroyed");
+  chapter.next_decision.options[1].uses_fact_ids = ["tracking_stopped", "invented_fact"];
+  expect(() => applyChapter(initialState(), chapter, 1, 2)).toThrow(/facts/);
+  chapter.next_decision.options[1].uses_fact_ids = ["device_knows_kael", "city_ai_silent"];
+  expect(() => applyChapter(initialState(), chapter, 1, 2)).toThrow(/consequence/);
+});
+
+it("still rejects a live-shaped dropped-device update if appearance incorrectly retains possession", async () => {
+  const { hammerChapterFixture } = await import("./engine-fixtures");
+  const chapter = hammerChapterFixture();
+  chapter.next_decision.options[1].uses_fact_ids = ["tracking_stopped", "city_ai_silent"];
+  chapter.story_state_updates.appearance_changes = [];
+  expect(() => applyChapter(initialState(), chapter, 1, 2)).toThrow(/holder/);
+});
