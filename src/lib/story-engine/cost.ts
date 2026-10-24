@@ -10,13 +10,13 @@ export function verifiedPrice(model: string, now = Date.now()): "script" | "imag
   return null;
 }
 // Integer micro-USD. These token allowances are planning estimates, not token or billing caps.
-export function reservation(event: Pick<GenerationEvent, "model" | "stage" | "approach" | "quality">, now = Date.now()): number | null {
+export function reservation(event: Pick<GenerationEvent, "model" | "stage" | "approach" | "quality" | "reference_count">, now = Date.now()): number | null {
   const kind = verifiedPrice(event.model, now);
   if (kind !== event.stage) return null;
   if (kind === "script") return Math.ceil(4000 * 0.4 + 3000 * 1.6);
   const outputAllowance = { low: 1500, medium: 5000, high: 10000 }[event.quality];
   const previewAllowance = event.approach === "reference" && supportsImagePreviews(event.model) ? 100 : 0;
-  return 2000 * 5 + (event.approach === "reference" ? 2000 * 8 : 0) + (outputAllowance + previewAllowance) * 30;
+  return 2000 * 5 + (event.approach === "reference" ? 2000 * 8 * (event.reference_count ?? 1) : 0) + (outputAllowance + previewAllowance) * 30;
 }
 export function usageCost(event: Pick<GenerationEvent, "model" | "stage" | "price_version">, metrics: Metrics | null): { total: number | null; reference: number | null } {
   if (event.price_version !== PRICES.version || !metrics?.usage) return { total: null, reference: null };

@@ -9,13 +9,16 @@ export function isReferenceModelSupported(model: string): boolean {
   return ["gpt-image-2.5-flare", "gpt-image-2.5-flare-2026-09-08", "gpt-image-2.5-sunburst", "gpt-image-2.5-sunburst-2026-09-08"].includes(model);
 }
 
-export function shotDirection(sequence: number): string {
+export function shotDirection(sequence: number, protagonist?: string): string {
+  if (protagonist) return sequence === 1
+    ? "An establishing wide shot: show the main character's clear silhouette, this story's location and the immediate consequence of the chosen action. One readable story beat."
+    : "An expressive close-up or tight action shot: preserve the main character's identity; reveal the reaction or consequence caused by panel 1. Change camera distance, not character design. One new story beat.";
   return sequence === 1
     ? "An establishing wide shot: show Kael's clear full or three-quarter silhouette, the abandoned station geography and the immediate consequence of his chosen action. One readable story beat."
     : "An expressive close-up or tight action shot: Kael's face, amber eye and yellow collar are recognizable; reveal a reaction or clue caused by panel 1. Change camera distance, not character design. One new story beat.";
 }
 
-export function buildIllustrationPrompt(panel: ScriptPanel, memory?: { identity: string; style: string; current: string }): string {
+export function buildIllustrationPrompt(panel: ScriptPanel, memory?: { identity: string; style: string; current: string; protagonist?: string }): string {
   const bubblePositions = [...new Set(layoutDialogue(panel.dialogues).map((bubble) => bubble.position))].join(", ");
-  return `Scene beat: ${panel.visual_description}\nAction and setting: ${panel.image_prompt}\nComposition: ${shotDirection(panel.sequence_index)}\nKeep faces, hands, the device and essential clues away from ${bubblePositions}; reserve a quiet 20% margin in those regions for dialogue added later by the app. No baked-in text.\nThe following canonical visual constraints override conflicting style or identity in the scene:\n${memory?.identity ?? CHARACTER_IDENTITY}\n${memory?.style ?? ART_DIRECTION}${memory ? `\nCurrent saved continuity (injuries, clothing condition and object states override their original condition in the reference): ${memory.current}` : ""}`;
+  return `Scene beat: ${panel.visual_description}\nAction and setting: ${panel.image_prompt}\nComposition: ${shotDirection(panel.sequence_index, memory?.protagonist)}\nKeep faces, hands, ${memory?.protagonist ? "important objects" : "the device"} and essential clues away from ${bubblePositions}; reserve a quiet 20% margin in those regions for dialogue added later by the app. No baked-in text.\nThe following canonical visual constraints override conflicting style or identity in the scene:\n${memory?.identity ?? CHARACTER_IDENTITY}\n${memory?.style ?? ART_DIRECTION}${memory ? `\nCurrent saved continuity (injuries, clothing condition and object states override their original condition in the reference): ${memory.current}` : ""}`;
 }

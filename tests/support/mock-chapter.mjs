@@ -1,5 +1,8 @@
 // Deterministic provider output for integration tests; never calls a paid service.
 export function mockChapter(context) {
+  if (context.bible.template?.protagonist_id === "ada") return cartographerChapter(context);
+  if (context.bible.template?.id === "last-lightkeeper") return lightkeeperChapter(context);
+  if (context.bible.template?.id === "glass-orchard") return orchardChapter(context);
   if (context.choice === "Destroy the device") return hammerChapter(context);
   const ending = context.step === context.max_steps;
   if (ending && context.state.objects.some(object => object.id === "device" && object.condition === "destroyed")) return hammerEnding(context);
@@ -13,6 +16,102 @@ export function mockChapter(context) {
       used_fact_ids: ending ? ["device_source", "cat_access"] : [], characters_added: [], appearance_changes: ending ? [] : [{ character_id: "kael", injuries_added: ["A shallow cut on his right hand"], clothing_condition: "Yellow coat wet and torn at the right cuff", objects_added: [], objects_removed: [] }], object_updates: [], relationships_added: [], unresolved_threads: ending ? [] : ["Why did Aster Transit Lab target Kael?"],
     },
     next_decision: ending ? { question: "", options: [] } : { question: "The lab seal and cat's TL-9 hatch reveal a route. What now?", options: [{ id: "follow_cat", label: "Follow the cat into the Aster Lab maintenance route", uses_fact_ids: ["device_source", "cat_access"] }, { id: "isolate_signal", label: "Use the TL-9 hatch to isolate Aster Lab's signal", uses_fact_ids: ["device_source", "cat_access"] }] }, is_ending: ending,
+  };
+}
+
+export function mockFoundation(input = {}) {
+  return {
+    title: input.title || "The Star Atlas", genre: input.genre || "Celestial Adventure",
+    description: "A cartographer unfolds a silent star chart and chooses a way home before the sky closes.",
+    premise: "In a hilltop observatory, Ada holds an indigo star chart whose ink has faded. A storm hides the north star. One silver crease still catches moonlight, while the old bell tower remains visible through the glass roof.",
+    world: "The hillside observatory and its nearby bell tower beneath a stormy violet sky. Moonlight reveals physical routes along old paper folds. Keep the story within this small, quiet world.",
+    protagonist_id: "ada",
+    character_bible: "Ada is a thirty-year-old cartographer with dark-brown skin, a long black braid over her anatomical right shoulder, round silver spectacles, and a cobalt poncho over a white shirt. She is patient and observant. Preserve her face, braid side, spectacles and costume.",
+    art_direction: "Original flat ink comic with indigo, cream, cobalt and silver, clean contours and restrained two-tone shadows. No photorealism, lettering or watermarks. Keep quiet space for dialogue overlays.",
+    object_anchor: "A folded indigo paper star chart with a silver crescent seal. Preserve its folds, color, scale and ownership. Its revealed route is shown by silver shapes, never drawn letters.",
+    setting_anchor: "A small hillside observatory with a glass roof and a visible bell tower; violet storm clouds and silver moonlight.",
+    continuity_rules: ["Ada keeps her identity and silver spectacles.", "The chart is initially faded and intact in Ada's hands.", "Choices must reveal a concrete route or consequence.", "The ending settles Ada's way home without introducing another quest."],
+    initial_state: {
+      facts: [{ id: "north_star_hidden", text: "Storm clouds hide the north star above the observatory." }, { id: "chart_faded", text: "Ada's star chart has faded except for a silver crease." }, { id: "bell_tower_visible", text: "The nearby bell tower remains visible through the observatory roof." }],
+      characters: [{ id: "ada", name: "Ada", visual_anchor: "Ada has dark-brown skin, a long black braid over her anatomical right shoulder, round silver spectacles, a cobalt poncho and a white shirt.", injuries: [], clothing_condition: "Dry cobalt poncho and white shirt", carried_objects: ["star_chart"] }],
+      objects: [{ id: "star_chart", name: "Folded indigo star chart with a silver crescent seal", condition: "intact", holder: "ada" }],
+      relationships: ["Ada wants to find a safe way home before the storm closes in."], unresolved_threads: ["Can Ada recover a route from the faded star chart?"],
+    },
+    initial_decision: { question: "How should Ada find the missing route?", options: [{ id: "trace_crease", label: "Trace the chart's silver crease in moonlight" }, { id: "watch_tower", label: "Align the chart with the visible bell tower" }, { id: "open_roof", label: "Open the observatory roof to follow the wind" }] },
+    opening_beats: [{ caption: "Ada waits under the observatory's glass roof. Clouds have hidden the north star.", alt: "Ada holds her faded indigo chart under a glass observatory roof" }, { caption: "One silver crease still catches the moon. Beyond it, the bell tower stands clear.", alt: "Moonlight catches a silver fold in Ada's chart beside the distant bell tower" }],
+    choice_effects: [],
+  };
+}
+
+function cartographerChapter(context) {
+  const ending = context.step === context.max_steps;
+  const first = ending ? "Ada aligns the silver crease with the visible bell tower, keeping the indigo chart open in her hands." : "Ada traces the indigo chart's silver crease in moonlight. A folded route points toward the visible bell tower.";
+  const second = ending ? "Ada follows the revealed path to her lit home below the bell tower, her cobalt poncho and right-shoulder braid unchanged." : "Through her silver spectacles Ada sees the crease split around a flooded stair; a dry path runs beside the bell tower.";
+  return {
+    panels: [first, second].map((text, index) => ({ panel_id: `panel_${index + 1}`, sequence_index: index + 1, layout_aspect: "vertical", visual_description: text, image_prompt: `${index ? "SCENE_TWO Close-up" : "SCENE_ONE Wide shot"}: ${text} No lettering.`, dialogues: [{ id: `bubble_${index + 1}`, character: "Ada", text: ending ? index ? "Home, before the storm. I found my own way." : "The tower and the silver fold agree. This is the dry path." : index ? "The stairs are flooded, but the tower's side path is dry." : "Moonlight brings out the fold. It points to the bell tower.", position: index ? "bottom-right" : "top-left", style: "normal" }] })),
+    event: { action: first, consequence: second, source_clue: null },
+    story_state_updates: {
+      facts_added: ending ? [{ id: "dry_path_followed", text: "Ada aligned her chart with the tower and followed the dry side path." }, { id: "ada_home", text: "Ada reached her lit home before the storm closed in." }] : [{ id: "silver_route_found", text: "Moonlight revealed a route along the chart's silver crease toward the bell tower." }, { id: "dry_side_path", text: "The tower's side path is dry while the main stair is flooded." }],
+      used_fact_ids: ending ? ["silver_route_found", "dry_side_path"] : ["chart_faded", "bell_tower_visible"], characters_added: [], appearance_changes: [], object_updates: [], relationships_added: [], unresolved_threads: ending ? [] : ["Will Ada take the dry path home before the storm arrives?"],
+    },
+    next_decision: ending ? { question: "", options: [] } : { question: "The silver route reveals a dry path beside the tower. How will Ada reach home?", options: [{ id: "follow_dry_path", label: "Align the chart and follow the dry side path home", uses_fact_ids: ["silver_route_found", "dry_side_path"] }, { id: "mark_safe_route", label: "Confirm the dry route from the tower before heading home", uses_fact_ids: ["silver_route_found", "dry_side_path"] }] }, is_ending: ending,
+  };
+}
+
+function lightkeeperChapter(context) {
+  const ending = context.step === context.max_steps;
+  const first = ending
+    ? "Mara aligns the lighthouse lens's brass ring with the causeway marker, holding the tide lantern steady to restore the missing third reflection."
+    : "Mara follows the exposed causeway into the tower with her tide lantern and inspects the dark lighthouse lens. Its turned brass ring blocks the third reflection.";
+  const second = ending
+    ? "The tide moves again beneath the causeway. Mara keeps her seafoam cape and ivory shell hairpin as the lighthouse answers with three warm pulses."
+    : "Mara holds the hexagonal brass tide lantern beside the fixed lens. Two reflections pass its brass ring; a causeway marker shows where the third should pass.";
+  return {
+    panels: [first, second].map((text, index) => ({
+      panel_id: `panel_${index + 1}`, sequence_index: index + 1, layout_aspect: "vertical", visual_description: text,
+      image_prompt: `${index ? "SCENE_TWO Expressive close-up" : "SCENE_ONE Wide establishing"}: ${text} No lettering.`,
+      dialogues: [{ id: `bubble_${index + 1}`, character: "Mara", text: ending ? index ? "Three lights. The sea can find its way home." : "The marker shows where the third light belongs." : index ? "The causeway marker shows where this ring belongs." : "The lighthouse lens blocks the third reflection.", position: index ? "bottom-right" : "top-left", style: "normal" }],
+    })),
+    event: { action: first, consequence: second, source_clue: { source: "The lighthouse lens's brass alignment ring", evidence: "The causeway marker matches the turned ring that blocks the third reflection." } },
+    story_state_updates: {
+      facts_added: ending ? [{ id: "third_pulse_restored", text: "Mara aligned the lighthouse lens's ring with the causeway marker and restored its third reflection." }, { id: "tide_returned", text: "The lighthouse answered all three pulses and the island's tide resumed." }] : [{ id: "blocked_third_pulse", text: "The turned lighthouse lens ring blocks the lantern's third reflection." }, { id: "causeway_alignment", text: "A marker on the exposed causeway shows the lens ring's correct alignment." }],
+      used_fact_ids: ending ? ["blocked_third_pulse", "causeway_alignment"] : ["tide_stalled", "lantern_answers"],
+      characters_added: [], appearance_changes: [], object_updates: [], relationships_added: [],
+      unresolved_threads: ending ? [] : ["Can Mara restore the third pulse before the lighthouse goes dark?"],
+    },
+    next_decision: ending ? { question: "", options: [] } : {
+      question: "The blocked third pulse and causeway marker reveal the missing rhythm. What will Mara do?",
+      options: [
+        { id: "align_ring", label: "Align the lighthouse lens ring with the causeway marker", uses_fact_ids: ["blocked_third_pulse", "causeway_alignment"] },
+        { id: "signal_lighthouse", label: "Carry the lantern to the marker and signal the lighthouse", uses_fact_ids: ["blocked_third_pulse", "causeway_alignment"] },
+      ],
+    }, is_ending: ending,
+  };
+}
+
+function orchardChapter(context) {
+  const ending = context.step === context.max_steps;
+  const first = ending
+    ? "Ivo lifts the root knot from the return valve, keeping the copper seed compass in his other hand. Water returns to the glass orchard's dry channels."
+    : "Ivo opens the sealed irrigation hatch beneath the hot glass canopy. His copper seed compass points at a thick root knot trapped in a return valve.";
+  const second = ending
+    ? "Water reaches the last living sapling. Ivo's round copper glasses catch its new green leaves as he closes the hatch gently without harming the roots."
+    : "Ivo studies the trapped root through his round copper glasses. Water knocks behind the valve while the compass's coral center points toward the sapling's channel.";
+  return {
+    panels: [first, second].map((text, index) => ({ panel_id: `panel_${index + 1}`, sequence_index: index + 1, layout_aspect: "vertical", visual_description: text,
+      image_prompt: `${index ? "SCENE_TWO Expressive close-up" : "SCENE_ONE Wide establishing"}: ${text} No lettering.`,
+      dialogues: [{ id: `bubble_${index + 1}`, character: "Ivo", text: ending ? index ? "The roots can drink again. This grove has a tomorrow." : "Easy now. We can free the water without cutting you." : index ? "The sapling's channel is beyond this valve. There's still time." : "A living root jammed the return valve. The water never left.", position: index ? "bottom-right" : "top-left", style: "normal" }],
+    })),
+    event: { action: first, consequence: second, source_clue: { source: "The irrigation hatch's return valve", evidence: "A visible root knot pins the valve shut while water knocks behind it." } },
+    story_state_updates: {
+      facts_added: ending ? [{ id: "return_valve_freed", text: "Ivo freed the return valve without cutting the living roots." }, { id: "sapling_watered", text: "Water reached the last sapling and its leaves opened beneath the glass canopy." }] : [{ id: "root_knot_found", text: "A living root knot jams the irrigation return valve." }, { id: "sapling_channel_found", text: "The seed compass identifies the sapling's channel beyond the blocked valve." }],
+      used_fact_ids: ending ? ["root_knot_found", "sapling_channel_found"] : ["orchard_dry", "compass_points"],
+      characters_added: [], appearance_changes: [], object_updates: [], relationships_added: [], unresolved_threads: ending ? [] : ["How can Ivo restore water to the sapling without harming the living roots?"],
+    },
+    next_decision: ending ? { question: "", options: [] } : { question: "A root blocks the return valve beside the sapling's channel. How will Ivo restore the water?", options: [
+      { id: "free_root", label: "Lift the living root free of the return valve", uses_fact_ids: ["root_knot_found", "sapling_channel_found"] },
+      { id: "reroute_water", label: "Guide water around the root into the sapling's channel", uses_fact_ids: ["root_knot_found", "sapling_channel_found"] },
+    ] }, is_ending: ending,
   };
 }
 export const jpegBase64 = "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAABQb/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCMABmX/9k=";

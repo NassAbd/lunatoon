@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" fill="none">
+  <title>The Quiet Giant — coming soon</title><desc>Original woodland-fantasy cover: a moss-covered stone giant rests beneath arching forest branches, holding a tiny sprout.</desc>
+  <path fill="#dde0bd" d="M0 0h1000v650H0z"/>
+  <path d="M0 0h181l-30 650H0Zm1000 0H839l36 650h125Z" fill="#71866a"/>
+  <path d="M104 650 85 210 179 98m-91 161L8 159M907 650l-15-440-78-96m81 155 105-88" stroke="#4e6b54" stroke-width="37"/>
+  <path d="M0 80c169-153 290-24 368-51 159-81 252 3 333 10 132-92 226-22 299 31v67c-142 31-199-38-291-27-170 23-260-17-354 1-165 20-201-15-355 49Z" fill="#93a67d"/>
+  <path d="M0 497c177-64 285 30 441-13s381-39 559 27v139H0Z" fill="#97aa7b"/>
+  <path d="m358 328-61 52-36 142 125 39 33-167m215-66 58 53 41 138-119 43-30-173" fill="#8e9e85" stroke="#4d6a55" stroke-width="6" stroke-linejoin="round"/>
+  <path d="m370 276-22 137 37 142h230l33-142-21-137Z" fill="#a4ae94" stroke="#4d6a55" stroke-width="6"/>
+  <path d="M386 164q113-43 226 0v149q-109 62-226 0Z" fill="#b6b99d" stroke="#4d6a55" stroke-width="6"/>
+  <path d="m384 160 48-27 33 10 27-21 31 17 39-6 54 28-14 27-54-16-31 17-40-21-35 19-43-4Z" fill="#6e8e62"/>
+  <path d="M423 239q23 15 44 0m65 0q24 15 45 0M475 280q25 9 48 0" stroke="#607b61" stroke-width="5" stroke-linecap="round"/>
+  <path d="m369 435 54 25 37-2m173-22-53 28-35-6" stroke="#627e60" stroke-width="5"/>
+  <path d="m431 465 67 17 69-20-12 37-55 14-57-15Z" fill="#bec4a2" stroke="#4d6a55" stroke-width="4"/>
+  <path d="M500 481v-53" stroke="#517653" stroke-width="4"/><path d="M500 450c-28 0-39-16-35-30 25-1 38 8 35 30Zm1-14c2-25 19-37 38-31-1 24-17 34-38 31Z" fill="#91af68"/>
+  <path d="m205 611 5-44 13 20m-13-5-20-11m585 37 4-52 17 18m-17 15-20-14" stroke="#597c55" stroke-width="5" stroke-linecap="round"/>
+</svg>

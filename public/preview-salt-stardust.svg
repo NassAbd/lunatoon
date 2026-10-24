@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" fill="none">
+  <title>Salt &amp; Stardust — coming soon</title><desc>Original cozy-space cover: a floating teacup and small orange planet share the window of a quiet orbital kitchen.</desc>
+  <path fill="#e8d4bc" d="M0 0h1000v650H0z"/>
+  <rect x="140" y="49" width="720" height="480" rx="196" fill="#415164" stroke="#b9937a" stroke-width="16"/>
+  <rect x="169" y="79" width="662" height="420" rx="170" stroke="#d2b296" stroke-width="3"/>
+  <circle cx="676" cy="213" r="77" fill="#df9369"/><path d="M608 182c51 26 91 24 135 9m-135 49c55 22 94 17 130 3" stroke="#edb47f" stroke-width="13"/>
+  <ellipse cx="676" cy="219" rx="132" ry="24" transform="rotate(-22 676 219)" stroke="#c7bca1" stroke-width="9"/>
+  <path d="m311 146 4-11 4 11 11 4-11 4-4 11-4-11-11-4Zm432 241 4-11 4 11 11 4-11 4-4 11-4-11-11-4Z" fill="#eadcc1"/>
+  <circle cx="505" cy="132" r="3" fill="#eadcc1"/><circle cx="240" cy="277" r="3" fill="#eadcc1"/><circle cx="626" cy="398" r="3" fill="#eadcc1"/>
+  <path d="M0 533h1000v117H0Z" fill="#ba8871"/>
+  <ellipse cx="421" cy="463" rx="149" ry="26" fill="#d7b69a"/>
+  <path d="M324 319h171l-10 100c-35 35-112 35-149 0Z" fill="#f0dfc5" stroke="#876b62" stroke-width="5"/>
+  <path d="M495 336c80-26 85 69-7 69" stroke="#f0dfc5" stroke-width="20"/><path d="M498 336c79-21 78 69-10 68" stroke="#876b62" stroke-width="3"/>
+  <ellipse cx="409" cy="319" rx="85" ry="17" fill="#a27059" stroke="#876b62" stroke-width="4"/>
+  <path d="M373 281c-21-27 22-40 4-69m37 58c-18-26 20-37 5-62m36 79c-17-21 18-31 3-52" stroke="#d8c9b2" stroke-width="5" stroke-linecap="round"/>
+  <path d="M668 556h101m-59 23h144M118 582h115" stroke="#e5bd98" stroke-width="5" stroke-linecap="round"/>
+</svg>

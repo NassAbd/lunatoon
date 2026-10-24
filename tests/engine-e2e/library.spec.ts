@@ -37,22 +37,37 @@ async function expectNoHorizontalOverflow(page: Page) {
 
 test.beforeEach(async ({ request }) => {
   mkdirSync("test-results-engine/poc06", { recursive: true });
+  mkdirSync("test-results-live/poc-08/screenshots", { recursive: true });
   await control(request, {});
 });
 test.afterEach(async ({ request }) => { await control(request, {}); });
 
-test("the light library offers one playable story, an honest preview and working navigation without generation", async ({ page, request }) => {
+test("the light library offers three playable stories, six honest previews and working navigation without generation", async ({ page, request }) => {
   const before = await stats(request);
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "Every story starts with a choice." })).toBeVisible();
   await expect(page.locator(".story-reader")).toHaveCSS("background-color", "rgb(250, 250, 247)");
   const neon = page.locator("article[data-story='neon-protocol']");
-  const preview = page.locator("article[data-story='last-lightkeeper']");
+  const lightkeeper = page.locator("article[data-story='last-lightkeeper']");
+  const ready = page.locator("#stories article[data-story][data-status='ready']");
+  const previews = page.locator(".library-preview[aria-labelledby='preview-heading'] article[data-story][data-status='preview']");
+  await expect(ready).toHaveCount(3);
+  await expect(previews).toHaveCount(6);
+  await expect(page.locator("#stories article[data-story], .library-preview[aria-labelledby='preview-heading'] article[data-story]")).toHaveCount(9);
   await expect(neon.getByRole("heading", { name: "Neon Protocol", exact: true })).toBeVisible();
-  await expect(preview.getByRole("heading", { name: "The Last Lightkeeper", exact: true })).toBeVisible();
+  await expect(lightkeeper.getByRole("heading", { name: "The Last Lightkeeper", exact: true })).toBeVisible();
   await expect(neon.getByRole("button", { name: "Begin the story", exact: true })).toBeEnabled();
-  await expect(preview.getByText("Coming soon", { exact: true })).toBeVisible();
-  await expect(preview.getByRole("button", { name: /begin|play|start|read/i })).toHaveCount(0);
+  await expect(ready.getByRole("button", { name: "Begin the story", exact: true })).toHaveCount(3);
+  for (const preview of await previews.all()) {
+    await expect(preview.getByText("Coming soon", { exact: true })).toBeVisible();
+    await expect(preview.getByRole("button")).toHaveCount(0);
+    await expect(preview.getByRole("link")).toHaveCount(0);
+    const rejected = await request.post("/api/runs", { data: { operation_id: randomUUID(), approach: "text", template_id: await preview.getAttribute("data-story"), template_version: 1 } });
+    expect(rejected.status()).toBe(404);
+  }
+  const modeIds = await page.locator("#stories").getByLabel("Image approach", { exact: true }).evaluateAll(selects => selects.map(select => select.id));
+  expect(modeIds).toHaveLength(3);
+  expect(new Set(modeIds).size).toBe(3);
   const header = page.locator("header");
   await expect(header.getByRole("link", { name: "Library", exact: true })).toHaveAttribute("href", "/");
   await expect(header.getByRole("link", { name: "Saved stories", exact: true })).toHaveAttribute("href", "/saved");
@@ -63,9 +78,12 @@ test("the light library offers one playable story, an honest preview and working
     await page.evaluate(async () => { await document.fonts.ready; await Promise.all(Array.from(document.images).map(image => image.decode())); });
     await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
     await expectNoHorizontalOverflow(page);
-    await page.screenshot({ path: `test-results-engine/poc06/library-${width}.png`, animations: "disabled" });
+    await page.screenshot({ path: `test-results-live/poc-08/screenshots/library-${width}.png`, animations: "disabled" });
+    await page.screenshot({ path: `test-results-live/poc-08/screenshots/library-full-${width}.png`, fullPage: true, animations: "disabled" });
+    await page.locator(".library-preview[aria-labelledby='preview-heading']").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `test-results-live/poc-08/screenshots/previews-${width}.png`, animations: "disabled" });
     await page.locator(".library-saved").scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `test-results-engine/poc06/library-saved-${width}.png`, animations: "disabled" });
+    await page.screenshot({ path: `test-results-live/poc-08/screenshots/library-saved-${width}.png`, animations: "disabled" });
     await page.evaluate(() => window.scrollTo(0, 0));
   }
   await neon.getByRole("button", { name: "Begin the story", exact: true }).click();
@@ -87,6 +105,8 @@ test("the light library offers one playable story, an honest preview and working
   await page.locator("header").getByRole("link", { name: "About", exact: true }).click();
   await expect(page).toHaveURL(/\/about$/);
   await expect(page.locator("main")).toBeVisible();
+  await expect(page.locator("main")).toContainText("3 original worlds are playable");
+  await expect(page.locator("main")).toContainText("6 original story previews");
   await expectNoHorizontalOverflow(page);
   const experiment = await page.goto("/experiment");
   expect(experiment?.ok()).toBe(true);

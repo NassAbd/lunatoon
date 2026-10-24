@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" fill="none">
+  <title>Cloudbreak Express — coming soon</title><desc>Original sky-adventure cover: a coral railway carriage glides along an elevated track above broad cream clouds.</desc>
+  <path fill="#8ebdcc" d="M0 0h1000v650H0z"/><circle cx="239" cy="153" r="73" fill="#f6d49b"/>
+  <path d="M0 398c63-60 113-45 158-11 20-75 119-102 173-28 48-32 112-17 129 31 47-43 115-18 130 29 70-89 165-80 200-19 81-25 146-4 210 59v191H0Z" fill="#f3edda"/>
+  <path d="M0 540c108-60 164-10 236-29 101-77 212-24 269 16 98-45 148-20 209 13 98-67 213-22 286 12v98H0Z" fill="#d8e4df"/>
+  <path d="m65 402 867-97m-867 119 867-97" stroke="#5d7f83" stroke-width="8" stroke-linecap="round"/>
+  <path d="m183 390 21 215m340-257 12 216m270-248 20 219" stroke="#6d9296" stroke-width="11"/>
+  <path d="m264 257 389-44 68 43 10 77-468 53Z" fill="#cf806c" stroke="#4c727c" stroke-width="5" stroke-linejoin="round"/>
+  <path d="m259 254 396-47 70 45-462 52Z" fill="#e4a086"/>
+  <path d="m281 275 52-6 3 54-52 6Zm74-9 52-6 4 54-52 7Zm74-9 52-6 4 54-53 6Zm75-8 52-6 3 54-51 6Zm75-9 52-6 3 55-52 6Z" fill="#e3e6cf" stroke="#6c7976" stroke-width="3"/>
+  <path d="m652 237 53 30 6 48-54 6Z" fill="#b3d0cf"/>
+  <path d="m279 346 428-49" stroke="#f2c69d" stroke-width="4"/>
+  <circle cx="337" cy="379" r="16" fill="#4d7078"/><circle cx="650" cy="343" r="16" fill="#4d7078"/>
+  <path d="M77 208h104m539-65h151M674 170h110" stroke="#d6e5dd" stroke-width="6" stroke-linecap="round"/>
+</svg>

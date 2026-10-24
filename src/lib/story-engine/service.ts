@@ -47,13 +47,15 @@ export class StoryEngine {
     if (existing && existing.status !== "planned") return snapshot;
     const planned = existing ?? snapshot.events.filter((event) => event.panel_id === panelId).at(-1);
     this.supports(planned?.approach ?? snapshot.run.approach, planned?.model ?? snapshot.run.models.image);
-    const reference = planned?.approach === "reference" ? this.store.readAsset(runId, "kael_reference").bytes : Buffer.alloc(0);
+    const referenceIds = snapshot.bible.template?.reference_asset_ids ?? ["kael_reference"];
+    if (planned?.approach === "reference" && referenceIds.length === 0) throw new EngineError("reference_missing", "This story has no saved reference images. No alternate paid mode was selected.", 400);
+    const references = planned?.approach === "reference" ? referenceIds.map(id => { const asset = this.store.readAsset(runId, id); return { ...asset, name: `${id}.${asset.mime === "image/jpeg" ? "jpg" : asset.mime.split("/")[1]}` }; }) : [];
     signal?.throwIfAborted();
     this.provider.prepare();
     const claim = this.store.claimImage(runId, panelId, input); if (!claim) return this.snapshot(runId);
     let metrics: Metrics | null = null;
     try {
-      const result = await this.provider.image(panel, snapshot, claim, reference, signal, onPreview ? preview => {
+      const result = await this.provider.image(panel, snapshot, claim, references, signal, onPreview ? preview => {
         const current = this.snapshot(runId).events.find(event => event.id === claim.id);
         if (!signal?.aborted && current?.status === "running" && current.claim_token === claim.claim_token) onPreview(preview);
       } : undefined); metrics = result.metrics;

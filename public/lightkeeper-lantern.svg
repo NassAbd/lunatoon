@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" fill="none">
+  <title>The lantern answers</title>
+  <desc>Original close-up of Mara's hexagonal brass lantern, with a faint golden star behind sea-glass panes and three lights reflected in the still water.</desc>
+  <path fill="#e8ebd9" d="M0 0h1000v500H0z"/>
+  <path d="M0 160h1000v340H0Z" fill="#a8c9bb"/>
+  <path d="M0 251c212-11 414 8 612-3s247 3 388-2v254H0Z" fill="#85ad9e"/>
+  <path d="M0 0h115v500H0Zm885 0h115v500H885Z" fill="#d1d8bd"/>
+  <path d="M114 0v500m771-500v500M0 150h1000" stroke="#748f79" stroke-width="5"/>
+  <path d="M151 218h167m355-16h164M171 325h111m428-5h128m-666 66h159m373 50h113" stroke="#d5e2cc" stroke-width="4" stroke-linecap="round"/>
+  <g fill="#f3d997">
+    <path d="m228 263 4-10 4 10 10 4-10 4-4 10-4-10-10-4Z"/>
+    <path d="m277 285 4-10 4 10 10 4-10 4-4 10-4-10-10-4Z"/>
+    <path d="m327 266 4-10 4 10 10 4-10 4-4 10-4-10-10-4Z"/>
+  </g>
+  <path d="M218 287h24m23 24h30m24-23h23" stroke="#f3d997" stroke-width="3" stroke-linecap="round"/>
+  <path d="m1000 405-186-62-101-91-49 51 93 108 243 89Z" fill="#85b09d" stroke="#355d55" stroke-width="5"/>
+  <path d="m697 243 39 34-52 57-36-33Z" fill="#f5eed9" stroke="#355d55" stroke-width="4"/>
+  <path d="m649 260-53-25-10-43-22-13-15 15 6 55 59 51 33 2 29-28Z" fill="#a86d54" stroke="#355d55" stroke-width="4" stroke-linejoin="round"/>
+  <path d="m576 213 26 37 32 17m-58-14 18 14" stroke="#754f3f" stroke-width="3" stroke-linecap="round"/>
+  <path d="M435 188c-38-65-16-120 48-125 61-4 92 56 58 126" stroke="#6f6847" stroke-width="11"/>
+  <path d="M439 174c-24-56-7-96 45-100 47-3 72 43 51 100" stroke="#d8b477" stroke-width="5"/>
+  <path d="m391 201 92-55 102 54v179l-98 62-96-61Z" fill="#bc945c" stroke="#355d55" stroke-width="6" stroke-linejoin="round"/>
+  <path d="m415 212 69-41 77 41v151l-74 47-72-46Z" fill="#dce6c5" stroke="#726c47" stroke-width="4"/>
+  <path d="m488 177 71 38v147l-71 45Z" fill="#c4d9b8"/>
+  <path d="m420 222 51-30v154l-51 15Z" fill="#eef0d7" opacity=".8"/>
+  <path d="M484 170v240m-69-197 146 151m0-152L415 364" stroke="#9a804e" stroke-width="5"/>
+  <path d="m480 245 13 33 33 11-32 12-12 37-14-36-31-12 32-12Z" fill="#f8d884" stroke="#d4ae62" stroke-width="2"/>
+  <path d="m408 386 79 49 81-49M454 159h59m-59 279h65" stroke="#736545" stroke-width="5" stroke-linecap="round"/>
+  <path d="m632 65 4 12 12 4-12 4-4 12-4-12-12-4Zm-294 46 3 9 9 3-9 3-3 9-3-9-9-3Z" fill="#acb896"/>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="460" viewBox="0 0 1000 460" fill="none">
+  <title>The orchard's sealed heart</title><desc>Original solarpunk scene: dry channels converge at a sealed copper irrigation hatch while the last sapling waits under the glass roof.</desc>
+  <path fill="#ead7b8" d="M0 0h1000v460H0z"/>
+  <path d="M0 0h1000v154L759 128l-255 35-241-36L0 159Z" fill="#8e6b7a"/>
+  <path d="M102 0v151m209-151v131M500 0v161M702 0v135M907 0v143M0 65h1000" stroke="#d8a780" stroke-width="7"/>
+  <path d="M0 154 263 127l241 36 255-35 241 26v306H0Z" fill="#c68f71"/>
+  <path d="m0 442 270-94 177-67m553 158-252-85-185-76M495 290l-5 170" stroke="#775968" stroke-width="22" stroke-linejoin="round"/>
+  <path d="m0 442 270-94 177-67m553 158-252-85-185-76M495 290l-5 170" stroke="#a27375" stroke-width="7"/>
+  <path d="m360 222 136-51 150 53-22 83-128 40-117-41Z" fill="#a46b55" stroke="#4e3e52" stroke-width="5" stroke-linejoin="round"/>
+  <path d="m384 228 111-40 125 43-18 57-107 35-96-33Z" fill="#bf8b61" stroke="#79514c" stroke-width="3"/>
+  <ellipse cx="500" cy="251" rx="59" ry="24" fill="#dab18a" stroke="#765550" stroke-width="4"/>
+  <path d="M454 250h93m-48-21v43m-32-38 65 32m-65-1 64-30" stroke="#8b5c53" stroke-width="5"/>
+  <circle cx="499" cy="251" r="9" fill="#704b54"/>
+  <path d="M379 237v43m238-39-9 37m-105 51v11" stroke="#dfb789" stroke-width="4"/>
+  <path d="M812 330V205m0 49-35-32m35 8 33-36" stroke="#5b4559" stroke-width="7" stroke-linecap="round"/>
+  <path d="M779 227c-37-3-54-19-54-43 34-3 54 11 54 43Zm63-25c0-35 20-55 49-54 1 34-18 53-49 54Zm-32 9c-20-27-15-52 7-65 20 26 18 49-7 65Z" fill="#ed9878" stroke="#8c5c63" stroke-width="3"/>
+  <path d="M170 293V173l-35-40m35 77 37-39m-37 78-43-25" stroke="#896369" stroke-width="8" stroke-linecap="round"/>
+  <path d="m52 346 70-15m108 56 61-17m400-35 53 14m84 53 88 21" stroke="#e3b38a" stroke-width="4" stroke-linecap="round"/>
+</svg>

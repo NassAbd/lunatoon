@@ -8,22 +8,30 @@
 .library-intro .book-eyebrow { margin-bottom: 22px; }
 .story-reader .library-intro h1 { font-size: clamp(48px, 4.8vw, 64px); max-width: 800px; line-height: 1.08; letter-spacing: -2.4px; }
 .library-intro > p:last-child { color: #6a7065; font-size: 16px; line-height: 1.9; margin: 24px 0 0; }
-.library-stories { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; scroll-margin-top: 25px; }
+.library-collection { scroll-margin-top: 25px; }
+.library-collection .library-section-heading { margin-bottom: 25px; }
+.library-count, .library-collection-note { color: #72796a; font-size: 12px; line-height: 1.8; margin: 0; }
+.library-collection-note { margin: -10px 0 25px; }
+.library-preview { margin-top: 66px; }
+.library-stories { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: stretch; }
 .story-card { border: 1px solid #e8e9e5; border-radius: 14px; overflow: hidden; background: #fff; }
-.story-cover { position: relative; height: 300px; overflow: hidden; }
+.playable-story { display: flex; flex-direction: column; }
+.playable-story .story-card-copy { display: flex; flex-direction: column; flex: 1; }
+.playable-story .library-launch { margin-top: auto; }
+.story-cover { position: relative; height: 260px; flex-shrink: 0; overflow: hidden; }
 .story-cover > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .neon-cover { background: #0a1721; }
 .neon-cover > img { object-position: center 65%; }
 .lightkeeper-cover { background: #d9e4d9; }
 .cover-label { position: absolute; top: 20px; left: 20px; padding: 7px 11px; border-radius: 5px; color: #202124; background: #faffefee; font-size: 9px; font-weight: 600; letter-spacing: 1.3px; text-transform: uppercase; }
 .preview-story .cover-label { background: #fff8ebee; }
-.story-card-copy { padding: 27px 30px 18px; }
+.story-card-copy { padding: 24px 24px 18px; }
 .story-genre { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 9px; letter-spacing: 1.2px; color: #6a7558; margin: 0 0 15px; }
 .story-genre > span { color: #878c80; font-size: 10px; letter-spacing: 0; margin-left: auto; }
-.story-reader .story-card h2 { font-size: clamp(30px, 3vw, 39px); letter-spacing: -1px; margin: 0 0 15px; }
+.story-reader .story-card h2 { font-size: clamp(27px, 2.3vw, 32px); line-height: 1.2; letter-spacing: -.7px; margin: 0 0 15px; }
 .story-card-copy > p:not(.story-genre) { color: #666d60; font-size: 14px; line-height: 1.85; margin: 0 0 24px; max-width: 49ch; }
-.library-launch { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 18px; }
-.library-launch .book-start { width: 100%; max-width: 230px; margin: 0; }
+.library-launch { display: grid; grid-template-columns: 1fr; align-items: center; gap: 12px; }
+.library-launch .book-start { width: 100%; margin: 0; }
 .library-launch .book-primary { min-height: 49px; padding: 12px 18px; }
 .story-info-link { font-size: 12px; line-height: 1.8; color: #636c56; }
 .story-info-link > span { margin-left: 4px; }
@@ -64,13 +72,14 @@
 .about-main section a { color: #617346; font-size: 13px; }
 @media (max-width: 1100px) {
   .library-main { width: calc(100% - 64px); }
-  .story-cover { height: 280px; }
-  .story-card-copy { padding: 24px 24px 18px; }
+  .story-cover { height: 220px; }
+  .story-card-copy { padding: 22px 19px 18px; }
+  .library-collection .library-section-heading { align-items: start; flex-direction: column; gap: 15px; }
   .library-launch { grid-template-columns: 1fr; gap: 14px; }
   .library-launch .book-start { max-width: none; }
 }
 @media (max-width: 720px) {
-  .book-header { gap: 18px; }
+  .book-header { gap: 8px; height: auto; min-height: 88px; flex-wrap: wrap; padding-top: 16px; padding-bottom: 16px; }
   .book-navigation { gap: 14px; font-size: 11px; }
   .book-brand { font-size: 19px; }
   .library-main { width: calc(100% - 32px); }

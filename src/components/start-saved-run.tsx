@@ -4,13 +4,15 @@ import { SnapshotSchema } from "@/lib/story-engine/contracts";
 import { useRouter } from "next/navigation";
 import type { ImageApproach } from "@/lib/contracts";
 
-export function StartSavedRun({ approach, simple = false }: { approach: ImageApproach; simple?: boolean }) {
-  const router = useRouter(); const operation = useRef<string | null>(null);
+export function StartSavedRun({ approach, simple = false, templateId, templateVersion }: { approach: ImageApproach; simple?: boolean; templateId?: string; templateVersion?: number }) {
+  const router = useRouter(); const operation = useRef<{ scope: string; id: string } | null>(null);
   const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   async function start() {
-    setBusy(true); setError(""); operation.current ??= crypto.randomUUID();
+    setBusy(true); setError("");
+    const scope = JSON.stringify([templateId, templateVersion, approach]);
+    if (operation.current?.scope !== scope) operation.current = { scope, id: crypto.randomUUID() };
     try {
-      const response = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ operation_id: operation.current, approach }) });
+      const response = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ operation_id: operation.current.id, approach, ...(templateId ? { template_id: templateId, template_version: templateVersion } : {}) }) });
       if (!response.ok) throw new Error("Could not create the saved run. Check local server settings.");
       const snapshot = SnapshotSchema.parse(await response.json()); router.push(`/run/${snapshot.run.id}`);
     } catch (error) { setError(error instanceof Error ? error.message : "Could not create the saved run."); setBusy(false); }

@@ -26,6 +26,23 @@ const FactSchema = z.object({ id: Key, text: Text }).strict();
 export const CharacterSchema = z.object({ id: Key, name: Text, visual_anchor: z.string().min(1).max(900), injuries: z.array(Text).max(8), clothing_condition: Text, carried_objects: z.array(Key).max(8) }).strict();
 export const ObjectSchema = z.object({ id: Key, name: Text, condition: z.enum(["intact", "active", "damaged", "destroyed", "missing"]), holder: Key.nullable() }).strict();
 export const StateSchema = z.object({ facts: z.array(FactSchema).max(20), characters: z.array(CharacterSchema).min(1).max(6), objects: z.array(ObjectSchema).min(1).max(8), relationships: z.array(Text).max(12), unresolved_threads: z.array(Text).max(8) }).strict();
+export const StoryFoundationSchema = z.object({
+  title: z.string().trim().min(1).max(100), genre: z.string().trim().min(1).max(80), description: z.string().trim().min(1).max(400),
+  premise: z.string().trim().min(1).max(1200), world: z.string().trim().min(1).max(1200), protagonist_id: Key,
+  character_bible: z.string().trim().min(1).max(6000), art_direction: z.string().trim().min(1).max(3000),
+  object_anchor: z.string().trim().min(1).max(1200), setting_anchor: z.string().trim().min(1).max(1200),
+  continuity_rules: z.array(Text).max(10), initial_state: StateSchema,
+  initial_decision: z.object({ question: z.string().trim().min(1).max(200), options: z.array(z.object({ id: Key, label: z.string().trim().min(1).max(100) }).strict()).length(3) }).strict(),
+  opening_beats: z.array(z.object({ caption: z.string().trim().min(1).max(500), alt: z.string().trim().min(1).max(300) }).strict()).min(1).max(4),
+  choice_effects: z.array(z.object({ choice_id: Key, object_id: Key, condition: ObjectSchema.shape.condition }).strict()).max(3),
+}).strict();
+export const StoryTemplateSchema = StoryFoundationSchema.extend({
+  id: Key, version: z.number().int().min(1).max(1000000), status: z.enum(["draft", "ready", "preview"]),
+  cover_asset_id: Key, reference_asset_ids: z.array(Key).max(3),
+  opening_beats: z.array(StoryFoundationSchema.shape.opening_beats.element.extend({ asset_id: Key, width: z.number().int().min(1).max(4096), height: z.number().int().min(1).max(4096) })).min(1).max(4),
+}).strict();
+export type StoryFoundation = z.infer<typeof StoryFoundationSchema>;
+export type StoryTemplate = z.infer<typeof StoryTemplateSchema>;
 const UpdatesSchema = z.object({
   facts_added: z.array(FactSchema).min(1).max(4),
   used_fact_ids: z.array(Key).max(6),
@@ -61,7 +78,7 @@ export function chapterRequestSchema(step: number, maxSteps: number, continuityF
   }).strict();
 }
 export const AssetSchema = z.object({ id: z.string(), path: z.string(), sha256: z.string(), mime: z.string(), purpose: z.string() });
-export const BibleSchema = z.object({ id: z.string(), title: z.literal("Neon Protocol"), opening: z.string(), character_bible: z.string(), art_direction: z.string(), device_anchor: z.string(), setting_anchor: z.string(), assets: z.array(AssetSchema) });
+export const BibleSchema = z.object({ id: z.string(), title: z.string().min(1).max(100), opening: z.string(), character_bible: z.string(), art_direction: z.string(), device_anchor: z.string(), setting_anchor: z.string(), assets: z.array(AssetSchema), template: StoryTemplateSchema.optional() });
 export const RunSchema = z.object({ id: Id, operation_id: Id, story_id: z.string(), step: z.number().int(), status: z.enum(["active", "ended"]), state: StateSchema, limits: LimitsSchema, models: ModelsSchema, approach: ImageApproachSchema, created_at: z.number(), updated_at: z.number() });
 export const NodeSchema = z.object({
   id: Id, run_id: Id, step: z.number().int(), parent_id: Id.nullable(), operation_id: Id, choice_id: z.string(), choice: z.string(), instruction: z.string(),
@@ -77,6 +94,7 @@ export const EventSchema = z.object({
   id: Id, run_id: Id, node_id: Id, panel_id: Id.nullable(), sequence: z.number().int(), operation_id: Id,
   stage: z.enum(["script", "image"]), status: z.enum(["planned", "running", "succeeded", "failed", "interrupted", "cancelled"]),
   model: z.string(), quality: z.enum(["low", "medium", "high"]), approach: ImageApproachSchema,
+  reference_count: z.number().int().min(0).max(3).optional(),
   reserved_micro_usd: z.number().int().nonnegative().nullable(), estimated_micro_usd: z.number().int().nonnegative().nullable(),
   reference_input_micro_usd: z.number().int().nonnegative().nullable(), price_version: z.string().nullable(),
   metrics: MetricsSchema.nullable(), error: ErrorSchema.nullable(), asset_path: z.string().nullable(),
@@ -88,7 +106,7 @@ export const SummarySchema = z.object({
   measured_input_tokens: z.number(), measured_output_tokens: z.number(), measured_reference_input_tokens: z.number(),
 });
 export const SnapshotSchema = z.object({ run: RunSchema, bible: BibleSchema, nodes: z.array(NodeSchema), panels: z.array(PanelSchema), events: z.array(EventSchema), summary: SummarySchema });
-export const NewRunRequestSchema = z.object({ operation_id: Id, approach: ImageApproachSchema }).strict();
+export const NewRunRequestSchema = z.object({ operation_id: Id, approach: ImageApproachSchema, template_id: Key.optional(), template_version: z.number().int().positive().optional() }).strict();
 export const NewNodeRequestSchema = z.object({ operation_id: Id, choice_id: z.string().min(1).max(60), instruction: z.string().trim().max(500).default("") }).strict();
 export const StageRequestSchema = z.object({ operation_id: Id, retry: z.boolean().default(false) }).strict();
 export const ReplayRequestSchema = z.object({ operation_id: Id, approach: ImageApproachSchema }).strict();

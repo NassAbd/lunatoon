@@ -1,14 +1,42 @@
 # Lunatoon — local webtoon POCs
 
-A local, desktop-first interactive webtoon demo. Discover **Neon Protocol**, select an action, add an optional twist, and complete a story through two decisions and four generated panels. Dialogue appears before each pair of independent illustration requests finishes.
+A local, desktop-first interactive webtoon demo with three playable worlds, six upcoming previews and a local Creator Studio. Choose a story, select an action, add an optional twist, and complete two decisions and four generated panels. Dialogue appears before each pair of independent illustration requests finishes.
 
-The light library opens at `/`. Click **Begin the story** to create a local persistent story at `/run/<uuid>`. `/saved` lists local reading sessions; `/story/neon-protocol` introduces the story and `/about` explains the demo. **The Last Lightkeeper** is an original **Coming soon** preview, not playable. The original POC 01/02 reader remains at `/experiment`. `SPECS.md` remains the long-term reference; there are no accounts, public sharing, creator studio or deployment setup.
+The light library opens at `/`. Click **Begin the story** to create a local persistent story at `/run/<uuid>`. `/saved` lists local reading sessions; `/story/<story-id>` introduces each playable world, `/studio` opens Creator Studio and `/about` explains the demo. The original POC 01/02 reader remains at `/experiment`. `SPECS.md` remains the long-term reference; there are no accounts, public sharing or deployment setup.
 
-In the saved reader, four immediately available authored opening beats lead into the first decision. Each submitted choice stays in the timeline and its two panels appear directly below it without navigation or automatic scrolling. Dialogue arrives first. Supported Flare reference edits request one optional real partial preview within each existing image call, followed independently by the saved final illustration. The provider may send no preview; the POC 05.1 live sample sent only finals. A fixed-size, clearly decorative noir placeholder supports the wait. Refresh/restart reads saved final assets without generating again.
+In the saved reader, immediately available opening beats lead into the first decision. The three bundled worlds have original illustrated openings; Creator stories use clearly labeled authored placeholders. Each submitted choice stays in the timeline and its two panels appear directly below it without navigation or automatic scrolling. Dialogue arrives first. Supported Flare reference edits request one optional real partial preview within each existing image call, followed independently by the saved final illustration. The provider may send no preview; the POC 05.1 live sample sent only finals. A fixed-size decorative placeholder supports the wait. Refresh/restart reads saved final assets without generating again.
 
-Completed decisions become compact saved-choice cards once fully offscreen and unfocused; their question and custom twist remain accessible. The reader preserves the visible chapter position during compaction. The ending recaps the actual saved decisions, distinguishes unfinished illustrations from a fully saved story, and links to the library, saved sessions and a new run. If a saved image fails to load, **Load saved illustration again** retries only its local file request. Developer details remain collapsed and distinguish upstream previews, browser transfer/decode and reveal timing. See [POC 07 streaming research](docs/POC_07_IMAGE_STREAMING.md) and [POC 07 results](POC_07_RESULTS.md). No new paid generation or speedup is claimed for this iteration.
+Completed decisions become compact saved-choice cards once fully offscreen and unfocused; their question and custom twist remain accessible. The reader preserves the visible chapter position during compaction. The ending recaps the actual saved decisions, distinguishes unfinished illustrations from a fully saved story, and links to the library, saved sessions and a new run. If a saved image fails to load, **Load saved illustration again** retries only its local file request. Developer details remain collapsed and distinguish upstream previews, browser transfer/decode and reveal timing. See [POC 07 streaming research](docs/POC_07_IMAGE_STREAMING.md) and [POC 07 results](POC_07_RESULTS.md).
 
 Saved sessions are for this **local single-user installation**. The catalogue uses bounded read-only SQLite queries and never starts generation or recovery. Do not expose this unauthenticated local app or private `data/` directory as a public service.
+
+## POC 08: three worlds and local creation
+
+All playable stories use the same persistent engine, two-decision structure, cost reservations and independent image stages. Each run captures its own initial state, protagonist, narrative/visual bible and reference assets.
+
+| Story | World and protagonist | Status |
+| --- | --- | --- |
+| Neon Protocol | Cyberpunk noir; Detective Kael and the cyan device | Playable; prior saved Neon stories and original reference art remain compatible |
+| The Last Lightkeeper | Coastal fantasy; Mara and her tide lantern | Playable through the shared engine |
+| The Glass Orchard | Solarpunk adventure; Ivo and his seed compass | Playable through the shared engine |
+
+Six additional original concepts—Velvet Signal, Cloudbreak Express, The Quiet Giant, Salt & Stardust, Paper Kingdom and Blue Hour Society—are labeled **Coming soon**. Their covers are authored previews; they have no generation or play action. The bundled openings and character-reference PNGs were made from original repository SVGs, using local rasterization rather than paid image generation.
+
+To create a local story:
+
+1. Open **Create a story** at `/studio`. Describe the premise and optionally supply a title, genre, main character, visual style and atmosphere.
+2. Optionally attach **0–3 of your own PNG, JPEG or WebP references**. Each must be a still image, no larger than 5 MiB, 4096 pixels per edge and 16 million pixels. The server validates actual bytes, fully decodes them, applies orientation, strips metadata and stores a bounded canonical PNG. SVG, animation, corruption and caller-supplied file paths are rejected.
+3. Click **Create story foundation** to make one paid narrative request. Review and edit the title, premise, character, visual guide, opening captions and three initial choices. This stage generates text only; uploaded images are supplied to OpenAI only during later explicit reference-image requests.
+4. Click **Save & make playable** to create an immutable local version with labeled decorative cover/opening placeholders. Saving and placeholder artwork make no AI calls. Manual edits remain in the current page until saved; refresh restores the last durable foundation.
+5. Begin the saved story from the Studio or local library. Reading generates its continuation panels through the existing engine. With references, the supported reference-edit mode uses that story's owned images. With no references, the UI explicitly selects text-only illustration using its written visual guide; it never borrows Kael's image.
+
+Draft URLs use `/studio?draft=<uuid>`. New saves create versions; existing `/run/<uuid>` sessions keep the exact template and references they started with. Removing a reference from a draft does not remove it from older saved versions or runs. Creator drafts, attempts and versions live in `data/creator.sqlite`; private assets live under `data/creator/assets/`. Back up the entire configured data directory with the application stopped.
+
+Foundation attempts have their own persisted usage ledger, a default maximum of **3 calls per draft** and a **$0.05 estimated budget**, separate from reading limits. Requests are claimed idempotently, with no automatic paid retries. An interrupted or failed attempt requires an explicit retry; unknown prior cost requires acknowledgement. Developer details show returned usage, estimates, held reservations and unknown costs. Neither budget is a provider billing cap. Additional references increase image-input usage and the reservation; an explicit run-budget adjustment may be needed for a three-reference story.
+
+Completed stories offer **Download story**: a self-contained HTML file with saved illustrations, readable dialogue and actual choices. Open or transfer that file to read it offline. Export makes no AI calls and excludes reference uploads, internal state, diagnostics, credentials and local paths. It includes the visible story text and your twists, so review that content before sharing the file. A local run URL still works only on this installation; no public link or cross-device editing is provided. Unfinished or missing artwork must be resolved before export. Historical Neon runs export the opening actually saved in their bible, not newer catalog artwork.
+
+**No paid OpenAI calls were run for POC 08.** The new worlds and Creator flow are covered with mocked providers; their live narrative and visual quality remains unverified. Historical live Neon evidence below remains separate. See [POC 08 results](POC_08_RESULTS.md), [template/Creator architecture](docs/story-template-architecture.md) and the [cost model](docs/api-cost-model.md) for executed checks and limitations.
 
 ## Run locally
 
@@ -37,7 +65,7 @@ Optional server settings:
 
 Model availability and image access depend on your API project. Image access may require organization verification. Model overrides must support the same request parameters; DALL-E models are not compatible with this pipeline. Models are never automatically substituted. Current project checks and live evidence are recorded in [POC 02 decision](references/POC_02_DECISION.md).
 
-## Pipeline and contracts
+## Original experiment pipeline and contracts
 
 1. `POST /api/story` receives `{ context, choice, instruction }`. Context must match the fixed initial scene, choice must be one of the three actions, and the optional instruction is capped at 500 characters.
 2. The official SDK calls `client.responses.parse` with `zodTextFormat`, which sends `text.format.type = json_schema`, `strict: true`, and a Zod-derived schema. Exactly two panels and one or two bubbles per panel are required. The server validates sequence order and unique panel/bubble IDs after parsing. Refusal and incomplete responses are errors.
@@ -141,7 +169,7 @@ Rebuild the original static reference after deliberately editing its source with
 4. A failed image has its own explicit paid retry; successful siblings and script stay saved. A/B same-script replay remains explicit and consumes two image calls.
 5. Open the collapsed **Developer details** for measured usage, estimated spend, unknown costs, separate reference-input tokens/cost, reservations and stage limits. Download diagnostics for all attempts. Current-visit browser request-flow timings are labeled separately from saved server timings and the original POC 02 decode-complete measurements.
 
-SQLite and assets live under ignored `data/`. **Back up the entire directory with the app stopped.** Use Node 24.14.0: the built-in SQLite API is experimental in that version. No additional service or npm library is required. Asset paths in the DB are relative; saved references are content-addressed and integrity checked.
+SQLite and assets live under ignored `data/`. **Back up the entire directory with the app stopped.** Use Node 24.14.0: the built-in SQLite API is experimental in that version. SQLite needs no additional service or package; project-local Sharp handles Creator reference normalization. Asset paths in the DB are relative; saved references are content-addressed and integrity checked.
 
 | Server setting | Default | Meaning for new saved runs |
 | --- | --- | --- |
@@ -183,7 +211,7 @@ See [POC 03.1 results](POC_03_1_RESULTS.md) for regression evidence, limitations
 
 ## POC 04 diagnostic checkpoint (historical)
 
-`feat/platform-experience` currently adds safe narrative failure diagnostics, not a new platform UI. Failed attempts now retain their local phase, static field/rule codes, error type and available request ID under **Developer details → Request accounting details** and in diagnostic downloads. Raw rejected narrative/error content and credentials are not added to these details. Historical errors without metadata remain readable.
+At the POC 04 checkpoint, `feat/platform-experience` added safe narrative failure diagnostics. Failed attempts retain their local phase, static field/rule codes, error type and available request ID under **Developer details → Request accounting details** and in diagnostic downloads. Raw rejected narrative/error content and credentials are not added to these details. Historical errors without metadata remain readable.
 
 Read [POC 04 findings](POC_04_RESULTS.md) before claiming story completion is fixed: the previous live second-decision exception was discarded, so its precise cause remains unconfirmed. Controlled mocked failures and successful four-panel/restart flows pass; no new paid calls were made. Narrative/state invariants and existing run limits are unchanged. At that checkpoint, opening, library, preview-story and branding work were deferred. The later live investigation is recorded below.
 
@@ -191,7 +219,7 @@ Read [POC 04 findings](POC_04_RESULTS.md) before claiming story completion is fi
 
 A fresh real OpenAI run completed both decisions and all four reference illustrations without retries, then survived refresh and an actual server restart with identical saved state/images and zero new generation calls. Stage-specific request schemas now match ending and continuity requirements; next choices can connect a new consequence to an established motive. Existing ownership, identity and destruction invariants remain strict.
 
-See [POC 04.1 results](POC_04_1_RESULTS.md) for reproduced failures, regression coverage, the complete live sequence, measured latency, usage-based cost estimates and remaining visual/semantic limitations. This is one observed working journey, not a general reliability guarantee. The earlier historical `stage_failed` exception remains unknown. Library and platform expansion remain deferred.
+See [POC 04.1 results](POC_04_1_RESULTS.md) for reproduced failures, regression coverage, the complete live sequence, measured latency, usage-based cost estimates and remaining visual/semantic limitations. This is one observed working journey, not a general reliability guarantee. The earlier historical `stage_failed` exception remains unknown. Library and platform expansion were deferred at that checkpoint.
 
 ## POC 05: continuous reading and genuine previews
 
@@ -213,7 +241,7 @@ One fresh live **Activate the device** story completed both decisions and all fo
 
 ## POC 06: library, illustrated opening and generation feedback
 
-The homepage now pairs one playable story with one honest upcoming preview. Saved sessions can be resumed or reread from `/saved`; listings show stored progress and a short local session ID, without exposing twists or dialogue. A story is listed as completed only when its ending and all expected illustrations are saved. Listing does not inspect files or recover interrupted stages; opening its existing reader URL performs the engine's established recovery checks.
+POC 06 introduced a homepage pairing one playable story with one upcoming preview; POC 08 expands that catalog above. Saved sessions can be resumed or reread from `/saved`; listings show stored progress and a short local session ID, without exposing twists or dialogue. A story is listed as completed only when its ending and all expected illustrations are saved. Listing does not inspect files or recover interrupted stages; opening its existing reader URL performs the engine's established recovery checks.
 
 The opening uses three new original vector compositions plus the existing immutable Kael illustration. Short captions replace the long prose block for the canonical opening. Generated panels retain their dialogue placement, fixed dimensions and independent arrival. The final decode-first fade is 220 ms; this presentation change is not a provider latency improvement. Reduced motion remains supported.
 

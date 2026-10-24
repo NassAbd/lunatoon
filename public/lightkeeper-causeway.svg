@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="480" viewBox="0 0 1000 480" fill="none">
+  <title>A path beneath the tide</title>
+  <desc>Original wide coastal scene. An exposed stone causeway crosses the still sea toward a lighthouse with a dark lens.</desc>
+  <path fill="#f4efdf" d="M0 0h1000v480H0z"/>
+  <circle cx="196" cy="109" r="58" fill="#e8c3a8"/>
+  <path d="M0 203c181-16 347 8 511 0s306-9 489-1v278H0Z" fill="#b4cdbb"/>
+  <path d="M0 264c198-14 360 9 536-3s300 9 464-3v222H0Z" fill="#8db4a2"/>
+  <path d="M0 360c190-15 322 18 519 1s316 14 481-3v122H0Z" fill="#709d8b"/>
+  <path d="m586 226 54-28 112-6 92 25 48 29H565Z" fill="#77967d"/>
+  <path d="m608 226 58-19 85-5 86 22 40 20H584Z" fill="#a7b69a"/>
+  <path d="m690 112-12 109h68l-12-109Z" fill="#f6edd7" stroke="#466b5c" stroke-width="3"/>
+  <path d="m720 113 7 107h19l-12-108Z" fill="#c9d1b1"/>
+  <path d="M684 155h56l2 15h-59Z" fill="#c99880"/>
+  <path d="M702 222v-25a9 9 0 0 1 18 0v25Z" fill="#3d6458"/>
+  <path d="M684 83h57v29h-57z" fill="#6d8a76" stroke="#466b5c" stroke-width="3"/>
+  <path d="M700 83v29m22-29v29" stroke="#b7c5a4" stroke-width="2"/>
+  <path d="m677 83 35-27 36 27Z" fill="#4c7362" stroke="#355d55" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M712 56V43m-36 70h74m-77-12h80m-74-1v13m70-13v13" stroke="#466b5c" stroke-width="3" stroke-linecap="round"/>
+  <path d="m689 229-66 16 30 14-39 19-74 13-24 26 48 17-89 29-85 13-60 35 27 27-138 42H56l220-63 21-38 115-35 64-3 61-18-45-19 29-30 91-17 13-11-23-13 80-27Z" fill="#c6c7aa" stroke="#4e7a67" stroke-width="3" stroke-linejoin="round"/>
+  <path d="m73 465 146-43 24 7-140 46m194-67 35-12 27 11-39 12m86-55 49-8 30 8-48 10m91-46 29-4 21 8-24 7m3-33 35-8 19 6-41 10m67-37 25-8 10 5-24 9" stroke="#e8e4ca" stroke-width="4" stroke-linecap="round"/>
+  <path d="m184 445 15 31m116-59 11 27m90-73 10 17m100-51 7 12m31-56 6 11m54-32 7 9" stroke="#839d83" stroke-width="3"/>
+  <path d="M39 233h142m37 9h119m27-17h105m307 35h163M60 298h115m40 24h85m441-24h144m-236 61h137m-636 34h99m498 32h187m-561 13h97" stroke="#dce6cc" stroke-width="3" stroke-linecap="round"/>
+  <path d="m837 323 5-12 5 12 12 5-12 5-5 12-5-12-12-5Zm-55 48 4-10 4 10 10 4-10 4-4 10-4-10-10-4Zm-58 48 3-8 3 8 8 3-8 3-3 8-3-8-8-3Z" fill="#f0d394"/>
+  <path d="M825 352h32m-87 45h26m-86 44h26" stroke="#f0d394" stroke-width="3" stroke-linecap="round"/>
+  <path d="m9 465 6-29 7 25 13-13-5 25m889 2 4-28 7 23 14-15-5 28m-47-4 4-20 7 17" stroke="#416f59" stroke-width="3" stroke-linecap="round"/>
+</svg>

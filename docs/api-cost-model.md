@@ -1,4 +1,4 @@
-# Usage, estimated cost and local guards — POC 03–05
+# Usage, estimated cost and local guards — POC 03–08
 
 Pricing source checked **2026-10-24**: [OpenAI Standard API pricing](https://developers.openai.com/api/docs/pricing). Capability check: [image guide](https://developers.openai.com/api/docs/guides/image-generation), [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs). POC 02's measured comparison remains historical evidence, not the price table or a representative cost benchmark.
 
@@ -60,6 +60,22 @@ Operation IDs, unique DB constraints, a transactional claim and leases prevent c
 When pricing is unknown/expired, the UI marks it unpriced and the monetary guard only covers known amounts. **Hard call/step counts remain enforced.** No invented dollar estimate is used to suggest protection that does not exist. To stop all new unpriced provider work operationally, remove/disable the key rather than treating a dollar figure as known.
 
 These are **application controls, not an absolute provider billing cap**. In-flight calls can exceed token allowances, usage can be incomplete, a request can finish after timeout/recovery, and API use outside this run/application is not covered. Actual known usage above its reservation is recorded honestly and blocks later reservations if over budget; it cannot undo a billable request. Configure provider-side billing controls separately as needed. The app does not promise provider billing behavior.
+
+### POC 08: multiple story-owned references
+
+The shared image-edit request accepts a template's zero to three references. With references, it still makes one request per panel; input image usage can increase. The planning allowance is now 2,000 reference-input tokens **per supplied reference**, rather than 2,000 regardless of count. For low-quality Flare this is $0.074 with one reference, $0.090 with two and $0.106 with three. The model, image quality, size and optional preview setting are unchanged. Measured reference-input usage from the provider remains the cost source; the estimate is never added again to returned usage.
+
+Three-reference stories may exhaust the default $0.30 run estimate guard before chapter two. Increase `LUNATOON_RUN_BUDGET_USD` deliberately for new runs if appropriate; changing configuration does not rewrite an existing run's budget. Multi-reference tests can use a $0.50 fixture budget to verify the complete journey. Zero-reference templates require explicit text-only mode, clearly disclosed in the reader. They cannot borrow another story's character reference or silently fall back after a failed paid edit.
+
+Reference-array support and rates were checked on 2026-10-24 against the [Images edit API](https://developers.openai.com/api/reference/resources/images/methods/edit), [image guide](https://developers.openai.com/api/docs/guides/image-generation#edit-images), and [Standard pricing](https://developers.openai.com/api/docs/pricing). Automated multi-reference tests use the official SDK with a mocked transport. No new live cost or quality result is claimed.
+
+### POC 08: foundation generation before a reader run exists
+
+Creator Studio uses a separate durable attempt ledger in `creator.sqlite`. Each draft snapshots the configured narrative model and defaults to **three attempts / $0.05 estimated budget**. The verified GPT-4.1 mini planning allowance is 4,000 input plus 5,000 output tokens, or **$0.0096 per attempt**; the request's output limit is 5,000 tokens. Actual usage uses the same captured price version and cached-token calculation as reader narratives. Unknown models or expired prices remain unpriced; the three-call hard limit still applies. These are per-draft controls, not installation-wide billing limits.
+
+Generating a foundation is an explicit narrative call. Editing, safe reference uploads, saving templates, listing stories and opening existing content make no generation calls. Uploaded images are not sent during foundation generation; their image-input costs arise only when a reader explicitly generates reference-edited panels.
+
+Failed JSON/schema/continuity validation retains returned request IDs, timing and usage. Connection failures or interrupted requests can retain unknown cost and their planning hold. Retrying them requires an explicit action and acknowledgement of the possible prior charge; no automatic retry or alternate model is used. Reader calls are accounted separately against each run's own stored limits, so the foundation amount is not counted twice in story-generation totals.
 
 ## Timing and comparison
 

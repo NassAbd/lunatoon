@@ -140,7 +140,7 @@ test("both decisions append in place with mocked provider previews, stable scrol
   page.on("request", item => { if (isImageRequest(item)) activeImageRequests.add(item); });
   page.on("requestfinished", item => { if (isImageRequest(item)) { activeImageRequests.delete(item); finishedImageRequests++; } });
   page.on("requestfailed", item => { if (isImageRequest(item)) { activeImageRequests.delete(item); failedImageRequests++; nativeImageFailures.push({ url: item.url(), error: item.failure()?.errorText ?? null }); } });
-  await page.goto("/"); await page.getByRole("button", { name: "Begin the story" }).click();
+  await page.goto("/"); await page.locator("[data-story='neon-protocol']").getByRole("button", { name: "Begin the story" }).click();
   await expect(page).toHaveURL(/\/run\/[a-f0-9-]+$/); const url = page.url();
   await page.getByRole("radio", { name: "Destroy the device" }).check();
   await page.getByLabel("Add a little of your imagination").fill("Destroy it with a hammer.");

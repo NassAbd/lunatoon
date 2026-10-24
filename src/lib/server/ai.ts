@@ -52,10 +52,12 @@ export async function generateScript(client: OpenAI, request: StoryRequest, sign
   };
 }
 
-export type VisualMemory = { identity: string; style: string; current: string; reference: Buffer; models: { image: string; quality: "low" | "medium" | "high" } };
+export type ReferenceImage = { bytes: Buffer; mime: string; name?: string };
+export type VisualMemory = { identity: string; style: string; current: string; reference?: Buffer; references?: ReferenceImage[]; protagonist?: string; models: { image: string; quality: "low" | "medium" | "high" } };
 export async function generateIllustration(client: OpenAI, panel: ScriptPanel, signal?: AbortSignal, approach: ImageApproach = "text", memory?: VisualMemory, onPreview?: OnIllustrationPreview): Promise<ImageResponse> {
   const started = performance.now();
   const config = memory?.models ?? getModelConfig();
+  const promptVersion = memory?.protagonist ? "story-visual-08" : ART_VERSION;
   const size = panel.layout_aspect === "vertical" ? "1024x1536" : panel.layout_aspect === "banner" ? "1536x1024" : "1024x1024";
   if (approach === "reference" && !isReferenceModelSupported(config.image)) throw new GenerationError("reference_unsupported", "The configured model has no verified reference-edit support in this experiment. Choose approach A or a documented GPT Image 2.5 model.", 400);
   const options = {
@@ -67,10 +69,18 @@ export async function generateIllustration(client: OpenAI, panel: ScriptPanel, s
     output_format: "jpeg" as const,
     output_compression: 85,
   };
-  // The authored sheet is a fixed local PNG, never a client-provided URL or file path.
-  const editOptions = approach === "reference" ? { ...options, prompt: `${options.prompt}\nUse the attached original sheet as the authority for Kael's face, costume, colors and flat ink style; apply explicitly recorded appearance changes. Create the requested new composition; do not reproduce the sheet layout or add labels.`, image: await toFile(memory?.reference ?? await readFile(path.join(process.cwd(), "public", "kael-reference.png")), "kael-reference.png", { type: "image/png" }) } : null;
+  // Inputs are validated server-owned bytes, never browser paths or URLs. Only
+  // the legacy experiment may fall back to its fixed authored Kael reference.
+  let editOptions = null;
+  if (approach === "reference") {
+    const references = memory?.references ?? (memory?.reference ? [{ bytes: memory.reference, mime: "image/png", name: "kael-reference.png" }] : memory?.protagonist ? [] : [{ bytes: await readFile(path.join(process.cwd(), "public", "kael-reference.png")), mime: "image/png", name: "kael-reference.png" }]);
+    if (references.length < 1 || references.length > 3 || references.some(ref => !["image/png", "image/jpeg", "image/webp"].includes(ref.mime) || ref.bytes.length === 0 || ref.bytes.length > 20 * 1024 * 1024)) throw new GenerationError("reference_missing", "Use one to three validated local raster references, or explicitly choose text-only mode.", 400);
+    const files = await Promise.all(references.map((ref, index) => toFile(ref.bytes, ref.name ?? `reference-${index + 1}.${ref.mime === "image/jpeg" ? "jpg" : ref.mime.split("/")[1]}`, { type: ref.mime })));
+    const direction = memory?.protagonist ? "Use the attached story references for the main character, environment and art style according to their supplied roles. Preserve the saved character identity and explicitly recorded appearance changes." : "Use the attached original sheet as the authority for Kael's face, costume, colors and flat ink style; apply explicitly recorded appearance changes.";
+    editOptions = { ...options, prompt: `${options.prompt}\n${direction} Create the requested new composition; do not reproduce reference layouts or add labels.`, image: files.length === 1 ? files[0] : files };
+  }
   if (editOptions && onPreview && supportsImagePreviews(config.image)) {
-    const metrics: Metrics = { model: config.image, quality: config.quality, approach, prompt_version: ART_VERSION, duration_ms: 0, request_id: null, usage: null, partial_images_requested: 1, partial_images_received: 0 };
+    const metrics: Metrics = { model: config.image, quality: config.quality, approach, prompt_version: promptVersion, duration_ms: 0, request_id: null, usage: null, partial_images_requested: 1, partial_images_received: 0 };
     let encoded: string | null = null;
     try {
       const response = await client.images.edit({ ...editOptions, stream: true, partial_images: 1 }, { signal }).withResponse();
@@ -105,7 +115,7 @@ export async function generateIllustration(client: OpenAI, panel: ScriptPanel, s
   const response = approach === "reference"
     ? await client.images.edit(editOptions!, { signal })
     : await client.images.generate(options, { signal });
-  const metrics: Metrics = { model: config.image, quality: config.quality, approach, prompt_version: ART_VERSION, duration_ms: Math.round(performance.now() - started), request_id: response._request_id ?? null, usage: response.usage ? { input_tokens: response.usage.input_tokens, output_tokens: response.usage.output_tokens, total_tokens: response.usage.total_tokens, input_text_tokens: response.usage.input_tokens_details?.text_tokens, input_image_tokens: response.usage.input_tokens_details?.image_tokens } : null };
+  const metrics: Metrics = { model: config.image, quality: config.quality, approach, prompt_version: promptVersion, duration_ms: Math.round(performance.now() - started), request_id: response._request_id ?? null, usage: response.usage ? { input_tokens: response.usage.input_tokens, output_tokens: response.usage.output_tokens, total_tokens: response.usage.total_tokens, input_text_tokens: response.usage.input_tokens_details?.text_tokens, input_image_tokens: response.usage.input_tokens_details?.image_tokens } : null };
   const encoded = response.data?.[0]?.b64_json;
   if (!encoded) throw new GenerationError("missing_image", "No illustration was returned. No automatic retry was made.", 502, metrics);
   return {

@@ -1,6 +1,6 @@
 import { CHARACTER_IDENTITY } from "../art-direction";
 import { ValidatedScriptSchema } from "../contracts";
-import { ChapterSchema, StateSchema, type Chapter, type StoryState } from "./contracts";
+import { ChapterSchema, StateSchema, StoryFoundationSchema, StoryTemplateSchema, type Chapter, type StoryState, type StoryFoundation, type StoryTemplate } from "./contracts";
 import { withFailurePhase } from "./failure-diagnostics";
 import { EngineError } from "./errors";
 
@@ -10,7 +10,28 @@ function requireState(valid: boolean, message: string, issue?: { path: string; r
 export function initialState(): StoryState {
   return { facts: [{ id: "device_knows_kael", text: "The device knows Kael's name." }, { id: "city_ai_silent", text: "The city's AI is silent while cameras track Kael." }], characters: [{ id: "kael", name: "Kael", visual_anchor: CHARACTER_IDENTITY, injuries: [], clothing_condition: "Mustard-yellow trench coat wet from rain", carried_objects: ["device"] }], objects: [{ id: "device", name: "Palm-sized black square device with cyan core", condition: "intact", holder: "kael" }], relationships: ["Kael distrusts the city AI."], unresolved_threads: ["Who sent the device and why does it know Kael?"] };
 }
-export function applyChapter(before: StoryState, proposed: Chapter, step: number, maxSteps: number): StoryState {
+function validateFoundationFields(foundation: StoryFoundation) {
+  const state = foundation.initial_state;
+  for (const records of [state.facts, state.characters, state.objects, foundation.initial_decision.options]) requireState(new Set(records.map(item => item.id)).size === records.length, "Initial story record IDs must be unique.");
+  requireState(state.characters.some(character => character.id === foundation.protagonist_id), "The story protagonist must exist in its initial characters.");
+  requireState(state.facts.length <= 12, "The initial story needs room for two chapters of new facts.");
+  for (const character of state.characters) requireState(character.carried_objects.every(id => state.objects.some(object => object.id === id && object.holder === character.id)), "Initial carried objects and their holder must agree.");
+  for (const object of state.objects) requireState(object.holder == null || state.characters.some(character => character.id === object.holder && character.carried_objects.includes(object.id)), "Initial object ownership and carried objects must agree.");
+  for (const effect of foundation.choice_effects) {
+    requireState(foundation.initial_decision.options.some(choice => choice.id === effect.choice_id), "A choice effect refers to an unknown initial choice.");
+    requireState(state.objects.some(object => object.id === effect.object_id), "A choice effect refers to an unknown initial object.");
+    requireState(!state.objects.some(object => object.id === effect.object_id && object.condition === "destroyed") || effect.condition === "destroyed", "A choice cannot restore an initially destroyed object.");
+  }
+}
+export function validateStoryFoundation(value: unknown): StoryFoundation {
+  const foundation = StoryFoundationSchema.parse(value); validateFoundationFields(foundation); return foundation;
+}
+export function validateStoryTemplate(value: unknown): StoryTemplate {
+  const template = StoryTemplateSchema.parse(value); validateFoundationFields(template);
+  requireState(new Set(template.reference_asset_ids).size === template.reference_asset_ids.length, "Story reference IDs must be unique.");
+  return template;
+}
+export function applyChapter(before: StoryState, proposed: Chapter, step: number, maxSteps: number, openingFactIds: readonly string[] = initialState().facts.map(fact => fact.id)): StoryState {
   requireState(Number.isInteger(step) && step >= 1 && step <= maxSteps && maxSteps <= 2, "Chapter chronology must stay within the configured story steps.");
   const chapter = withFailurePhase("chapter_validation", () => {
     const parsed = ChapterSchema.parse(proposed);
@@ -26,7 +47,7 @@ export function applyChapter(before: StoryState, proposed: Chapter, step: number
   const used = new Set(updates.used_fact_ids);
   for (const id of used) requireState(facts.has(id), "The chapter used a fact not present in this run's saved context.", { path: "story_state_updates.used_fact_ids", rule: "unknown_fact_reference" });
   if (step > 1) {
-    const openingFacts = new Set(initialState().facts.map(fact => fact.id));
+    const openingFacts = new Set(openingFactIds);
     requireState([...used].some(id => !openingFacts.has(id)), "The second continuation must use a consequence established by the first decision.", { path: "story_state_updates.used_fact_ids", rule: "missing_saved_consequence" });
   }
   const after = structuredClone(before);

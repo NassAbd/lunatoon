@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" fill="none">
+  <title>Blue Hour Society — coming soon</title><desc>Original urban-mystery cover: a coral umbrella rests on a blue rooftop beneath a clock with a missing hour.</desc>
+  <path fill="#41748b" d="M0 0h1000v650H0z"/>
+  <path d="M0 300h85V179h108v183h66V240h107v113h78V137h108v201h91V201h91v144h80V167h112v151h74v332H0Z" fill="#2e596f"/>
+  <path d="M22 384h169V311h132v114h113V285h147v89h130V290h143v101h144v259H0Z" fill="#22465e"/>
+  <path d="M104 211h19v22h-19Zm42 0h19v22h-19Zm137 63h20v24h-20Zm186-101h18v25h-18Zm39 0h18v25h-18Zm160 61h18v23h-18Zm178-35h21v25h-21Z" fill="#aac1bd"/>
+  <circle cx="738" cy="142" r="82" fill="#b4ceca" stroke="#22465e" stroke-width="7"/>
+  <circle cx="738" cy="142" r="67" stroke="#7ea4a9" stroke-width="3"/>
+  <path d="M738 79v13m0 99v13m-63-62h13m99 0h13m-107-44 9 9m72 72 9 9m-90 0 9-9" stroke="#356379" stroke-width="5" stroke-linecap="round"/>
+  <path d="M738 142v-35m0 35 31 16" stroke="#22465e" stroke-width="6" stroke-linecap="round"/>
+  <path d="M0 513h1000v137H0Z" fill="#3a6478"/><path d="M0 513h1000M90 513v137m155-137v137m155-137v137m155-137v137m155-137v137m155-137v137" stroke="#234b62" stroke-width="4"/>
+  <path d="M265 391c28-145 278-171 346-29-42-15-68-11-99 9-41-15-70-12-100 9-37-10-70-3-101 15Z" fill="#db8e84" stroke="#724f63" stroke-width="4"/>
+  <path d="M446 277c-41 24-52 62-34 103m34-103c50 19 65 47 66 94m-66-94 18-28" stroke="#b26d72" stroke-width="4"/>
+  <path d="m447 282 14 199c2 43 46 41 43 11" stroke="#d4c9b5" stroke-width="7" stroke-linecap="round"/>
+  <path d="m102 104 13 31m121-50 13 31m55 99 13 31m267-174 13 31m-41 85 13 31m294 52 13 31m50-120 13 31" stroke="#78a0ad" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="459" cy="569" rx="130" ry="13" fill="#7c9da4" opacity=".55"/>
+</svg>

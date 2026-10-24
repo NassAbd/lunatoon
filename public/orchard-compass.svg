@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="480" viewBox="0 0 1000 480" fill="none">
+  <title>The seed compass points below</title><desc>Original close-up of a copper compass with an ivory face and coral glass center, held above dry root channels.</desc>
+  <path fill="#b77d69" d="M0 0h1000v480H0z"/>
+  <path d="m-30 349 198-121 204 10 126-104 244-12 284-76M166 228l15 189 138 84M498 134l43 224 271 76" stroke="#745567" stroke-width="27" stroke-linejoin="round"/>
+  <path d="m-30 349 198-121 204 10 126-104 244-12 284-76M166 228l15 189 138 84M498 134l43 224 271 76" stroke="#956776" stroke-width="9" stroke-linejoin="round"/>
+  <path d="m48 78 64 18m685 237 83-29m-648 53 40 21m380-327 56 9" stroke="#dca885" stroke-width="4" stroke-linecap="round"/>
+  <path d="m1000 361-263-64-111-47-74 84 151 81 297 65Z" fill="#66506c" stroke="#42384c" stroke-width="5"/>
+  <path d="m657 257 65 30-58 99-61-35Z" fill="#ead9b9" stroke="#42384c" stroke-width="4"/>
+  <path d="m610 282-65-34-66 26-4 45 72 36 63-15 28-39Z" fill="#c38b62" stroke="#42384c" stroke-width="4"/>
+  <circle cx="455" cy="235" r="130" fill="#b67d54" stroke="#42384c" stroke-width="7"/>
+  <circle cx="455" cy="235" r="108" fill="#eedcba" stroke="#8d634e" stroke-width="5"/>
+  <circle cx="455" cy="235" r="90" stroke="#c3a47c" stroke-width="2"/>
+  <path d="m455 151 23 62 61 22-62 22-22 61-22-61-62-22 62-22Z" fill="#6e5269"/>
+  <path d="m455 151 23 62-23 22Z" fill="#997388"/>
+  <circle cx="455" cy="235" r="26" fill="#ed9878" stroke="#734d56" stroke-width="4"/>
+  <path d="m443 223 12-8 14 13-11 24-17-12Z" fill="#f5bc94"/>
+  <path d="M455 113v15m0 215v15m-123-123h15m216 0h15m-210-87 11 11m152 152 10 10m-173 0 11-11m152-152 10-10" stroke="#dfb27e" stroke-width="5" stroke-linecap="round"/>
+  <path d="m462 371 14 25 23-4" stroke="#eac59b" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -1,23 +1,28 @@
 import Link from "next/link";
 import { Icon } from "./icon";
 import { INITIAL_CONTEXT } from "@/lib/contracts";
+import type { StoryTemplate } from "@/lib/story-engine/contracts";
 import "@/app/opening.css";
 
-export function StoryHeader({ active }: { active?: "library" | "saved" | "about" }) {
+export function StoryHeader({ active }: { active?: "library" | "saved" | "about" | "studio" }) {
   return <header className="book-header">
     <Link href="/" className="book-brand" aria-label="Lunatoon home"><span><Icon name="moon" size={23} /></span>lunatoon<span className="book-brand-dot">.</span></Link>
     <nav className="book-navigation" aria-label="Main navigation">
       <Link href="/" aria-current={active === "library" ? "page" : undefined}>Library</Link>
       <Link href="/saved" aria-current={active === "saved" ? "page" : undefined}>Saved stories</Link>
+      <Link href="/studio" aria-current={active === "studio" ? "page" : undefined}>Create a story</Link>
       <Link href="/about" aria-current={active === "about" ? "page" : undefined}>About</Link>
     </nav>
   </header>;
 }
-export function StoryOpening({ src, context }: { src: string; context: string }) {
+export function StoryOpening({ src, context, template, assetUrls = {} }: {
+  src: string; context: string; template?: StoryTemplate; assetUrls?: Record<string, string>;
+}) {
   const canonical = context === INITIAL_CONTEXT;
   return <section aria-label="Story opening" className="book-opening" id="story">
-    <div className="book-title"><p className="book-eyebrow">NEW KYOTO, 2089 · CYBERPUNK NOIR</p><h1>Neon Protocol</h1><p className="book-deck">The city knows everything.<br />Except what you’ll do next.</p></div>
-    {canonical ? <div className="opening-beats">
+    {template ? <div className="book-title"><p className="book-eyebrow">{template.genre}</p><h1>{template.title}</h1><p className="book-deck">{template.description}</p></div>
+      : <div className="book-title"><p className="book-eyebrow">NEW KYOTO, 2089 · CYBERPUNK NOIR</p><h1>Neon Protocol</h1><p className="book-deck">The city knows everything.<br />Except what you’ll do next.</p></div>}
+    {template ? <div className="opening-beats">{template.opening_beats.map((beat, index) => <OpeningBeat key={`${beat.asset_id}-${index}`} number={String(index + 1).padStart(2, "0")} src={assetUrls[beat.asset_id]} width={beat.width} height={beat.height} alt={beat.alt}>{beat.caption}</OpeningBeat>)}</div> : canonical ? <div className="opening-beats">
       <OpeningBeat number="01" src="/neon-city.svg" width={1000} height={500} alt="Rain falls between midnight-blue towers above the abandoned transit station">
         <strong>New Kyoto, 2089.</strong> Rain never stops in the lower city.
       </OpeningBeat>
