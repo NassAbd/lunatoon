@@ -1,10 +1,7 @@
 import Link from "next/link";
 import { StoryHeader } from "@/components/story-book";
-import { LibraryLaunch } from "@/components/library-launch";
 import { SavedSessions } from "@/components/saved-sessions";
 import { CreatorStories } from "@/components/creator-stories";
-import { getModelConfig } from "@/lib/server/ai";
-import { isReferenceModelSupported } from "@/lib/art-direction";
 import { listSavedRuns } from "@/lib/story-library";
 import { BUNDLED_STORIES, PREVIEW_STORIES } from "@/lib/story-templates/catalog";
 import { listOwnedSavedTemplates } from "@/lib/creator/store";
@@ -13,7 +10,6 @@ export default function Home() {
   let saved: ReturnType<typeof listSavedRuns> | null;
   try { saved = listSavedRuns({ limit: 6 }); } catch { saved = null; }
   const stories = BUNDLED_STORIES.filter(entry => entry.template.status === "ready");
-  const referenceSupported = isReferenceModelSupported(getModelConfig().image);
   let creatorStories: ReturnType<typeof listOwnedSavedTemplates> = [];
   let creatorUnavailable = false;
   try { creatorStories = listOwnedSavedTemplates({ limit: 12 }); } catch { creatorUnavailable = true; }
@@ -30,14 +26,14 @@ export default function Home() {
             <img src={`/api/templates/${template.id}/assets/${template.cover_asset_id}?version=${template.version}`} width={cover.width} height={cover.height} alt={cover.alt} />
             <span className="cover-label">{index === 0 ? "FEATURED · PLAYABLE" : "PLAYABLE"}</span>
           </div>
-          <div className="story-card-copy"><p className="story-genre">{template.genre}</p><h2>{template.title}</h2><p>{template.description}</p><LibraryLaunch referenceSupported={referenceSupported} template={template.id === "neon-protocol" ? undefined : template} /></div>
+          <div className="story-card-copy"><p className="story-genre">{template.genre}</p><h2>{template.title}</h2><p>{template.description}</p><div className="library-launch"><Link className="book-primary" href={`/story/${template.id}`}>About this story</Link></div></div>
         </article>;
       })}</div>
     </section>
     <section id="creator-stories" className="library-preview library-collection" aria-labelledby="creator-heading">
       <div className="library-section-heading"><div><p className="book-eyebrow">MADE BY YOU</p><h2 id="creator-heading">Your own worlds.</h2></div><Link href="/studio">Create a story <span aria-hidden="true">↗</span></Link></div>
       <p className="library-collection-note">Describe a world, refine its beginning, and make it playable. Saved on this local installation.</p>
-      {creatorUnavailable ? <p role="status">Local creator stories are temporarily unavailable. Your saved files have been preserved.</p> : <CreatorStories stories={creatorStories} referenceSupported={referenceSupported} />}
+      {creatorUnavailable ? <p role="status">Local creator stories are temporarily unavailable. Your saved files have been preserved.</p> : <CreatorStories stories={creatorStories} />}
     </section>
     <section className="library-preview library-collection" aria-labelledby="preview-heading">
       <div className="library-section-heading"><div><p className="book-eyebrow">WORLDS ON THE HORIZON</p><h2 id="preview-heading">More stories to look forward to.</h2></div></div>

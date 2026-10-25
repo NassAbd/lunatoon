@@ -11,7 +11,7 @@ async function start(request: APIRequestContext, approach = "reference") { const
 async function illustrate(request: APIRequestContext, saved: Snapshot) { await Promise.all(saved.panels.filter(p => p.status === "pending").map(p => request.post(`/api/runs/${saved.run.id}/panels/${p.id}/image`, { data: { operation_id: p.operation_id, retry: false } }))); return SnapshotSchema.parse(await (await request.get(`/api/runs/${saved.run.id}`)).json()); }
 
 test("saved two-decision story paints dialogue first, completes images independently, survives refresh and real process restart", async ({ page, request, browser }) => {
-  const before = await stats(request); await page.goto("/"); await page.locator("[data-story='neon-protocol']").getByRole("button", { name: "Begin the story" }).click(); await expect(page).toHaveURL(/\/run\/[a-f0-9-]+$/);
+  const before = await stats(request); await page.goto("/"); await page.locator("[data-story='neon-protocol']").getByRole("link", { name: "About this story", exact: true }).click(); await page.getByRole("button", { name: "Begin the story", exact: true }).click(); await expect(page).toHaveURL(/\/run\/[a-f0-9-]+$/);
   const url = page.url(); const runId = url.split("/").at(-1)!;
   await page.getByRole("radio", { name: "Investigate its origin" }).check(); await page.getByLabel("Add a little of your imagination").fill("A mysterious cyborg cat suddenly appears.");
   await page.getByRole("button", { name: "Continue the story" }).click();

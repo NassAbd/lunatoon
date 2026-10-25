@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ImageDisplayTiming } from "@/lib/reader-timing";
 import { Icon } from "./icon";
+import { WaitingArtwork } from "./waiting-artwork";
+import type { WaitingArtwork as Artwork } from "@/lib/reader-waiting-artwork";
 import "@/app/generation-ux.css";
 export type OnImageDisplay = (kind: "preview" | "final", timing: ImageDisplayTiming) => void;
 function DecodedImage({ src, description, kind, onDisplay }: { src: string; description: string; kind: "preview" | "final"; onDisplay?: OnImageDisplay }) {
@@ -45,7 +47,12 @@ function WaitingCopy({ savedContent = "dialogue" }: { savedContent?: "dialogue" 
   }, []);
   return <span>{longWait ? `Taking a little longer. Your ${savedContent} is saved.` : "Keep reading. The scene will appear here."}</span>;
 }
-export function ReaderIllustration({ src, preview, description, error, onDisplay, savedContent = "dialogue" }: { src?: string; preview?: string; description: string; error?: string; onDisplay?: OnImageDisplay; savedContent?: "dialogue" | "caption" }) {
+export function ReaderIllustration({ src, preview, description, error, onDisplay, savedContent = "dialogue", waitingArtwork = [] }: { src?: string; preview?: string; description: string; error?: string; onDisplay?: OnImageDisplay; savedContent?: "dialogue" | "caption"; waitingArtwork?: readonly Artwork[] }) {
+  const [visibleSource, setVisibleSource] = useState<string>();
+  const display: OnImageDisplay = (kind, timing) => {
+    if (kind === "final" && timing.phase === "visible") setVisibleSource(src);
+    onDisplay?.(kind, timing);
+  };
   return <>
     <div className="image-placeholder reading-placeholder generation-placeholder" data-state={error ? "failed" : "pending"} aria-hidden={Boolean(src)}>
       {/* Authored decorative geometry, not a generated preview or story event. */}
@@ -57,14 +64,15 @@ export function ReaderIllustration({ src, preview, description, error, onDisplay
         <circle className="generation-orbit" cx="240" cy="176" r="26" />
         <path className="generation-orbit" d="M240 138V146M240 206V214M202 176H210M270 176H278" />
       </svg>
+      {!preview && !error && (!src || visibleSource !== src) && waitingArtwork.length > 0 && <WaitingArtwork artwork={waitingArtwork} />}
       <div className="generation-copy">
         <span className="placeholder-mark"><Icon name={error ? "break" : "moon"} size={24} /></span>
         <p>{error ? "This illustration couldn’t be finished" : src ? "Loading your saved illustration…" : "Illustrating this moment…"}</p>
         {error ? <span>Your {savedContent} is still here.</span> : src ? <span>Your artwork is saved.</span> : <WaitingCopy savedContent={savedContent} />}
       </div>
     </div>
-    {preview && !error && <DecodedImage key={preview} src={preview} description={`Preview: ${description}`} kind="preview" onDisplay={onDisplay} />}
-    {src && <DecodedImage key={src} src={src} description={description} kind="final" onDisplay={onDisplay} />}
+    {preview && !error && <DecodedImage key={preview} src={preview} description={`Preview: ${description}`} kind="preview" onDisplay={display} />}
+    {src && <DecodedImage key={src} src={src} description={description} kind="final" onDisplay={display} />}
     {preview && !src && !error && <span className="preview-label">Preview · still illustrating</span>}
   </>;
 }

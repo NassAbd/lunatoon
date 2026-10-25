@@ -53,6 +53,12 @@
   align-items: center;
 }
 
+.waiting-artwork { position: absolute; inset: 0; overflow: hidden; }
+.waiting-artwork img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.4s ease-in-out; }
+.waiting-artwork img.is-current { opacity: 0.55; }
+.waiting-artwork::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #0b1b2540, #0b1b25b8 48%, #0b1b25dc); }
+.waiting-artwork-label { position: absolute; z-index: 1; bottom: 22px; left: 20px; right: 20px; text-align: center; color: #d5e2db; font-size: 11px; letter-spacing: 0.02em; }
+
 .story-reader .generation-copy .placeholder-mark {
   display: grid;
   place-items: center;
@@ -87,6 +93,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Override the global reduced-motion timing rule: scenery needs no events. */
+  .waiting-artwork img { transition: none !important; }
   .story-reader .generated-image.reader-image.is-ready,
   .story-reader .preview-image.reader-image.is-ready {
     /* Keep animationend so the existing real visibility measurement still completes. */

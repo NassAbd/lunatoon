@@ -64,7 +64,7 @@ async function anchor(page: Page): Promise<Anchor> {
     };
   });
 }
-async function expectFinale(page: Page, saved: Snapshot, artwork: "complete" | "unfinished") {
+async function expectFinale(page: Page, saved: Snapshot, artwork: "complete") {
   const ending = page.locator(".book-ending");
   await expect(ending).toHaveAttribute("data-artwork", artwork);
   await expect(ending.getByRole("heading", { name: "A story only you could tell.", exact: true })).toBeVisible();
@@ -171,7 +171,7 @@ test("completed decisions compact only when safe, keep the visible panel anchore
   expect(await stats(request)).toEqual(generated);
 });
 
-test("the ending stays honest and usable with unfinished art, isolated retry and reduced motion at 1024px", async ({ page, request }) => {
+test("the ending stays hidden through unfinished art and isolated recovery with reduced motion at 1024px", async ({ page, request }) => {
   await page.setViewportSize({ width: 1024, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await control(request, { scriptDelay: 50, imageDelay: 100 });
@@ -184,12 +184,12 @@ test("the ending stays honest and usable with unfinished art, isolated retry and
   await page.goto(`/run/${fresh.run.id}`);
   await expect(page.locator(".book-decision[data-compact='true']")).toHaveCount(2);
   await expect(page.locator(".generated-image.is-ready")).toHaveCount(2);
-  await expectFinale(page, written, "unfinished");
+  await expect(page.locator(".book-ending")).toHaveCount(0);
   await page.locator(".book-decision[data-step='2']").scrollIntoViewIfNeeded();
   await page.screenshot({ path: "test-results-live/poc-07/screenshots/mocked-compact-history-1024.png", animations: "disabled" });
   await expect(page.getByRole("button", { name: "Finish the illustrations", exact: true })).toBeEnabled();
   await page.reload();
-  await expectFinale(page, written, "unfinished");
+  await expect(page.locator(".book-ending")).toHaveCount(0);
   expect(await stats(request)).toEqual(beforeVisit);
   await control(request, { imageDelay: 150, failSecond: true });
   await page.getByRole("button", { name: "Finish the illustrations", exact: true }).click();
@@ -199,7 +199,7 @@ test("the ending stays honest and usable with unfinished art, isolated retry and
   await expect(page.locator(".saved-reader")).not.toHaveCSS("overflow-anchor", "none");
   const failed = await readRun(request, fresh.run.id);
   expect(failed.panels.map(panel => panel.status)).toEqual(["complete", "complete", "complete", "failed"]);
-  await expectFinale(page, failed, "unfinished");
+  await expect(page.locator(".book-ending")).toHaveCount(0);
   const afterFailure = await stats(request);
   expect(afterFailure.scripts).toBe(beforeVisit.scripts); expect(afterFailure.images - beforeVisit.images).toBe(2);
   await control(request, { imageDelay: 100 });
@@ -233,6 +233,7 @@ test("a failed saved-illustration load retries its local GET without replacing i
   });
   await page.goto(`/run/${fresh.run.id}`);
   await expect(page.locator(".generated-image.is-ready")).toHaveCount(1);
+  await expect(page.locator(".book-decision[data-step='2']")).toHaveCount(0);
   const reload = page.getByRole("button", { name: "Load saved illustration again", exact: true });
   await expect(reload).toBeEnabled();
   await page.locator(".book-panel").nth(1).locator(".generated-image").evaluate(image => {
@@ -242,6 +243,7 @@ test("a failed saved-illustration load retries its local GET without replacing i
   expect(await stats(request)).toEqual(generated);
   await reload.click();
   await expect(page.locator(".generated-image.is-ready")).toHaveCount(2);
+  await expect(page.locator(".book-decision[data-step='2']")).toBeVisible();
   await expect(reload).toHaveCount(0);
   expect(assetGets).toBe(2);
   expect(await page.locator(".book-panel").nth(1).locator(".generated-image").evaluate(image => (window as Window & { finaleSibling?: Element }).finaleSibling === image)).toBe(true);
@@ -256,8 +258,8 @@ test("retrying a failed illustration above the viewport preserves the later pane
   await Promise.all(written.panels.map(panel => request.post(`/api/runs/${fresh.run.id}/panels/${panel.id}/image`, { data: { operation_id: panel.operation_id, retry: false } })));
   const partial = await readRun(request, fresh.run.id);
   expect(partial.panels.map(panel => panel.status)).toEqual(["complete", "failed"]);
-  // The saved script permits the next decision while the isolated image failure
-  // remains recoverable. SCENE_TWO selects the failure, regardless of call order.
+  // Reconstruct a legacy advanced run through the API. The reader now gates new
+  // choices, but must keep this existing history and earlier recovery accessible.
   await control(request, { scriptDelay: 50, imageDelay: 100 });
   const ending = await writeChapter(request, partial, partial.nodes[0].chapter!.next_decision.options[0].id, "Keep the cat close.");
   await Promise.all(ending.panels.filter(panel => panel.status === "pending").map(panel => request.post(`/api/runs/${fresh.run.id}/panels/${panel.id}/image`, { data: { operation_id: panel.operation_id, retry: false } })));
@@ -266,6 +268,7 @@ test("retrying a failed illustration above the viewport preserves the later pane
   const beforeCalls = await stats(request);
   await page.goto(`/run/${fresh.run.id}`);
   await expect(page.locator(".generated-image.is-ready")).toHaveCount(3);
+  await expect(page.locator(".book-ending")).toHaveCount(0);
   await expect(page.locator(".book-decision[data-compact='true']")).toHaveCount(2);
   await expect(page.locator(".saved-reader")).not.toHaveCSS("overflow-anchor", "none");
   const retry = page.getByRole("button", { name: "Try this illustration again", exact: true });
@@ -284,6 +287,7 @@ test("retrying a failed illustration above the viewport preserves the later pane
   await retry.evaluate(button => (button as HTMLButtonElement).click());
   await expect(retry).toHaveCount(0);
   await expect(page.locator(".generated-image.is-ready")).toHaveCount(4);
+  await expect(page.locator(".book-ending")).toBeVisible();
   await twoFrames(page);
   const after = await anchor(page);
   expect(after.timeOrigin).toBe(before.timeOrigin);
@@ -320,6 +324,8 @@ test("a long illustration wait reports saved dialogue without invented progress 
     await twoFrames(page);
     await page.screenshot({ path: `test-results-live/poc-07/screenshots/mocked-long-wait-${width}.png`, animations: "disabled" });
   }
-  await expect(page.locator(".generated-image.is-ready")).toHaveCount(2);
+  // The browser clock does not advance the mock server's real 5,000 ms delay
+  // for panel two. Allow that delay plus response transfer and local decoding.
+  await expect(page.locator(".generated-image.is-ready")).toHaveCount(2, { timeout: 10_000 });
   await expect(page.getByText("Taking a little longer. Your dialogue is saved.", { exact: true })).toHaveCount(0);
 });

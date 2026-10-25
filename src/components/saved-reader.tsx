@@ -12,6 +12,8 @@ import { ReaderFinale } from "./reader-finale";
 import { ReaderDecision, type ReaderSubmission } from "./reader-decision";
 import { consumeImageResponse } from "@/lib/image-stream-client";
 import { recordImageDisplay, type ImageDisplayTiming, type ReaderObservation } from "@/lib/reader-timing";
+import { waitingArtworkForRun } from "@/lib/reader-waiting-artwork";
+import { chapterIllustrationsReady, storyIllustrationsReady, recordFinalVisibility, type FinalVisibility } from "@/lib/reader-completion";
 import "@/app/reader-polish.css";
 
 const usd = (micro: number) => `$${(micro / 1e6).toFixed(6)}`;
@@ -31,6 +33,7 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
   const [error, setError] = useState(""); const [writingStep, setWritingStep] = useState<number | null>(null);
   const [approach, setApproach] = useState<ImageApproach>(initial.run.approach);
   const [previews, setPreviews] = useState<Record<string, string>>({});
+  const [visibleFinals, setVisibleFinals] = useState<FinalVisibility>(() => new Set());
   const observationsRef = useRef<Record<string, ReaderObservation>>({});
   const measuredOperations = useRef(new Map<string, string>());
   const [observations, setObservations] = useState<Record<string, ReaderObservation>>({});
@@ -38,6 +41,8 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
   const publishObservation = () => setObservations({ ...observationsRef.current });
   function clearPreview(panelId: string) { setPreviews(current => { if (!(panelId in current)) return current; const next = { ...current }; delete next[panelId]; return next; }); }
   function recordDisplay(panelId: string, operationId: string, kind: "preview" | "final", timing: ImageDisplayTiming) {
+    // Availability must also work on reload, without a new generation clock.
+    setVisibleFinals(current => recordFinalVisibility(current, panelId, operationId, kind, timing.phase));
     if (kind === "final" && timing.phase === "visible") clearPreview(panelId);
     if (measuredOperations.current.get(panelId) !== operationId) return;
     const observed = Object.values(observationsRef.current).find(item => item.images[panelId]?.operation_id === operationId);
@@ -47,6 +52,7 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
   const operations = useRef(new Map<string, string>()); const readQueue = useRef<Promise<unknown>>(Promise.resolve());
   const base = `/api/runs/${initial.run.id}`;
   const template = snapshot.bible.template;
+  const waitingArtwork = waitingArtworkForRun(snapshot);
   const operation = (key: string) => { let id = operations.current.get(key); if (!id) { id = crypto.randomUUID(); operations.current.set(key, id); } return id; };
   function refresh() {
     // Serialize read responses so concurrent image completions cannot roll the UI back.
@@ -117,7 +123,8 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
   }
   const latest = snapshot.nodes.at(-1);
   const pending = snapshot.panels.filter(p => p.status === "pending");
-  const canDecide = !busy && !running && !pending.length && (!latest || Boolean(latest.chapter)) && snapshot.run.status !== "ended";
+  const canDecide = !busy && !running && (!latest || chapterIllustrationsReady(latest, snapshot.panels, visibleFinals)) && snapshot.run.status !== "ended";
+  const visuallyComplete = storyIllustrationsReady(snapshot.nodes, snapshot.panels, visibleFinals, snapshot.run.limits.max_steps);
   function panelView(panel: Panel): ComicPanel {
     return { ...panel.script, image_url: panel.status === "complete" && panel.image_path ? `${base}/assets/${panel.id}?v=${panel.operation_id}` : undefined, status: panel.status === "complete" ? "complete" : "loading_image", error: panel.error?.message, metrics: panel.metrics ?? undefined };
   }
@@ -153,6 +160,9 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
       {Array.from({ length: snapshot.run.limits.max_steps }, (_, index) => {
         const step = index + 1; const node = snapshot.nodes.find(item => item.step === step); const previous = snapshot.nodes.find(item => item.step === step - 1);
         if (step > 1 && !previous?.chapter) return null;
+        // Keep already-saved history recoverable, including older runs that
+        // progressed with unfinished art. Only a new decision is gated here.
+        if (step > 1 && !node && !chapterIllustrationsReady(previous, snapshot.panels, visibleFinals)) return null;
         const options = step === 1 ? template?.initial_decision.options ?? ["activate", "destroy", "investigate"].map((id, i) => ({ id, label: CHOICES[i] })) : previous!.chapter!.next_decision.options;
         if (!node && !options.length) return null;
         return <div className="book-step" data-step={step} key={step}>
@@ -160,7 +170,7 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
           {node && <section id={`chapter-${node.id}`} aria-label={`Chapter ${node.step}`} className="book-chapter">
             {node.chapter && <div className="book-chapter-heading"><span>Chapter {node.step}</span><h2>{node.chapter.is_ending ? "One choice changes everything." : "The story takes a turn."}</h2></div>}
             {snapshot.panels.filter(panel => panel.node_id === node.id).map(panel => <div className="book-panel" key={panel.id} data-panel-id={panel.id}>
-              <ComicPanelCard panel={panelView(panel)} reading preview={previews[panel.id]} onDisplay={(kind, timing) => recordDisplay(panel.id, panel.operation_id, kind, timing)} />
+              <ComicPanelCard panel={panelView(panel)} reading preview={previews[panel.id]} waitingArtwork={waitingArtwork} onDisplay={(kind, timing) => recordDisplay(panel.id, panel.operation_id, kind, timing)} />
               {panel.status === "failed" && <div className="book-recovery" role="alert"><p>We couldn’t finish this illustration. Your dialogue and the rest of your story are saved.</p><button className="book-secondary" disabled={busy || running} onClick={() => void work(async () => { await images([panel], undefined, operation(`retry:${panel.id}:${panel.operation_id}`)); })}>Try this illustration again</button><small>Only this illustration will be retried. Another attempt may incur a charge.</small></div>}
             </div>)}
           </section>}
@@ -170,7 +180,7 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
       {latest?.status === "script_failed" && <div className="book-recovery" role="alert"><h2>This part of the story couldn’t be written.</h2><p>Your last choice and earlier story are safe. You can try this part again.</p><p className="book-recovery-choice">{latest.choice}{latest.instruction && ` · ${latest.instruction}`}</p><button className="book-primary" disabled={busy || running} onClick={() => void writeChapter(undefined, latest.id)}>Try this part again</button><small>Another attempt may incur a charge. Your spending limits still apply.</small></div>}
       {pending.length > 0 && !busy && <div className="book-recovery"><p>Your words are saved. Let’s bring the remaining illustrations to life.</p><button className="book-primary" disabled={running} onClick={() => void work(async () => { await images(pending); })}>Finish the illustrations</button><small>Only unfinished illustrations will be requested.</small></div>}
       {error && <div className="book-recovery" role="alert"><p>{/limit|budget/i.test(error) ? "This story has reached a generation or spending limit. Your progress is saved; check Developer details for the remaining allowance." : "We couldn’t finish that request. Your saved story is safe. Check its status before trying again."}</p><button className="book-secondary" disabled={busy} onClick={() => void work(async () => { await refresh(); })}>Check saved progress</button></div>}
-      <ReaderFinale snapshot={snapshot} />
+      <ReaderFinale snapshot={snapshot} visuallyComplete={visuallyComplete} />
       {developerDetails}
       <footer className="book-footer">A little moonlight. A different story.</footer>
     </main>
