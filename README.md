@@ -46,7 +46,12 @@ Existing readings retain the exact story version and artwork they started with.
 
 ## Demo
 
-- **Two-minute pitch video:** not yet published; link to be added.
+Watch Lunatoon in action — from interactive reading to creating and playing an original illustrated story.
+
+[![Watch the Lunatoon demo](docs/screenshots/demo-thumbnail.png)](https://www.youtube.com/watch?v=Y_RcSYUp_AQ)
+
+**[Watch the 2-minute demo on YouTube](https://www.youtube.com/watch?v=Y_RcSYUp_AQ)**
+
 - **Hosted interactive demo:** not published. Run the application locally using the instructions below.
 - **Screenshots:** [Library](docs/screenshots/hackathon-library.png) · [Reader](docs/screenshots/hackathon-reader.png) · [Creator Studio](docs/screenshots/hackathon-studio.png)
 
