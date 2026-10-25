@@ -1,5 +1,7 @@
 # Lunatoon — POC 01 results
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 ## 1. Implemented functionality
 
 - English desktop viewer with a fixed illustrated opening for **Neon Protocol**, the initial context, three choices, and an optional 500-character twist.
@@ -29,7 +31,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Visit [http://127.0.0.1:3000](http://127.0.0.1:3000), choose an action, optionally add a twist, and click **Generate Continuation**. Observe dialogue first, each image independently, and the diagnostics. Test all three choices and the cyborg-cat twist. Restart after environment changes. See `README.md` for verification commands and measurement definitions.
+Visit [http://127.0.0.1:3000](http://127.0.0.1:3000), choose an action, optionally add a twist, and click **Generate Continuation**. Observe dialogue first, each image independently, and the diagnostics. Test all three choices and the cyborg-cat twist. Restart after environment changes. See the [current README](../../../README.md) for verification commands and measurement definitions.
 
 ## 4. Observed latencies and validation
 
@@ -58,3 +60,7 @@ Local verification completed on **2026-10-24**, using Node 24.14.0, Next.js 16.4
 ## 6. Recommendation: continue with a measured live experiment
 
 Continue the feasibility experiment, conditional on real results; do not expand product scope yet. Run the three actions plus the custom twist, record multiple full pipeline timings and qualitative quality notes, then compare the observed results against the targets. If character consistency is weak, evaluate a reference-image approach next; if latency is too high, compare quality settings and supported models. There is insufficient live evidence to claim feasibility or justify a pivot today.
+
+## Subsequent evidence supplied for POC 02
+
+The original verification notes above describe the initial implementation session. The user subsequently confirmed at least one real OpenAI generation and dialogue appearing before images. They reported approximately **5.58s text-ready** and **18.66s both images complete** from one observed run. Its raw request IDs, per-panel timings, token usage and server/browser timing breakdown were not supplied; it is not a representative benchmark or an inferred bottleneck. See [POC 02 decision](POC_02_DECISION.md) for the separate, controlled comparison and current evidence.

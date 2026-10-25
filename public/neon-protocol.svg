@@ -2,7 +2,7 @@
   <defs>
     <linearGradient id="sky" x1="500" y1="0" x2="500" y2="850" gradientUnits="userSpaceOnUse"><stop stop-color="#080f1b"/><stop offset=".55" stop-color="#173744"/><stop offset="1" stop-color="#07151c"/></linearGradient>
     <linearGradient id="street" x1="420" y1="460" x2="630" y2="850" gradientUnits="userSpaceOnUse"><stop stop-color="#2a7880"/><stop offset=".35" stop-color="#143440"/><stop offset="1" stop-color="#091622"/></linearGradient>
-    <linearGradient id="coat" x1="450" y1="400" x2="630" y2="740" gradientUnits="userSpaceOnUse"><stop stop-color="#e2bd59"/><stop offset=".38" stop-color="#ba903b"/><stop offset="1" stop-color="#705025"/></linearGradient>
+    <linearGradient id="coat" x1="450" y1="400" x2="630" y2="740" gradientUnits="userSpaceOnUse"><stop stop-color="#d2a751"/><stop offset="1" stop-color="#d2a751"/></linearGradient>
     <linearGradient id="coatShade" x1="466" y1="460" x2="552" y2="715" gradientUnits="userSpaceOnUse"><stop stop-color="#4d492f"/><stop offset="1" stop-color="#171e21"/></linearGradient>
     <linearGradient id="glass" x1="70" y1="0" x2="327" y2="600"><stop stop-color="#1c3d4a"/><stop offset="1" stop-color="#08131f"/></linearGradient>
     <radialGradient id="haze"><stop stop-color="#62c7cd" stop-opacity=".37"/><stop offset="1" stop-color="#3a7a85" stop-opacity="0"/></radialGradient>
@@ -57,7 +57,7 @@
   <path d="m423 634 1 24 9 14 16-6 4-30Z" fill="#93654d" stroke="#102029" stroke-width="3"/>
   <path d="m573 557 15-12 26-4 9 13-9 17-24 11Z" fill="#a27655" stroke="#16262b" stroke-width="3"/>
   <path d="m500 415 6 28 20 22 23-25 2-36Z" fill="#a67450" stroke="#152128" stroke-width="3"/>
-  <path d="m491 373 10-28 27-13 31 13 10 26-6 44-19 21-25-3-19-17Z" fill="#b0835b" stroke="#102129" stroke-width="4"/>
+  <path d="m491 373 10-28 27-13 31 13 10 26-6 44-19 21-25-3-19-17Z" fill="#a67450" stroke="#102129" stroke-width="4"/>
   <path d="m501 382 8 27 22 11 24-9-11 24-24-2-20-17-9-41Z" fill="#7a5544"/>
   <path d="m494 385-9-28 12-26 19-15 29 5 26 20 3 32-14 11-7-30-22-8-24 13-7 30Z" fill="#0a1721" stroke="#24414a" stroke-width="3"/>
   <path d="m503 343 23-17 28 14m-59 19 28-16 31 2" stroke="#2e4650" stroke-width="3"/>

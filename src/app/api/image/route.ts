@@ -9,6 +9,6 @@ export async function POST(request: Request) {
   const started = performance.now();
   try {
     const input = await readRequest(request, ImageRequestSchema);
-    return jsonResponse(await generateIllustration(getClient(), input.panel, request.signal));
+    return jsonResponse(await generateIllustration(getClient(), input.panel, request.signal, input.approach));
   } catch (error: unknown) { return errorResponse(error, started); }
 }

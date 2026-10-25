@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" fill="none">
+  <title>The station's cameras turn toward Kael</title>
+  <desc>An original upward view beneath an angular station roof. Three surveillance cameras face the reader from separate mounts, their lenses converging on the same viewpoint.</desc>
+  <path fill="#173744" d="M0 0h1000v420H0z"/>
+  <!-- Roof ribs converge beyond the viewer; broad ink gives the shot weight. -->
+  <path d="m0 0 500 264L1000 0Zm0 125 500 184L1000 125V420H0Z" fill="#112b36"/>
+  <path d="M0 0h1000v58H0z" fill="#091720"/>
+  <path d="M0 58h1000v17H0z" fill="#3c5862"/>
+  <path d="m17 75 483 206L983 75M0 138l500 188 500-188M0 241l500 120 500-120" stroke="#091923" stroke-width="17"/>
+  <path d="m33 83 467 198L967 83M0 147l500 181 500-181M0 249l500 114 500-114" stroke="#35535f" stroke-width="3"/>
+  <path d="M333 75 465 267m202-192L535 267M170 75l271 204m389-204L559 279" stroke="#0a1d28" stroke-width="10"/>
+  <path d="M465 75h70v179h-70z" fill="#0a1d27"/>
+  <path d="M481 76h38v162h-38z" fill="#24434f"/>
+  <path d="M0 303h1000v117H0z" fill="#0d242f"/>
+  <path d="M0 320h1000m-1000 25h1000m-1000 55h1000" stroke="#1d3c48" stroke-width="3"/>
+  <!-- Left camera: close three-quarter silhouette, visibly rotated inward. -->
+  <path d="M122 58h42v51l32 22-18 29-56-38Z" fill="#3c5862" stroke="#091720" stroke-width="5"/>
+  <circle cx="183" cy="143" r="18" fill="#162e39" stroke="#091720" stroke-width="5"/>
+  <path d="m149 124 139 40-8 32-139-40Z" fill="#36545f" stroke="#091720" stroke-width="5" stroke-linejoin="round"/>
+  <path d="m141 156 139 40-7 43-143-38Z" fill="#1e3a46" stroke="#091720" stroke-width="5"/>
+  <path d="m288 164 30 28-7 38-38 9 7-43Z" fill="#48636c" stroke="#091720" stroke-width="5" stroke-linejoin="round"/>
+  <ellipse cx="291" cy="205" rx="15" ry="22" transform="rotate(12 291 205)" fill="#081820" stroke="#779397" stroke-width="3"/>
+  <ellipse cx="292" cy="205" rx="7" ry="12" transform="rotate(12 292 205)" fill="#294b55"/>
+  <path d="m290 197 4-2" stroke="#a5bcb9" stroke-width="3" stroke-linecap="round"/>
+  <path d="m155 168 20 6m-22 5 20 6m-22 5 20 6" stroke="#0a1d27" stroke-width="3"/>
+  <path d="m165 135 90 27" stroke="#70898e" stroke-width="2"/>
+  <!-- Central camera: a smaller direct gaze anchors the three-viewpoint rhythm. -->
+  <path d="M487 58h26v45h-26z" fill="#4b6570" stroke="#091720" stroke-width="4"/>
+  <path d="M446 104 460 90h81l14 14-7 58h-95Z" fill="#284650" stroke="#091720" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M454 105h94v46h-94z" fill="#1a3540"/>
+  <path d="M446 104h109l-7 13h-95Z" fill="#526d75"/>
+  <circle cx="500" cy="133" r="19" fill="#081820" stroke="#739096" stroke-width="3"/>
+  <circle cx="500" cy="133" r="9" fill="#274c56"/>
+  <path d="m496 128 4-2" stroke="#a5bcb9" stroke-width="3" stroke-linecap="round"/>
+  <path d="M461 126v14m77-14v14" stroke="#0a1721" stroke-width="3"/>
+  <!-- Right camera: opposing angle, its dark front faces the same subject. -->
+  <path d="M856 58h37v57l-59 39-18-31 40-25Z" fill="#36525f" stroke="#091720" stroke-width="5"/>
+  <circle cx="827" cy="139" r="18" fill="#152e39" stroke="#091720" stroke-width="5"/>
+  <path d="m853 125-137 44 5 29 141-40Z" fill="#3c5964" stroke="#091720" stroke-width="5" stroke-linejoin="round"/>
+  <path d="m862 158-141 40 7 42 140-40Z" fill="#203d49" stroke="#091720" stroke-width="5"/>
+  <path d="m716 169-31 28 7 34 36 9-7-42Z" fill="#47616c" stroke="#091720" stroke-width="5" stroke-linejoin="round"/>
+  <ellipse cx="708" cy="207" rx="15" ry="22" transform="rotate(-12 708 207)" fill="#081820" stroke="#779397" stroke-width="3"/>
+  <ellipse cx="707" cy="207" rx="7" ry="12" transform="rotate(-12 707 207)" fill="#294b55"/>
+  <path d="m704 199 4-1" stroke="#a5bcb9" stroke-width="3" stroke-linecap="round"/>
+  <path d="m836 172-20 6m22 5-20 6m22 5-20 6" stroke="#0a1d27" stroke-width="3"/>
+  <path d="m841 137-92 29" stroke="#70898e" stroke-width="2"/>
+  <!-- Foreground pillars and dead fixtures keep the centre spare and uneasy. -->
+  <path d="M0 74h44v346H0Zm956 0h44v420h-44Z" fill="#091720"/>
+  <path d="M44 219h10v201H44Zm902 18h12v183h-12Z" fill="#35525e"/>
+  <path d="M73 30h180v8H73Zm674 0h180v8H747Z" fill="#2b434d"/>
+  <path d="M82 32h72m631 0h79" stroke="#657f83" stroke-opacity=".45" stroke-width="3"/>
+  <path d="m52 79 20 145-19 55m899-188-18 152 19 40" stroke="#091720" stroke-width="4"/>
+  <path d="m69 296-6 25m858-39-8 30m-806 46-7 26m777-35-9 32" stroke="#84a0a4" stroke-opacity=".24" stroke-width="1.2"/>
+</svg>

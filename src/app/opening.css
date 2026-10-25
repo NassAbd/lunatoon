@@ -1,0 +1,14 @@
+.opening-beats { display: grid; gap: 34px; }
+.opening-beat { margin: 0; }
+.opening-beat > img { display: block; width: 100%; height: auto; border-radius: 7px; background: #0a1721; }
+.opening-beat figcaption { display: flex; gap: 20px; padding: 21px 20px 0; align-items: baseline; }
+.opening-beat-number { flex-shrink: 0; color: #8a927e; font-size: 10px; letter-spacing: 1px; }
+.opening-beat figcaption p { color: #555c50; font-size: 15px; line-height: 1.85; margin: 0; max-width: 51ch; }
+.opening-beat figcaption strong { color: #202124; font-weight: 500; }
+.opening-beat:last-child { margin-top: 10px; }
+.opening-beat:last-child figcaption { padding-top: 25px; }
+@media (max-width: 720px) {
+  .opening-beats { gap: 27px; }
+  .opening-beat figcaption { gap: 14px; padding: 17px 8px 0; }
+  .opening-beat figcaption p { font-size: 14px; }
+}

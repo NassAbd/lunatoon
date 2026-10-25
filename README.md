@@ -1,103 +1,128 @@
-# Lunatoon — POC 01
+# Lunatoon
 
-A local, desktop-first experiment in interactive webtoons. Select an action, add an optional twist, and generate one two-panel continuation of **Neon Protocol**. The script appears before two independent illustration requests finish.
+**Every story starts with a choice.**
 
-This POC follows the supplied experiment prompt. `SPECS.md` remains the long-term reference. There is one base scene, one continuation per run, no routing step, and no accounts, persistence, sharing, library, or deployment setup.
+Lunatoon is an AI-powered interactive webtoon application where readers shape illustrated stories through decisions and natural-language twists. Creator Studio turns an original premise into an editable story world, illustrated opening and playable experience.
 
-## Run locally
+Built for the **OpenAI DevDay Community Hackathon — Paris, October 2026**. English-language, desktop-first and local-first.
 
-Use Node **24.14.0** (declared in `.node-version`) and npm. Dependencies are project-local.
+![Lunatoon library with three original playable worlds](docs/screenshots/hackathon-library.png)
+
+## Why Lunatoon?
+
+Digital comics offer expressive visual storytelling, but their readers usually follow a fixed path. Building an illustrated story that responds to its audience adds writing, artwork and software work. Lunatoon explores a smaller, approachable loop: read an opening, make a meaningful choice, and see that choice become the next scene.
+
+## Read a story. Make it yours.
+
+**Choose a world → Read → Decide → Add a twist → Continue → Reach your ending**
+
+Each story offers two decisions and four newly generated panels. Dialogue appears first; illustrations finish independently in a continuous reading strip. Saved choices, story facts, character details and visual references provide context for the next chapter.
+
+| Playable world | Genre |
+| --- | --- |
+| **Neon Protocol** | Cyberpunk noir |
+| **The Last Lightkeeper** | Coastal fantasy |
+| **The Glass Orchard** | Solarpunk adventure |
+
+Six additional original concepts are clearly marked **Coming soon**. They are previews, not playable stories.
+
+## Create a world of your own
+
+**Describe → Generate a foundation → Edit → Illustrate → Save a playable version → Play**
+
+Describe an idea, then edit its premise, protagonist, visual direction, opening scenes and choices. Attach up to three owned visual references and explicitly label their roles, including the main character. **Save draft** keeps your work without image calls; **Save & Illustrate** generates the opening scenes. Once those scenes are saved, the story becomes playable in your local library.
+
+Existing readings retain the exact story version and artwork they started with.
+
+## What works today
+
+- **Continuous reading:** illustrated openings, overlaid dialogue, integrated choices and a personalized ending.
+- **Progressive artwork:** each final illustration appears when ready. Saved scenery provides clearly labeled atmosphere while waiting; genuine intermediate previews appear only when the provider supplies them.
+- **Story memory:** structured narrative state and saved visual references guide continuity across both decisions.
+- **Local persistence:** SQLite and local files preserve dialogue, choices and artwork across refreshes and application restarts.
+- **Controlled recovery:** independent image retries, duplicate-request protection and visible usage, estimated costs and limits.
+- **Portable endings:** download a completed story as self-contained HTML for offline reading.
+- **Local content management:** resume readings, revisit completed stories, and delete readings or created stories with confirmation.
+
+## Demo
+
+- **Two-minute pitch video:** not yet published; link to be added.
+- **Hosted interactive demo:** not published. Run the application locally using the instructions below.
+- **Screenshots:** [Library](docs/screenshots/hackathon-library.png) · [Reader](docs/screenshots/hackathon-reader.png) · [Creator Studio](docs/screenshots/hackathon-studio.png)
+
+Screenshots show the actual interface with original bundled artwork in an isolated workspace, without uploaded references or generated panels. They are not live AI quality benchmarks. Historical live Neon Protocol runs and their limitations are documented in the [development archive](docs/archive/poc/README.md).
+
+## Technology
+
+| Layer | Implementation |
+| --- | --- |
+| Application | Next.js App Router, React, TypeScript |
+| Narrative | OpenAI Responses API, official JavaScript SDK, strict Structured Outputs and Zod validation |
+| Illustrations | OpenAI Images generation/editing with story-owned references |
+| Persistence | Node.js `node:sqlite`, local image files and immutable story snapshots |
+| Image processing | Sharp for validated uploads, authored assets and export |
+| Verification | Vitest, Playwright, TypeScript and ESLint |
+
+The configured defaults are **`gpt-4.1-mini`** for narrative and **`gpt-image-2.5-flare`** at **`low`** quality for illustrations. Model access depends on your OpenAI API project. Overrides must support the implemented request format; the app never silently substitutes a model or retries in another paid mode.
+
+## Getting started
+
+Use **Node.js 24.14.0** from [`.node-version`](.node-version), npm and an OpenAI API project with access to the configured models.
 
 ```sh
+git clone https://github.com/NassAbd/lunatoon.git
+cd lunatoon
 npm ci
-cp .env.example .env.local
+test -f .env.local || cp .env.example .env.local
 ```
 
-Set `OPENAI_API_KEY` in `.env.local` to an OpenAI API project key, then start:
+Set `OPENAI_API_KEY` in `.env.local`, then start the application:
 
 ```sh
 npm run dev
 ```
 
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000). Restart the server after changing environment variables. The UI loads without credentials; generation returns a clear configuration error until a key is provided. A ChatGPT subscription alone does not supply API credentials or billing.
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000). This is a local development address, not a hosted demo. The interface can load without a key; live generation requires API credentials and can incur charges. Restart the server after changing environment settings.
 
-Optional server settings:
+Storage defaults to ignored `data/`. **Back up the entire data directory with the application stopped.** The app has no authentication and is intended for a local, single-user installation.
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `OPENAI_STORY_MODEL` | `gpt-4.1-mini` | Responses model supporting strict Structured Outputs |
-| `OPENAI_IMAGE_MODEL` | `gpt-image-2.5-flare` | GPT Image model supporting the Images API |
-| `OPENAI_IMAGE_QUALITY` | `low` | `low`, `medium`, or `high`; start with low for latency |
-
-Model availability and image access depend on your API project. Image access may require organization verification. Model overrides must support the same request parameters; DALL-E models are not compatible with this pipeline. Models are never automatically substituted. Defaults were checked against official model documentation; account-level access has **not** been tested.
-
-## Pipeline and contracts
-
-1. `POST /api/story` receives `{ context, choice, instruction }`. Context must match the fixed initial scene, choice must be one of the three actions, and the optional instruction is capped at 500 characters.
-2. The official SDK calls `client.responses.parse` with `zodTextFormat`, which sends `text.format.type = json_schema`, `strict: true`, and a Zod-derived schema. Exactly two panels and one or two bubbles per panel are required. The server validates sequence order and unique panel/bubble IDs after parsing. Refusal and incomplete responses are errors.
-3. The client commits dialogue and placeholders, yields a browser frame, then sends **two concurrent** `POST /api/image` requests. Each request receives `{ panel }`, validated with Zod, and independently calls `client.images.generate` for one JPEG. Every image prompt includes the same Kael character sheet and art direction.
-4. Each image is decoded and displayed independently. One failure leaves the other panel and all dialogue intact. Generating again replaces this run with a new continuation of the original scene; it does not create another branch.
-
-`SpeechBubble` and `ComicPanel` retain the applicable `SPECS.md` field names, positions, aspect ratios, and lifecycle states. The POC adds `visual_description`, metrics, and an error field. Optional onomatopoeia is omitted. A failed illustration retains its last noncomplete lifecycle state and carries `error`.
-
-Source contracts: `src/lib/contracts.ts`. Server-only SDK calls: `src/lib/server/ai.ts`. Client sequencing: `src/lib/pipeline.ts`.
-
-## Measure a live experiment
-
-1. Choose **Activate the device** and click **Generate Continuation**.
-2. Verify two sets of dialogue appear on placeholders before the illustrations. Each illustration should appear when its request finishes.
-3. Inspect **Developer diagnostics** for narrative and individual image server latencies, reader text-ready time, total time, models, token counts, request IDs, and errors. The text and total target checks use time from submit, not just provider latency.
-4. Repeat with **Destroy the device**, then **Investigate its origin** and the twist “A mysterious cyborg cat suddenly appears.” Assess whether the action/twist changes the story and Kael stays recognizable.
-5. Record successful timings and quality observations in `POC_RESULTS.md`. Failed runs show their settlement time; total completion remains blank unless both images finish decoding.
-
-The <3s text and <30s full-run targets are experiments, not timeouts or guarantees. Server timing includes SDK request and parsing; text-ready timing includes the browser round trip and DOM commit; total includes the script, both image requests, transfer, and decoding (before the cosmetic fade completes). No automatic retries are enabled, so measured latency does not hide retries or duplicate paid calls. Upstream SDK timeout is 180 seconds. API request IDs are available for provider troubleshooting. Images API model names reflect the requested model because the response does not provide a resolved snapshot.
-
-The SDK uses `store: false` on Responses calls. Keys remain server-side. This is a local tool: unauthenticated endpoints incur API charges and should not be exposed publicly.
-
-## Verification
+### Run the checks
 
 ```sh
 npm run typecheck
 npm run lint
 npm test
 npm run build
-```
-
-Browser tests use intercepted local API requests and a tiny test image. They verify progressive rendering, concurrent requests, out-of-order completion, partial failure, missing credentials, and responsive overflow. They do **not** measure OpenAI performance or prove narrative/image quality.
-
-With a Playwright Chromium installation:
-
-```sh
 npx playwright install chromium
 npm run test:e2e
+npm run test:engine:build
+npm run test:engine:e2e
 ```
 
-Or use an existing local Google Chrome without downloading a browser:
+The browser suites use mocks, not paid OpenAI requests. The persistent-engine suite starts an isolated production server and temporary database on port **3110**; keep that port free. An installed Google Chrome can be selected with `PLAYWRIGHT_CHANNEL=chrome` instead of downloading Chromium.
 
-```sh
-PLAYWRIGHT_CHANNEL=chrome npm run test:e2e
-```
+See the [development guide](docs/development.md) for configuration, test isolation, recovery, diagnostics and the separately opted-in legacy live experiment.
 
-If port 3000 is occupied, Next.js prints another local port. To test that existing server, set the printed URL, for example:
+## How it is built
 
-```sh
-PLAYWRIGHT_CHANNEL=chrome PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npm run test:e2e
-```
+A story template captures its opening, choices, character bible, initial state and owned references. Starting a reading freezes that template into a persistent run. Each decision produces a strictly validated two-panel script and state update before separate image requests begin. Completed assets are saved locally; reloading reads them rather than generating them again.
 
-For production-mode local testing:
+Creator drafts have their own foundation and illustration accounting. Illustrated versions remain immutable, and existing readings keep their original version. Request claims, reservations and explicit retries isolate failures without repeating successful work.
 
-```sh
-npm run build
-npm start
-```
+Read more in the [engine architecture](docs/story-engine-architecture.md), [template architecture](docs/story-template-architecture.md), [Creator and content-management guide](docs/creator-content-management.md), [visual-reference notes](docs/POC_08_3_VISUAL_REFERENCES.md) and [API cost model](docs/api-cost-model.md). The [POC archive](docs/archive/poc/README.md) preserves the investigation and test history; [SPECS.md](SPECS.md) describes the broader product vision.
 
-## Persistence and experiment limits
+## Current limits
 
-Generated JPEGs are returned as data URLs and kept only in the current browser page's memory. Reloading loses the run. There are no shareable image URLs, external image storage, saved sessions, or database. The initial panel is a fixed repository SVG, labeled as such; it is not a generated result or benchmark. Independent image calls share a text character sheet but no image reference or seed, so visual consistency is an open quality question. Diagnostics show token usage when returned. Cost is not calculated: this POC does not maintain complete pricing for configurable models, and token usage is not represented as a dollar estimate.
+- Local storage only: no accounts, cloud synchronization or publicly hosted interactive sharing. HTML export is a portable reading copy.
+- Stories currently use a short two-decision format.
+- Image latency, narrative quality and visual consistency depend on the provider and prompt. Reference images help; they do not guarantee identical characters.
+- Intermediate image previews are optional. Successful historical live streams sometimes delivered only final images.
+- Application budgets are estimates and call-count safeguards, **not provider billing caps**. Unknown usage and retries can incur charges.
+- Node's built-in SQLite API is experimental in the pinned Node 24.14.0 runtime.
+- Automated tests use mocked providers. Historical live Neon journeys succeeded; the newer worlds and Creator flows do not have equivalent recorded live quality validation.
 
-## Verified API references
+## Hackathon and future direction
 
-- [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
-- [GPT-4.1 Mini: Responses and Structured Outputs support](https://developers.openai.com/api/docs/models/gpt-4.1-mini)
-- [Image generation API: parameters and limits](https://developers.openai.com/api/docs/guides/image-generation)
-- [GPT Image 2.5 Flare](https://developers.openai.com/api/docs/models/gpt-image-2.5-flare)
+Lunatoon was built for the OpenAI DevDay Community Hackathon in Paris, October 2026, to explore participatory visual storytelling. It is an independent project, with no claim of OpenAI endorsement or affiliation.
+
+Possible next steps include longer branching stories, richer creation tools, stronger visual identity consistency and public publishing. These are future directions, not current features.

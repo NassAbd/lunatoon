@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { ErrorResponseSchema, ImageResponseSchema, StoryResponseSchema, type ScriptPanel, type StoryRequest } from "./contracts";
+import { ErrorResponseSchema, ImageResponseSchema, StoryResponseSchema, type ImageApproach, type ScriptPanel, type StoryRequest } from "./contracts";
 
 export class RequestError extends Error {
   constructor(message: string, public readonly code: string, public readonly duration_ms: number, public readonly request_id: string | null) { super(message); }
 }
 
-async function post<T>(path: string, body: unknown, schema: z.ZodType<T>, signal: AbortSignal): Promise<T> {
+async function post<T>(path: string, body: unknown, schema: z.ZodType<T>, signal: AbortSignal) {
   const started = performance.now();
   const response = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
   let data: unknown;
@@ -15,16 +15,22 @@ async function post<T>(path: string, body: unknown, schema: z.ZodType<T>, signal
     if (parsed.success) throw new RequestError(parsed.data.error.message, parsed.data.error.code, parsed.data.duration_ms, parsed.data.error.request_id);
     throw new RequestError(`Request failed (HTTP ${response.status}).`, "http_error", performance.now() - started, null);
   }
-  return schema.parse(data);
+  const received = performance.now();
+  const parsed = schema.parse(data);
+  return { data: parsed, client: { request_ms: received - started, validation_ms: performance.now() - received, decode_ms: 0 } };
 }
 
-export const fetchStory = (request: StoryRequest, signal: AbortSignal) => post("/api/story", request, StoryResponseSchema, signal);
-export async function fetchImage(panel: ScriptPanel, signal: AbortSignal) {
-  const result = await post("/api/image", { panel }, ImageResponseSchema, signal);
+export async function fetchStory(request: StoryRequest, signal: AbortSignal) {
+  const { data, client } = await post("/api/story", request, StoryResponseSchema, signal);
+  return { ...data, metrics: { ...data.metrics, client } };
+}
+export async function fetchImage(panel: ScriptPanel, signal: AbortSignal, approach: ImageApproach = "text") {
+  const { data: result, client } = await post("/api/image", { panel, approach }, ImageResponseSchema, signal);
   // Include browser decoding in end-to-end completion; retain server latency separately.
+  const decodeStarted = performance.now();
   const image = new Image();
   image.src = result.image_url;
   await image.decode();
   signal.throwIfAborted();
-  return result;
+  return { ...result, metrics: { ...result.metrics, client: { ...client, decode_ms: performance.now() - decodeStarted } } };
 }

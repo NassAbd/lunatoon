@@ -25,13 +25,14 @@ describe("official SDK integration (mocked transport)", () => {
     let sent: Record<string, unknown> = {};
     const client = new OpenAI({ apiKey: "test-only", fetch: async (_url, init) => {
       sent = JSON.parse(String(init?.body)) as Record<string, unknown>;
-      return Response.json({ created: 1, data: [{ b64_json: "aW1hZ2U=" }], usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 } });
+      return Response.json({ created: 1, data: [{ b64_json: "aW1hZ2U=" }], usage: { input_tokens: 10, input_tokens_details: { text_tokens: 7, image_tokens: 3 }, output_tokens: 20, total_tokens: 30 } });
     } });
     const result = await generateIllustration(client, scriptFixture.panels[0]);
     expect(sent).toMatchObject({ n: 1, output_format: "jpeg", size: "1024x1536" });
     expect(sent.prompt).toContain(CHARACTER_IDENTITY);
     expect(result.image_url).toBe("data:image/jpeg;base64,aW1hZ2U=");
     expect(result.metrics.usage?.total_tokens).toBe(30);
+    expect(result.metrics.usage).toMatchObject({ input_text_tokens: 7, input_image_tokens: 3 });
   });
   it("rejects missing image output", async () => {
     const client = new OpenAI({ apiKey: "test-only", fetch: async () => Response.json({ created: 1, data: [] }) });

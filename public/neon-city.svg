@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" fill="none">
+  <title>Rain over New Kyoto's abandoned transit station</title>
+  <desc>An original flat-ink city panorama. Dark towers rise behind a shuttered transit entrance, and rain crosses an empty lower-city approach.</desc>
+  <defs>
+    <pattern id="city-windows" width="29" height="31" patternUnits="userSpaceOnUse"><path d="M8 8v10m11-10v10" stroke="#60818a" stroke-opacity=".3" stroke-width="3"/></pattern>
+    <pattern id="city-rain" width="113" height="104" patternUnits="userSpaceOnUse"><path d="m20 3-9 31m71 16-6 22m-30 9-6 21m66-85-6 20" stroke="#8cabaf" stroke-opacity=".24" stroke-width="1.1"/></pattern>
+  </defs>
+  <path fill="#173744" d="M0 0h1000v500H0z"/>
+  <!-- Far skyline, intentionally quieter than the foreground station. -->
+  <path d="M0 147h54V76h48v185h24V42h70v222h27V104h61v157h29V72h40v189h26V18h70v252h38V88h53v183h25V51h49v215h34V0h75v270h32V96h50v178h30V63h61v203h23V126h46v142h40V37h61v239h28V154h52v346H0Z" fill="#112b37"/>
+  <path d="M126 42h70v222h-70zm253-24h70v252h-70zm186 33h49v215h-49zm185 12h61v203h-61zm158-26h61v239h-61z" fill="url(#city-windows)"/>
+  <path d="M156 42V9m253 9V0m180 51V17m193 46V22m158 15V8M329 72V43" stroke="#47616d" stroke-width="2"/>
+  <path d="M390 76h47m-47 6h47M577 112h25m-25 6h25m156 25h41m-41 6h41M139 147h45" stroke="#668a90" stroke-opacity=".65" stroke-width="2"/>
+  <path d="M0 266h1000v234H0z" fill="#102630"/>
+  <!-- A lower service viaduct divides the rain-filled city into layers. -->
+  <path d="M0 240 1000 205v28L0 279Z" fill="#0a1721"/>
+  <path d="m0 242 1000-35M0 274l1000-45" stroke="#3b5863" stroke-width="3"/>
+  <path d="m91 241 16 98h18l-7-99m222-9 8 67h17l-2-68m471-16-3 101h18l11-103" fill="#0a1721"/>
+  <!-- Station frontage: a low, broad threshold below the towers. -->
+  <path d="m419 294 38-54h390l63 51-21 25H435Z" fill="#0a1721" stroke="#3b5962" stroke-width="3"/>
+  <path d="m438 290 28-35h374l43 35Z" fill="#294752"/>
+  <path d="m438 290 445 0-7 11H443Z" fill="#4d6d74"/>
+  <path d="M452 303h418v102H452z" fill="#142d38" stroke="#0a1721" stroke-width="5"/>
+  <path d="M494 320h57v70h-57zm77-8h173v78H571zm195 8h57v70h-57z" fill="#091820"/>
+  <path d="M579 320h157v70H579z" fill="#193b45"/>
+  <path d="M590 320v70m18-70v70m18-70v70m18-70v70m18-70v70m18-70v70m18-70v70m18-70v70" stroke="#0b202b" stroke-width="6"/>
+  <path d="M582 313h149M500 328h44m228 0h45" stroke="#809d9d" stroke-width="3"/>
+  <path d="M451 402h419l29 13H429Z" fill="#36515b"/>
+  <path d="m429 415 470 0 39 23H400Z" fill="#0a1c26"/>
+  <path d="M466 271h62m17 0h19m179 0h84" stroke="#526f79" stroke-width="7"/>
+  <path d="M456 304v97m406-97v97" stroke="#607b80" stroke-width="5"/>
+  <!-- Approach lines lead the eye toward the station, with broad wet reflections. -->
+  <path d="m0 500 426-104h440l134 104Z" fill="#18333f"/>
+  <path d="m122 500 414-94m330 94-104-94m-340 94 181-83m-12 83 56-83" stroke="#3b5864" stroke-width="2"/>
+  <path d="m335 441 466-1m-583 33 664-1" stroke="#304d58" stroke-width="2"/>
+  <path d="m486 430 71-4-31 11-72 4Zm121 16 97-7 10 7-104 8Zm-228 35 53-9 39 1-59 12Zm376-14 65 7 27 10-59-6Z" fill="#587b80" opacity=".45"/>
+  <!-- Close framing elements stay almost black, leaving the station readable. -->
+  <path d="M0 0h88l47 66v323L0 432Z" fill="#08151f"/>
+  <path d="M16 18h52v324l-52 18Zm82 60 22 19v266l-22 9Z" fill="#18303c"/>
+  <path d="M16 126h52m-52 72h52m-52 71h52M1000 0h-65v500h65Z" stroke="#34505d" stroke-width="4"/>
+  <path d="M955 0h45v500h-45z" fill="#08151f"/>
+  <path d="M921 0v52l35 33M87 30l171 35 144-22m-286 74 135 17 152-28" stroke="#0a1721" stroke-width="5"/>
+  <path d="M251 65v69m87-81v64m586-33-71 39-45 1" stroke="#0a1721" stroke-width="3"/>
+  <path d="M0 0h1000v500H0z" fill="url(#city-rain)"/>
+  <path d="m277 120-13 46m243-127-11 40m222 24-16 55m180 79-14 48M152 326l-14 51m230-71-13 47m427-7-10 37M275 436l-10 35" stroke="#a2bec0" stroke-opacity=".3" stroke-width="1.3"/>
+</svg>

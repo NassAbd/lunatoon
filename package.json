@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24 <25" },
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build --webpack",
@@ -12,13 +14,18 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "reference:build": "node scripts/build-reference.mjs",
+    "experiment:live": "playwright test --config=playwright.live.config.ts",
+    "test:engine:build": "LUNATOON_TEST_BUILD=1 npm run build",
+    "test:engine:e2e": "playwright test --config=playwright.engine.config.ts"
   },
   "dependencies": {
     "next": "^16.0.0",
+    "openai": "^6.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "openai": "^6.0.0",
+    "sharp": "0.35.5",
     "zod": "^4.0.0"
   },
   "devDependencies": {

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="680" viewBox="0 0 1000 680" fill="none">
+  <title>Mara and the tide lantern</title>
+  <desc>Original coastal-fantasy comic art. Mara, a young keeper with dark curls and a shell hairpin, holds a brass lantern beside the still sea.</desc>
+  <path fill="#f5f0e5" d="M0 0h1000v680H0z"/>
+  <circle cx="795" cy="146" r="71" fill="#edc7af"/>
+  <path d="M0 324c213-24 346 15 518 1s309-12 482 1v354H0Z" fill="#b8d2c5"/>
+  <path d="M0 407c246-18 397 19 601-1s289 4 399 0v274H0Z" fill="#8bb3a3"/>
+  <path d="M67 363h127m43 17h151m309-11h149m-67 65h178M26 464h187m504 44h201m-681 18h102m433 38h211" stroke="#e1e9d8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M0 0h132v560l-47 120H0Zm1000 0H904v552l96 128Z" fill="#d7dac4"/>
+  <path d="M111 0h28v558l-54 122H58l57-128ZM883 0h26v550l91 94v36L883 561Z" fill="#91a48e"/>
+  <path d="M0 42h1000M0 77h1000" stroke="#d6d9c2" stroke-width="3"/>
+  <path d="m0 680 153-116h694l153 116Z" fill="#b4bfa1"/>
+  <path d="m169 566-90 114m235-114-37 114m415-114 36 114m126-114 93 114M46 647h908M108 602h783" stroke="#7f9984" stroke-width="3"/>
+  <g id="mara" stroke="#355d55" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m447 493-8 122 46 13 30-132m27-1 16 121 45-7-13-122" fill="#40695e"/>
+    <path d="m439 599-13 37 8 15h60l-4-29m67-18 6 39h71l2-14-36-24" fill="#4d5045"/>
+    <path d="M442 636h43m84-5h52" stroke="#b5b99c" stroke-width="3"/>
+    <path d="m456 269-48 28-57 167 43 33 33-57-21 104 186 5-8-121 38 63 43-25-65-168-49-28Z" fill="#88b4a2"/>
+    <path d="m456 269-27 46-24 165-16 10 19-193Zm93 3 27 45 25 167 18 7-20-193Z" fill="#608e7c" stroke="none"/>
+    <path d="m456 281 44 38 49-41-19-17h-51Z" fill="#f5eed9"/>
+    <path d="m473 277 30 25 27-28 20 21-34 46 24 78-27 26-26-100-34-49Z" fill="#d3a088"/>
+    <path d="m501 310 11 24m-15 16 20 72" stroke="#a87060" stroke-width="3"/>
+    <path d="M476 238v39c16 16 36 17 51-2v-38" fill="#955c48"/>
+    <path d="M462 162c-26 29-12 87 13 105 18 13 44 9 61-9 18-19 28-72 10-96Z" fill="#a86d54"/>
+    <path d="M527 173c10 31 10 61-5 88 21-10 33-41 30-67Z" fill="#955c48" stroke="none"/>
+    <path d="M460 206c-20-11-24-29-15-44-14-24-2-50 17-53 5-22 35-27 48-15 20-16 46-2 47 15 24 1 36 27 26 45 14 19 4 43-14 47l-14 22-8-37-9-21c-14 9-26 7-36-2-10 15-29 19-42 12Z" fill="#354c46"/>
+    <path d="M454 143c5-9 15-10 23-4m15-27c10-5 20-2 24 6m18 20c13-6 24 0 26 10" stroke="#587165" stroke-width="3"/>
+    <path d="m551 165 23-9-2 19-17 2Z" fill="#f6eed4" stroke-width="2"/>
+    <path d="m556 174 1-9m6 6 2-9m-6 11 10-13" stroke="#b1b79c" stroke-width="1.5"/>
+    <path d="M468 204c7-4 14-4 20-1m24 0c6-4 13-4 19 0" stroke-width="3"/>
+    <ellipse cx="479" cy="212" rx="3.2" ry="4.2" fill="#263f38" stroke="none"/>
+    <ellipse cx="521" cy="211" rx="3.2" ry="4.2" fill="#263f38" stroke="none"/>
+    <path d="m499 213-4 19 9 1m-17 12c8 5 16 5 24-1" stroke="#6e493b" stroke-width="2.5"/>
+    <path d="m395 402 41-20 19 17-15 20-39 12Zm184-29-28 28 8 17 30-8 10-16Z" fill="#a86d54"/>
+    <path d="m403 394 16 29-18 10-18-31m200-33 20 24-17 17-20-26" fill="#f1ead3"/>
+    <path d="M430 393c-8-15-4-34 12-36 14-1 20 19 12 33" stroke="#987a48" fill="none"/>
+    <path d="m419 397 22-14 25 13v57l-23 15-24-14Z" fill="#c49d61"/>
+    <path d="m428 402 14-9 16 9v45l-15 9-15-10Z" fill="#dce7c9" stroke-width="2"/>
+    <path d="M442 394v61m-14-53 30 45m0-45-30 44" stroke="#a58954" stroke-width="2"/>
+    <path d="m441 409 4 9 9 3-9 4-3 10-4-10-8-3 9-4Z" fill="#f4d891" stroke="none"/>
+    <path d="m423 458 19 12 21-13M431 387h22" stroke="#806b45" stroke-width="3"/>
+    <circle cx="548" cy="308" r="6" fill="#bd9662" stroke-width="2"/>
+    <path d="m439 456-10 57m128-66 10 69M452 525h80" stroke="#608e7c" stroke-width="3"/>
+  </g>
+  <path d="M160 548h112m450 12h104m-658 81h81" stroke="#dce3cf" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,190 @@
+{
+  "source": "One authorized live OpenAI comparison; not mock data",
+  "recorded_at": "2026-10-24T09:33:17.499Z",
+  "baseline_commit": "7a6df63c29bd45d58f8df4e8433529307cb0d109",
+  "request_counts": {
+    "story": 1,
+    "text": 2,
+    "reference": 2
+  },
+  "request": {
+    "context": "New Kyoto, 2089. Rain never stops in the lower city. Detective Kael follows an anonymous signal into an abandoned transit station. Beneath a shattered advertisement, he finds a palm-sized black device with a pulsing cyan core. It knows his name. Every surveillance camera turns toward him. For the first time in years, the city's all-seeing AI has gone silent.",
+    "choice": "Investigate its origin",
+    "instruction": "A mysterious cyborg cat suddenly appears."
+  },
+  "configured_models": {
+    "story": "gpt-4.1-mini",
+    "image": "gpt-image-2.5-flare",
+    "quality": "low",
+    "referenceSupported": true
+  },
+  "reference_sha256": "b0e7bcbc29138e8108bed37c32ac5d06effdf44eba5edf537c5831c037f45fae",
+  "shared_script": [
+    {
+      "panel_id": "panel_1",
+      "sequence_index": 1,
+      "layout_aspect": "vertical",
+      "visual_description": "Kael crouches under flickering neon lights, holding the pulsing device, while hidden cameras swivel toward him. A sleek cybernetic cat materializes beside him.",
+      "image_prompt": "In a rain-soaked, dimly lit abandoned transit station with flickering neon lights, Detective Kael crouches low, mustard-yellow trench coat billowing slightly as he holds a palm-sized black device with a glowing cyan core. Around him, multiple cameras swivel sharply in his direction. Suddenly, a sleek black cybernetic cat with glowing blue eyes appears at his side, its tail flicking attentively. The atmosphere is tense and charged with mystery.",
+      "dialogues": [
+        {
+          "id": "bubble_p1_1",
+          "character": "Kael",
+          "text": "That device... it’s picking up something unusual. You appeared out of nowhere?",
+          "position": "top-left",
+          "style": "normal"
+        }
+      ]
+    },
+    {
+      "panel_id": "panel_2",
+      "sequence_index": 2,
+      "layout_aspect": "vertical",
+      "visual_description": "Close-up on Kael's intense face as the cybernetic cat’s eyes sync with the device, pulsing brighter, revealing secret data streams reflected in his amber cyber-eye.",
+      "image_prompt": "Close-up shot of Detective Kael’s face, showing his angular jaw, thin scar through his left eyebrow, and distinct amber cybernetic eye reflecting complex neon data streams. The cybernetic cat’s glowing blue eyes are locked onto the device in Kael’s hand, which pulses brighter with cyan light. Raindrops glisten on Kael’s trench coat collar. The tension and mystery deepen as hidden codes seemingly emerge within the reflections in Kael’s cyber eye.",
+      "dialogues": [
+        {
+          "id": "bubble_p2_1",
+          "character": "Kael",
+          "text": "It’s decrypting something... maybe a hidden message. What are you trying to show me?",
+          "position": "bottom-right",
+          "style": "normal"
+        }
+      ]
+    }
+  ],
+  "shared_narrative": {
+    "model": "gpt-4.1-mini-2025-04-14",
+    "duration_ms": 4771,
+    "request_id": "req_1b979100a2e4462d9cf880b4feaa30da",
+    "usage": {
+      "input_tokens": 630,
+      "output_tokens": 412,
+      "total_tokens": 1042,
+      "cached_input_tokens": 0
+    },
+    "prompt_version": "neon-noir-02",
+    "sdk_ms": 4770.378458000021,
+    "validation_ms": 0.3130830000154674,
+    "output_chars": 1855,
+    "client": {
+      "request_ms": 4789.799999998882,
+      "validation_ms": 4.900000000372529,
+      "decode_ms": 0
+    }
+  },
+  "runs": [
+    {
+      "approach": "text",
+      "script_reused": false,
+      "text_ready_ms": 4810.4000000003725,
+      "image_phase_ms": 12001.700000001118,
+      "total_ms": 16823.299999998882,
+      "failures": [],
+      "panels": [
+        {
+          "panel_id": "panel_1",
+          "metrics": {
+            "model": "gpt-image-2.5-flare",
+            "duration_ms": 11969,
+            "request_id": "req_9b2ce465e63e4c2fb377e172493da767",
+            "usage": {
+              "input_tokens": 494,
+              "output_tokens": 158,
+              "total_tokens": 652,
+              "input_text_tokens": 494,
+              "input_image_tokens": 0
+            },
+            "quality": "low",
+            "approach": "text",
+            "prompt_version": "neon-noir-02",
+            "client": {
+              "request_ms": 11984.599999999627,
+              "validation_ms": 0.09999999962747097,
+              "decode_ms": 16.699999999254942
+            }
+          }
+        },
+        {
+          "panel_id": "panel_2",
+          "metrics": {
+            "model": "gpt-image-2.5-flare",
+            "duration_ms": 10591,
+            "request_id": "req_0d15ea34f59e46ca99d74782e011c6ba",
+            "usage": {
+              "input_tokens": 511,
+              "output_tokens": 158,
+              "total_tokens": 669,
+              "input_text_tokens": 511,
+              "input_image_tokens": 0
+            },
+            "quality": "low",
+            "approach": "text",
+            "prompt_version": "neon-noir-02",
+            "client": {
+              "request_ms": 10609.800000000745,
+              "validation_ms": 0.5,
+              "decode_ms": 4.199999999254942
+            }
+          }
+        }
+      ]
+    },
+    {
+      "approach": "reference",
+      "script_reused": true,
+      "text_ready_ms": null,
+      "image_phase_ms": 11380.5,
+      "total_ms": 11410.10000000149,
+      "failures": [],
+      "panels": [
+        {
+          "panel_id": "panel_1",
+          "metrics": {
+            "model": "gpt-image-2.5-flare",
+            "duration_ms": 10479,
+            "request_id": "req_f7d88cbc0f0f4ac4b7876b79efd599f3",
+            "usage": {
+              "input_tokens": 1982,
+              "output_tokens": 158,
+              "total_tokens": 2140,
+              "input_text_tokens": 542,
+              "input_image_tokens": 1440
+            },
+            "quality": "low",
+            "approach": "reference",
+            "prompt_version": "neon-noir-02",
+            "client": {
+              "request_ms": 10493.599999999627,
+              "validation_ms": 0.09999999962747097,
+              "decode_ms": 3.200000001117587
+            }
+          }
+        },
+        {
+          "panel_id": "panel_2",
+          "metrics": {
+            "model": "gpt-image-2.5-flare",
+            "duration_ms": 11362,
+            "request_id": "req_aa89d2f9296e43b68c1d1ab61cf1af31",
+            "usage": {
+              "input_tokens": 1999,
+              "output_tokens": 158,
+              "total_tokens": 2157,
+              "input_text_tokens": 559,
+              "input_image_tokens": 1440
+            },
+            "quality": "low",
+            "approach": "reference",
+            "prompt_version": "neon-noir-02",
+            "client": {
+              "request_ms": 11377.60000000149,
+              "validation_ms": 0.19999999925494194,
+              "decode_ms": 2.300000000745058
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

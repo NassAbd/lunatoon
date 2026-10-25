@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" fill="none">
+  <title>Paper Kingdom — coming soon</title><desc>Original fairy-tale cover: a folded ivory castle rises from vermilion paper hills beneath a small golden sun.</desc>
+  <path fill="#f1e7d4" d="M0 0h1000v650H0z"/><circle cx="754" cy="135" r="57" fill="#dbb66d"/>
+  <path d="m0 427 223-128 155 77 123-90 210 122 289-79v321H0Z" fill="#d49d84"/>
+  <path d="m0 509 223-210-12 217 167-140 23 176 100-266 105 270 105-148 132 170 157-249v321H0Z" fill="#bb735f"/>
+  <path d="m0 567 235-58 255 37 210-25 300 46v83H0Z" fill="#8c5552"/>
+  <path d="M317 469V252l54-51 55 51v217m152 0V252l55-51 55 51v217" fill="#f7eedc" stroke="#a07969" stroke-width="3"/>
+  <path d="m316 251 55-80 56 80m151 0 55-80 56 80" fill="#ce8c73" stroke="#a07969" stroke-width="3"/>
+  <path d="M407 470V322l94-69 97 69v148Z" fill="#f7eedc" stroke="#a07969" stroke-width="3"/>
+  <path d="m407 323 94-114 97 114Z" fill="#d9b294" stroke="#a07969" stroke-width="3"/>
+  <path d="M501 253v216m-130-267v267m262-267v267" stroke="#d3c2a7" stroke-width="3"/>
+  <path d="M476 469v-72l26-25 26 25v72Z" fill="#bd8b75"/><path d="M501 372v97" stroke="#8c6358" stroke-width="3"/>
+  <path d="m349 287 22-17 22 17v40h-44Zm262 0 22-17 22 17v40h-44Z" fill="#ccb299"/>
+  <path d="m443 359 26-15v31h-26Zm92-15 27 15v16h-27Z" fill="#ccb299"/>
+  <path d="m233 123 63 25-38 19-21 30-4-74 25 44 38-19" fill="#f8f0df" stroke="#b88e78" stroke-width="2"/>
+  <path d="m772 358 48 18-28 14-17 23-3-55 20 32 28-14" fill="#f8f0df" stroke="#b88e78" stroke-width="2"/>
+  <path d="m501 470-62 113h151Z" fill="#dcad89"/><path d="M501 470v113" stroke="#c49478" stroke-width="3"/>
+</svg>

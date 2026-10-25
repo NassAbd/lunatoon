@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" fill="none">
+  <title>The Last Lightkeeper — Avel's quiet shore</title>
+  <desc>An original illustrated cover: a small cream lighthouse stands on a seafoam cliff above a quiet sea, beneath a peach moon.</desc>
+  <path fill="#f5f0e5" d="M0 0h1000v650H0z"/>
+  <!-- A quiet sky, with broad warm shapes and delicate line details. -->
+  <circle cx="282" cy="177" r="88" fill="#edc7af"/>
+  <path d="M194 177a88 88 0 0 0 150 62 88 88 0 0 1-111-118 87.6 87.6 0 0 0-39 56Z" fill="#e5bda7" opacity=".55"/>
+  <path d="M67 229h154c13-17 36-19 53-7h89m-255 14h68m185-84h75c12-14 35-12 44 2h88" stroke="#fffaf0" stroke-width="9" stroke-linecap="round"/>
+  <path d="m481 135 4-10 4 10 10 4-10 4-4 10-4-10-10-4Zm367-17 3-8 3 8 8 3-8 3-3 8-3-8-8-3Z" fill="#c4a385"/>
+  <circle cx="526" cy="96" r="2.5" fill="#b8a88f"/>
+  <circle cx="804" cy="169" r="2" fill="#b8a88f"/>
+  <path d="M142 317c9-7 15-7 23 0 7-6 14-7 23-2m220-39c7-5 11-5 17 0 6-4 11-4 17 0" stroke="#7e9a8e" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Sea and distant coast keep the lighthouse's silhouette uncluttered. -->
+  <path d="M0 346c153-6 260 7 400 0s277-2 400-5l200 8v301H0Z" fill="#b8d2c5"/>
+  <path d="M0 387c146-13 248-2 388-7s244-8 371-3 168 1 241-6v279H0Z" fill="#9cc1b2"/>
+  <path d="m0 341 104-23 74 7 62 18 55 7H0Z" fill="#93b1a2"/>
+  <path d="m0 345 87-14 50 8 41-1 62 12H0Z" fill="#799c8e"/>
+  <path d="M0 442c158-12 274 11 424-1s359 10 576-3v212H0Z" fill="#85ae9f"/>
+  <path d="M25 369h98m38 1h154m40-8h126M74 410h119m24-8h145m21 6h101M0 470h124m23 8h115m41-14h85M49 524h160m29-9h122M0 584h109m28 7h91m26-22h90" stroke="#dce7d7" stroke-width="3" stroke-linecap="round"/>
+  <path d="M22 388h39m280 45h49m-131 103h37m-208 80h76m247-122h25" stroke="#f8f4e7" stroke-width="2" stroke-linecap="round"/>
+  <!-- Cliff ledges: original shapes, no photographic or third-party texture. -->
+  <path d="m1000 328-115 37-139 5-60 20-50 36-38 11-31 40-21 53-62 35-29 85h545Z" fill="#7f9d88"/>
+  <path d="m1000 385-107 15-57 53-97 7-49 59-72 13-29 60-92 35-8 23h511Z" fill="#577c6b"/>
+  <path d="m1000 333-113 41-138 8-60 19-46 35-40 8-22 29 23-50 76-40 64-22 138-5 118-38Z" fill="#b4c29d"/>
+  <path d="m690 410-8 44-44 34 1 38-33 29m148-131-16 42-35 24 12 45-26 44m154-174-24 41 3 56-36 37-8 58m182-200-42 67 9 71-30 56" stroke="#40685d" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>
+  <path d="m598 480 28-13-7 20-26 22Zm48 83 39-21-10 32-31 12Zm139-77 32-25-6 29-22 12Zm120 77 26-18-4 38-23 9Z" fill="#97ad8e" opacity=".7"/>
+  <path d="m482 568 47-20 40-9m-112 81 30-11 19-18m-54 49 47-8" stroke="#d2deca" stroke-width="4" stroke-linecap="round"/>
+  <!-- The lantern and tower occupy the cover's central crop-safe region. -->
+  <path d="m689 237-245-39-150 93 396-38Z" fill="#f1d8a9" opacity=".45"/>
+  <path d="m663 267-13 128h90l-13-128Z" fill="#f8f2df" stroke="#55796c" stroke-width="3" stroke-linejoin="round"/>
+  <path d="m707 269 4 125h29l-13-127Z" fill="#d2d9bc"/>
+  <path d="M656 322h78l2 18h-82Z" fill="#d5a68d"/>
+  <path d="M712 322h22l2 18h-23Z" fill="#bd987f"/>
+  <path d="M677 394v-33a13 13 0 0 1 26 0v33Z" fill="#496e63"/>
+  <path d="M679 362h22m-11-11v43" stroke="#87a28c" stroke-width="2"/>
+  <path d="M685 284h15v20h-15z" fill="#7c9b8b"/>
+  <path d="M692 284v20" stroke="#f8f2df" stroke-width="2"/>
+  <path d="M658 222h73v43h-73z" fill="#f4d9a8" stroke="#486e61" stroke-width="3"/>
+  <path d="M659 222h20v43h-20z" fill="#dce2c8"/>
+  <path d="M712 222h19v43h-19z" fill="#c3d1b3"/>
+  <path d="M678 221v44m34-44v44m-53-21h72" stroke="#527667" stroke-width="3"/>
+  <path d="m647 223 47-32 49 32Z" fill="#507467" stroke="#3e6258" stroke-width="3" stroke-linejoin="round"/>
+  <path d="m694 195 34 27h-47Z" fill="#71917d"/>
+  <path d="M694 190v-16" stroke="#496d61" stroke-width="3" stroke-linecap="round"/>
+  <path d="M646 265h97v10h-97z" fill="#507467"/>
+  <path d="M642 249h105m-101 0v16m15-16v16m66-16v16m16-16v16" stroke="#527667" stroke-width="3" stroke-linecap="round"/>
+  <path d="M643 397h105" stroke="#3f665b" stroke-width="4" stroke-linecap="round"/>
+  <!-- A winding path and small grasses give the still cover a human scale. -->
+  <path d="M690 399c12 12 29 9 47 6s35-2 42 6-4 19 13 23 57-6 80 4" stroke="#dfd6b5" stroke-width="11" stroke-linecap="round"/>
+  <path d="m775 381 3-16 5 13 9-11-4 16m101-22 4-18 4 16 10-8-3 13m-295 78 2-14 6 11m302 42 5-19 4 17 10-10-3 16m-180 90 2-14 7 12" stroke="#547c65" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m920 572 4-26m-4 13-11-8m14 1 10-9m-54 70 3-29m-3 14-8-8" stroke="#a0ba98" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="925" cy="542" r="5" fill="#e8c7ae"/>
+  <circle cx="935" cy="540" r="3" fill="#f2e6cf"/>
+  <circle cx="883" cy="580" r="4" fill="#f2e6cf"/>
+</svg>
