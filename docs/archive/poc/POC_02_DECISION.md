@@ -1,5 +1,7 @@
 # POC 02 — visual consistency, storytelling and latency
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: **2026-10-24**. Branch: `feat/visual-consistency`. Baseline commit: `7a6df63c29bd45d58f8df4e8433529307cb0d109`. Scope: one English, desktop-first, two-panel continuation. No library, studio, accounts, additional story nodes, sharing, database or deployment changes.
 
 ## Decision
@@ -37,7 +39,7 @@ The user explicitly authorized one live comparison, capped at **one narrative + 
 - B: reused the **identical script and both panel descriptions**, then made two concurrent image-edit requests with the same authored PNG. Neither depended on the other panel. B added reference-preservation instructions, the intentional experimental difference.
 - Actual local request counts: **story 1, text images 2, reference edits 2**. All five succeeded. A and B ran sequentially; within each approach both panels ran concurrently.
 
-The live browser harness used actual local Route Handlers and OpenAI responses, with no intercepted API fixtures. It checked identical panel payloads and saved the actual images, reader screenshots and diagnostics. The structured, credential-free evidence is [POC_02_RUN_2026-10-24.json](technical/POC_02_RUN_2026-10-24.json), including request IDs, token counts, shared script, timings and the reference PNG SHA-256. Original images/screenshots/raw exports are retained only under ignored `test-results-live/poc-02-live/`; they are not committed. Review used the four full-resolution image files and the reader overlays. The original B reader capture caught part of the decorative fade; image quality ratings use the completed JPEGs, not their temporary fade opacity. The harness now waits for the fade before future screenshots; no extra paid run was made for that capture-only change.
+The live browser harness used actual local Route Handlers and OpenAI responses, with no intercepted API fixtures. It checked identical panel payloads and saved the actual images, reader screenshots and diagnostics. The structured, credential-free evidence is [POC_02_RUN_2026-10-24.json](POC_02_RUN_2026-10-24.json), including request IDs, token counts, shared script, timings and the reference PNG SHA-256. Original images/screenshots/raw exports are retained only under ignored `test-results-live/poc-02-live/`; they are not committed. Review used the four full-resolution image files and the reader overlays. The original B reader capture caught part of the decorative fade; image quality ratings use the completed JPEGs, not their temporary fade opacity. The harness now waits for the fade before future screenshots; no extra paid run was made for that capture-only change.
 
 ## Observed performance — one pair only
 

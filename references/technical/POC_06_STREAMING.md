@@ -49,7 +49,7 @@ This code audit and mocked transport coverage support an incremental local path.
 
 ## Existing phase measurements
 
-All values below come from the **single POC 05.1 story**, not a fresh POC 06 benchmark. Full evidence and cost accounting are in [POC_05_1_RESULTS.md](../../POC_05_1_RESULTS.md).
+All values below come from the **single POC 05.1 story**, not a fresh POC 06 benchmark. Full evidence and cost accounting are in [POC_05_1_RESULTS.md](../../docs/archive/poc/POC_05_1_RESULTS.md).
 
 | Phase | Activation | Destruction / ending |
 | --- | ---: | ---: |

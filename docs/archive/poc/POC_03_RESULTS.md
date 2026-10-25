@@ -1,5 +1,7 @@
 # POC 03 — persistent story engine results
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: **2026-10-24**. Branch: **`feat/persistent-story-engine`**. Base: synchronized local/origin `feat/visual-consistency`, commit **`0ac736f3598b337201a1e8b532a26cd3ddf1d2b0`**. The working tree was clean before branching. POC 02 was explicitly reviewed/approved by the user before implementation. Main was not merged or modified.
 
 ## Implemented result
@@ -51,9 +53,9 @@ Inspected the saved-reader desktop screenshot at 1440px: original opening artwor
 
 ## Live observations, cost and quality
 
-**No POC 03 live generation, latency benchmark, usage/cost total or visual quality score is reported.** Synthetic usage and injected delays exercise accounting/rendering; they are not measurements of OpenAI performance or charges. Documentation was checked live on 2026-10-24 for strict Structured Outputs, multipart image edits and Standard prices; see [API cost model](docs/api-cost-model.md).
+**No POC 03 live generation, latency benchmark, usage/cost total or visual quality score is reported.** Synthetic usage and injected delays exercise accounting/rendering; they are not measurements of OpenAI performance or charges. Documentation was checked live on 2026-10-24 for strict Structured Outputs, multipart image edits and Standard prices; see [API cost model](../../api-cost-model.md).
 
-POC 02's single prior controlled comparison remains unchanged in `references/POC_02_DECISION.md` and `references/technical/POC_02_RUN_2026-10-24.json`: GPT-4.1 mini, GPT Image 2.5 Flare/low; A text-ready 4.810s/full 16.823s; A/B image phases 12.002s/11.381s; B's image cost estimate about 2.62× A. B reused A's script. Those are one observed pair, not a representative benchmark or a POC 03 speedup. Prior subjective visual ratings are not re-assigned to this implementation.
+POC 02's single prior controlled comparison remains unchanged in [the POC 02 decision](POC_02_DECISION.md) and [its original JSON evidence](POC_02_RUN_2026-10-24.json): GPT-4.1 mini, GPT Image 2.5 Flare/low; A text-ready 4.810s/full 16.823s; A/B image phases 12.002s/11.381s; B's image cost estimate about 2.62× A. B reused A's script. Those are one observed pair, not a representative benchmark or a POC 03 speedup. Prior subjective visual ratings are not re-assigned to this implementation.
 
 The next live check, if separately authorized, should run one two-decision story with the same first choice/twist, inspect the named clue and causal second decision, and verify current appearance across all four images. Bound the number of calls before starting; do not run a large batch or automatic retries. A/B remains optional and costs extra image calls. This implementation did not reuse the already-consumed POC 02 paid-test authorization.
 
@@ -68,4 +70,4 @@ The next live check, if separately authorized, should run one two-decision story
 - Local disk corruption requires backup/restoration. JPEG checks cover bounded markers, not full decoding/checksum. Old replay/orphan files are retained; no automated garbage collection.
 - No accounts, public deployment/share links, platform library, creator studio, cloud persistence or multi-user guarantees were added.
 
-See [architecture](docs/story-engine-architecture.md), [cost model](docs/api-cost-model.md) and the updated [README](README.md) for setup, API/state machine and recovery details. Secrets, `.env.local`, databases, generated images and test artifacts are excluded from Git; the example key remains blank.
+See [architecture](../../story-engine-architecture.md), [cost model](../../api-cost-model.md) and the updated [README](../../../README.md) for setup, API/state machine and recovery details. Secrets, `.env.local`, databases, generated images and test artifacts are excluded from Git; the example key remains blank.

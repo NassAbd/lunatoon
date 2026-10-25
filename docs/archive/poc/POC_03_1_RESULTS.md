@@ -1,5 +1,7 @@
 # POC 03.1 — narrative reliability and reader refinement
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Implemented on top of POC 03 commit `819449e`, on `feat/persistent-story-engine`. No push, main merge, data reset or paid OpenAI calls were performed.
 
 ## Failure diagnosis
@@ -39,8 +41,8 @@ The header has the brand and a simple navigation action. Choices follow their re
 
 These show the actual desktop UI with original owned opening artwork. Request outcomes are mocked; no paid artwork was generated for screenshots.
 
-- [Reader and hammer choice](docs/screenshots/poc-03-1-reader.png)
-- [Friendly narrative recovery](docs/screenshots/poc-03-1-recovery.png)
+- [Reader and hammer choice](../../screenshots/poc-03-1-reader.png)
+- [Friendly narrative recovery](../../screenshots/poc-03-1-recovery.png)
 
 The integration suite also produces local screenshots of the home page and dialogue-before-image state under ignored `test-results-engine/`. Its completed-image fixture is a one-pixel JPEG and is not evidence of generated-art quality.
 

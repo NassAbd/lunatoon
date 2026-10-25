@@ -1,5 +1,7 @@
 # POC 04.1 — live end-to-end reliability
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: 2026-10-24. Branch: `feat/platform-experience`, based on verified clean checkpoint `0de4659fe74e5e35c83d0d7ad93e4a512e5648df`. No push or merge. No UI redesign, library, new service, dependency or database migration.
 
 **Outcome: one fresh, complete real OpenAI journey succeeded with two decisions, four reference-generated illustrations and an ending, without retries.** Refresh and an actual server-process restart returned identical saved state and image bytes, with zero generation calls. This demonstrates a working journey; it is not a measured reliability rate or a guarantee for arbitrary prompts.
@@ -101,7 +103,7 @@ Panel 2 arrived first in both chapters. In chapter 2 it displayed while panel 1 
 
 Final-run totals: 15,896 measured input tokens, 1,915 output tokens, 5,760 reference-input tokens included in input. Narrative estimate **$0.004595**; image estimate **$0.083950**, including **$0.046080** reference input. No unknown costs or held reservations remain for this run.
 
-Rates verified 2026-10-24: narrative $0.40/M uncached input, $0.10/M cached input, $1.60/M output; images $5/M text input, $8/M image input, $30/M output. Narrative cache counts were zero. Reference cost is not added twice. Each event rounds upward to integer micro-USD. These are usage-based estimates, not invoices or a provider billing cap; see [cost model](docs/api-cost-model.md).
+Rates verified 2026-10-24: narrative $0.40/M uncached input, $0.10/M cached input, $1.60/M output; images $5/M text input, $8/M image input, $30/M output. Narrative cache counts were zero. Reference cost is not added twice. Each event rounds upward to integer micro-USD. These are usage-based estimates, not invoices or a provider billing cap; see [cost model](../../api-cost-model.md).
 
 ## Persistence, recovery and evidence
 

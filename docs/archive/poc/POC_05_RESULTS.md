@@ -1,5 +1,7 @@
 # POC 05 — continuous reading and progressive images
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: 2026-10-24. Branch: `feat/seamless-reading`, created from `706bb4a6938851b3c0f93e0582b7507b08dd74eb` after confirming it matched `origin/feat/platform-experience`. Local implementation only; no push or merge. Existing narratives, references, saved runs and prior evidence were preserved.
 
 **Evidence boundary:** all new generation tests use synthetic local providers. No paid OpenAI call was made. Official documentation supports the implemented preview path, but actual account streaming access and performance remain unverified. POC 04.1's live story and its approximately 87-second image request are historical observations, not a POC 05 benchmark.
@@ -29,13 +31,13 @@ Official sources checked **2026-10-24**:
 | [Output settings](https://developers.openai.com/api/docs/guides/image-generation#customize-image-output) | Existing portrait size, JPEG/compression and quality settings remain supported; no model/quality downgrade needed |
 | [Costs and latency](https://developers.openai.com/api/docs/guides/image-generation#cost-and-latency) | A partial adds 100 image-output tokens; it is not proof of faster final completion |
 
-The edit reference Markdown fetch returned 404. The official edit endpoint OpenAPI specification and separate guide/model/event pages were available; missing content was not invented. Details and links are recorded in [API references](references/technical/api-references.md).
+The edit reference Markdown fetch returned 404. The official edit endpoint OpenAPI specification and separate guide/model/event pages were available; missing content was not invented. Details and links are recorded in [API references](../../../references/technical/api-references.md).
 
 The saved reader opts into NDJSON from its existing image endpoint. The SDK requests **one real partial within the same reference-edit call**, preserving two independent concurrent calls. The server validates JPEG preview bytes and forwards a transient event; the client displays it inside the existing panel. A final event follows existing validated asset/receipt/database persistence. Only the saved snapshot supplies a canonical local asset URL. Previews are never stored as completed images or reused after refresh.
 
 The legacy JSON endpoint behavior, original experiment, text mode and other configured models retain their existing final-only workflow. There is no paid fallback if streaming fails. Truncated, invalid or aborted streams cannot become a successful image merely because a preview arrived; unknown-cost attempts stay accounted for, and retries remain explicit and isolated. Claim fencing suppresses stale preview/persistence callbacks.
 
-At the verified $30/million image-output rate, one partial's allowance is **$0.003**, or up to $0.012 for four delivered previews. The supported low Flare reference reservation increases from $0.071 to **$0.074**; initial script plus two images reserves **$0.1544**. Older pending events are atomically topped up before claiming; insufficient budget blocks provider work. Completed history is unchanged. Returned completion usage is reconciled normally, without adding the planning amount a second time. Limits and reservations remain application guards, not provider billing caps. See [cost details](docs/api-cost-model.md).
+At the verified $30/million image-output rate, one partial's allowance is **$0.003**, or up to $0.012 for four delivered previews. The supported low Flare reference reservation increases from $0.071 to **$0.074**; initial script plus two images reserves **$0.1544**. Older pending events are atomically topped up before claiming; insufficient budget blocks provider work. Completed history is unchanged. Returned completion usage is reconciled normally, without adding the planning amount a second time. Limits and reservations remain application guards, not provider billing caps. See [cost details](../../api-cost-model.md).
 
 ## Latency investigation and changes
 
@@ -118,9 +120,9 @@ Local artifacts are intentionally ignored, not bundled as public product assets:
 - `test-results-engine/poc05/first-previews-desktop.png`: genuine streamed **mock** preview events; tiny synthetic fixture images, not generated artwork.
 - `test-results-engine/poc05/complete-story-desktop.png` and `complete-story-1024.png`: both decisions and ending with mock images, diagnostics collapsed.
 - `test-results-engine/poc05/interrupted-preview-desktop.png`: honest failed-image state, successful sibling retained.
-- [Saved choice and continuation, 1440px](test-results-engine/poc05/reused-poc41-decision-1440.png) and [1024px](test-results-engine/poc05/reused-poc41-decision-1024.png).
-- [Illustrated reading strip, 1440px](test-results-engine/poc05/reused-poc41-continuation-1440.png) and [1024px](test-results-engine/poc05/reused-poc41-continuation-1024.png).
-- [Whole saved story](test-results-engine/poc05/reused-poc41-fullpage-1440.png).
+- Saved choice and continuation, 1440px — local-only `test-results-engine/poc05/reused-poc41-decision-1440.png` and 1024px — local-only `test-results-engine/poc05/reused-poc41-decision-1024.png`.
+- Illustrated reading strip, 1440px — local-only `test-results-engine/poc05/reused-poc41-continuation-1440.png` and 1024px — local-only `test-results-engine/poc05/reused-poc41-continuation-1024.png`.
+- Whole saved story — local-only `test-results-engine/poc05/reused-poc41-fullpage-1440.png`.
 
 The `reused-poc41-*` screenshots show the updated UI with **existing POC 04.1 live artwork**, read from a temporary database/files copy. Generation was disabled with a test key/unreachable provider and browser mutation blocking. Evidence confirms original DB/WAL hashes, generation events and costs unchanged; these are UI screenshots, not new live generation or streaming evidence. Diagnostics were collapsed and both desktop widths visually inspected. Artifact links are local and unavailable in a source-only Git checkout.
 

@@ -22,4 +22,4 @@ The art guide, Kael bible, narrative notes, and SVG drawings are original Lunato
 
 Composition decisions such as the 20% quiet dialogue margin and wide-shot/close-up pairing are Lunatoon-specific experiments, not quoted WEBTOON rules. Source advice informs the experiment; it does not establish that the resulting images or latency have improved.
 
-See [art direction](visual/art-direction.md), [Kael](visual/kael-character-bible.md), [narrative continuity](narrative/neon-protocol.md), [API notes](technical/api-references.md), and [decision/evidence](POC_02_DECISION.md).
+See [art direction](visual/art-direction.md), [Kael](visual/kael-character-bible.md), [narrative continuity](narrative/neon-protocol.md), [API notes](technical/api-references.md), and [decision/evidence](../docs/archive/poc/POC_02_DECISION.md).

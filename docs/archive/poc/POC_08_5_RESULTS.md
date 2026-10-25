@@ -1,5 +1,7 @@
 # POC 08.5 — Creator waiting artwork and final navigation polish
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: 2026-10-25. Branch: `fix/final-ui-creator-waiting`. No paid OpenAI calls, narrative-engine changes, new product features, database migrations or destructive data operations.
 
 ## Git baseline and preservation

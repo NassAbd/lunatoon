@@ -1,5 +1,7 @@
 # POC 06 — platform polish
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: 2026-10-24. Branch: `feat/platform-polish`, based on POC 05.1 commit `8b3d7b08bc0659ea1dc0f56e0da59fef5b0338a1`.
 
 ## Baseline and boundaries
@@ -10,7 +12,7 @@ No paid OpenAI calls are authorized or performed in this iteration. The single P
 
 ## Streaming and performance audit
 
-See [the technical audit](references/technical/POC_06_STREAMING.md) for verified official sources, endpoint/SDK checks, retrieval failures and the phase breakdown.
+See [the technical audit](../../../references/technical/POC_06_STREAMING.md) for verified official sources, endpoint/SDK checks, retrieval failures and the phase breakdown.
 
 Flare reference edits with the existing settings support optional partial events; requesting one does not guarantee one arrives. The POC 05.1 upstream ledger recorded four completed events and no partial events before the SDK/app. This rules out application buffering as the reason for that sample's missing previews. It does not establish why the provider sent only finals. No documented change guarantees an earlier preview, so model, quality, format, portrait dimensions and reference inputs remain unchanged.
 

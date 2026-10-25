@@ -1,5 +1,7 @@
 # POC 08.1 — Illustrated creation and local content management
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: 2026-10-24. Branch: `feat/illustrated-creator-management`. Provider tests in this iteration are mocked; no paid OpenAI calls were authorized or made.
 
 ## Baseline and data protection
@@ -18,7 +20,7 @@ Opening stages survive reload/restart. A duplicate operation cannot start anothe
 
 The Studio shows individual scene states and makes **Play your story** available only when ready. Developer details retains usage, estimated/unknown cost and timing information. The opening budget is separate from the foundation and reading budgets: default 8 image attempts and $1 estimated spend per version, configurable within bounded limits. These are application safeguards, not provider billing caps.
 
-Official compatibility and pricing were checked on 2026-10-24; direct citations and implementation details are in [the architecture note](docs/creator-content-management.md). Partial delivery remains optional. Live quality and preview delivery for Creator openings remain unverified.
+Official compatibility and pricing were checked on 2026-10-24; direct citations and implementation details are in [the architecture note](../../creator-content-management.md). Partial delivery remains optional. Live quality and preview delivery for Creator openings remain unverified.
 
 ## Deletion and ownership
 
@@ -54,11 +56,11 @@ Screenshots are actual browser captures at **1440 × 1100** and **1024 × 1100**
 
 | View | 1440px | 1024px |
 | --- | --- | --- |
-| Completed opening and captions | [Screenshot](test-results-live/poc-08-1/screenshots/opening-illustrated-mock-1440.png) | [Screenshot](test-results-live/poc-08-1/screenshots/opening-illustrated-mock-1024.png) |
-| Ready-to-play action | [Screenshot](test-results-live/poc-08-1/screenshots/opening-ready-actions-mock-1440.png) | [Screenshot](test-results-live/poc-08-1/screenshots/opening-ready-actions-mock-1024.png) |
-| Partial failure and explicit retry | [Screenshot](test-results-live/poc-08-1/screenshots/opening-partial-failure-mock-1440.png) | [Screenshot](test-results-live/poc-08-1/screenshots/opening-partial-failure-mock-1024.png) |
-| Delete a reading | [Screenshot](test-results-live/poc-08-1/screenshots/reading-delete-confirmation-1440.png) | [Screenshot](test-results-live/poc-08-1/screenshots/reading-delete-confirmation-1024.png) |
-| Delete a created story | [Screenshot](test-results-live/poc-08-1/screenshots/creator-delete-confirmation-1440.png) | [Screenshot](test-results-live/poc-08-1/screenshots/creator-delete-confirmation-1024.png) |
+| Completed opening and captions | Screenshot — local-only `test-results-live/poc-08-1/screenshots/opening-illustrated-mock-1440.png` | Screenshot — local-only `test-results-live/poc-08-1/screenshots/opening-illustrated-mock-1024.png` |
+| Ready-to-play action | Screenshot — local-only `test-results-live/poc-08-1/screenshots/opening-ready-actions-mock-1440.png` | Screenshot — local-only `test-results-live/poc-08-1/screenshots/opening-ready-actions-mock-1024.png` |
+| Partial failure and explicit retry | Screenshot — local-only `test-results-live/poc-08-1/screenshots/opening-partial-failure-mock-1440.png` | Screenshot — local-only `test-results-live/poc-08-1/screenshots/opening-partial-failure-mock-1024.png` |
+| Delete a reading | Screenshot — local-only `test-results-live/poc-08-1/screenshots/reading-delete-confirmation-1440.png` | Screenshot — local-only `test-results-live/poc-08-1/screenshots/reading-delete-confirmation-1024.png` |
+| Delete a created story | Screenshot — local-only `test-results-live/poc-08-1/screenshots/creator-delete-confirmation-1440.png` | Screenshot — local-only `test-results-live/poc-08-1/screenshots/creator-delete-confirmation-1024.png` |
 
 
 ## Manual checklist

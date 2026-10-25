@@ -1,5 +1,7 @@
 # POC 05.1 — narrative robustness and live streaming
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: 2026-10-24. Corrective branch: `fix/narrative-robustness`, based on `5d7d8c9ed344aca60ab43be566cec017656795b1`.
 
 Before implementation, the clean POC 05 branch was scanned, pushed without force, and verified against [origin/feat/seamless-reading](https://github.com/NassAbd/lunatoon/tree/feat/seamless-reading). The corrective branch is for a local commit only; no merge or corrective-branch push is authorized.
@@ -102,7 +104,7 @@ Private evidence remains under ignored `test-results-live/poc-05-1/`; generated 
 - `run-1/second-2026-10-24T14-45-48.350Z-*`: complete story screenshot, diagnostics, usage and browser observations.
 - `run-1/reload-2026-10-24T14-46-15.863Z-verification.json` and `run-1/verify-2026-10-24T14-46-43.766Z-verification.json`: unchanged call counts, event records and image hashes.
 - `preexisting-integrity-verification.json`: previous stories/assets preserved.
-- Desktop screenshots: [first chapter](test-results-live/poc-05-1/run-1/live-first-chapter-1440.png) and [ending](test-results-live/poc-05-1/run-1/live-ending-1440.png), both 1440×1000, local only. Read-only capture left generation counts unchanged. The full vertical reader is in `run-1/second-2026-10-24T14-45-48.350Z-reader.png`.
+- Desktop screenshots: first chapter — local-only `test-results-live/poc-05-1/run-1/live-first-chapter-1440.png` and ending — local-only `test-results-live/poc-05-1/run-1/live-ending-1440.png`, both 1440×1000, local only. Read-only capture left generation counts unchanged. The full vertical reader is in `run-1/second-2026-10-24T14-45-48.350Z-reader.png`.
 
 ## Remaining limitations and recommendation
 

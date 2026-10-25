@@ -1,5 +1,7 @@
 # POC 07 — reader continuity and finale
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: **2026-10-24**. Branch: `feat/reader-finale`, based on POC 06 `2b68eb97d99628d0ca2c3549f4a1478611f3c2fb`.
 
 ## Baseline and Git safety
@@ -12,7 +14,7 @@ The existing narrative engine, strict validation, prompts, models, reference art
 
 ## Streaming conclusion
 
-See [the source-by-source investigation and decision table](docs/POC_07_IMAGE_STREAMING.md). The six requested official sources were checked again, including the edit endpoint, event schema, Flare alias/snapshot and pricing. The edit-method Markdown URL returned 404; the official HTML reference succeeded.
+See [the source-by-source investigation and decision table](../../POC_07_IMAGE_STREAMING.md). The six requested official sources were checked again, including the edit endpoint, event schema, Flare alias/snapshot and pricing. The edit-method Markdown URL returned 404; the official HTML reference succeeded.
 
 The current `images.edit` workflow supports reference inputs, `stream: true`, `partial_images: 1`, low quality, JPEG/compression 85 and 1024×1536. A requested partial is **not guaranteed**. There is no documented minimum delivery count, preview deadline or evidence that another supported quality/format/snapshot/endpoint would reliably deliver an earlier preview while preserving this tested reference workflow.
 

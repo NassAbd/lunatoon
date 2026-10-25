@@ -1,5 +1,7 @@
 # Story templates: POC #8 architecture assessment
 
+> Historical design assessment and implementation notes. The [development guide](development.md) describes the current illustrated Creator workflow; earlier placeholder-version steps below are preserved as history.
+
 Assessed 2026-10-24 against POC #7 `a0e9354`, before implementing the shared engine.
 
 ## Existing boundary and risks

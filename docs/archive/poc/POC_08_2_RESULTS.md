@@ -1,5 +1,7 @@
 # POC 08.2 — Creator narrative reliability and legacy deletion
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: 2026-10-25. Branch: `fix/creator-reliability-legacy-deletion`. No paid OpenAI calls were made in this iteration.
 
 ## Baseline and safety

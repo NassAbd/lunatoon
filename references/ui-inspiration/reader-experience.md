@@ -25,4 +25,4 @@ The library separates a playable story from an explicitly upcoming concept. Save
 
 ## Evidence
 
-See `POC_06_RESULTS.md` for the final test inventory and screenshot paths. Synthetic provider delays verify sequencing, fallback and scroll behavior; they are not real API latency measurements. No new paid generation is part of this iteration.
+See [historical POC 06 results](../../docs/archive/poc/POC_06_RESULTS.md) for the final test inventory and screenshot paths. Synthetic provider delays verify sequencing, fallback and scroll behavior; they are not real API latency measurements. No new paid generation is part of this iteration.

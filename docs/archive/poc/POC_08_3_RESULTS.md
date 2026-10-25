@@ -1,5 +1,7 @@
 # POC 08.3 — Visual identity and historical-reading review
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: 2026-10-25. Branch: `fix/visual-consistency-legacy-cleanup`. No paid OpenAI calls or real-data deletions were made.
 
 ## Baseline and protection
@@ -29,7 +31,7 @@ The three-upload cap, model, low quality, JPEG dimensions/compression, reference
 
 ## Official API verification
 
-The configured Flare model supports image inputs and editing. Numbered input roles and explicit preservation instructions are supported prompting techniques; there is no documented API canonical-character switch or numeric per-reference weighting. We retain the existing endpoint/settings and do not add an unverified `input_fidelity` parameter. The documentation warns that recurring-character consistency can still vary. See the dated source review and API limitations in [Visual reference research](docs/POC_08_3_VISUAL_REFERENCES.md), with direct official citations.
+The configured Flare model supports image inputs and editing. Numbered input roles and explicit preservation instructions are supported prompting techniques; there is no documented API canonical-character switch or numeric per-reference weighting. We retain the existing endpoint/settings and do not add an unverified `input_fidelity` parameter. The documentation warns that recurring-character consistency can still vary. See the dated source review and API limitations in [Visual reference research](../../POC_08_3_VISUAL_REFERENCES.md), with direct official citations.
 
 ## Historical-reading inventory and deletion diagnosis
 

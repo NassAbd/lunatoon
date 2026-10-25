@@ -38,7 +38,7 @@ The existing ignored `test-results-live/poc-05-1/ledger.json` was re-read using 
 
 The observation proxy records events before they reach the SDK or application. Consequently, application/browser buffering cannot account for the missing partial events in that sample. The docs permit this final-only outcome. They do not identify why those four requests omitted partials, so explanations such as low quality, JPEG, reference editing or provider scheduling remain hypotheses.
 
-The prior [live report](../POC_05_1_RESULTS.md) records browser dialogue readiness of 5.526s and 4.409s, with both final images decoded at 17.224s and 15.318s from their respective submissions. The four server image durations were 11.663s, 11.086s, 10.346s and 10.868s. One story is not a latency distribution; there is no new POC 07 speedup claim. Genuine preview display/replacement is covered by mocked tests, not demonstrated by that live run.
+The prior [live report](archive/poc/POC_05_1_RESULTS.md) records browser dialogue readiness of 5.526s and 4.409s, with both final images decoded at 17.224s and 15.318s from their respective submissions. The four server image durations were 11.663s, 11.086s, 10.346s and 10.868s. One story is not a latency distribution; there is no new POC 07 speedup claim. Genuine preview display/replacement is covered by mocked tests, not demonstrated by that live run.
 
 ## Current local path, inspected directly
 

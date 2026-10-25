@@ -1,5 +1,7 @@
 # POC 08.4 — Final reader UX and authorized historical cleanup
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: 2026-10-25. Branch: `feat/final-reader-ux-polish`, based on POC 08.3 `6bd1d3f8729a29ec013fcbaafa23703a7ba88fbc`. No paid OpenAI calls, new models, database migrations or narrative-engine changes.
 
 ## Historical cleanup and protection

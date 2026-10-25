@@ -1,10 +1,12 @@
 # POC #8 — Creator platform
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 Date: 2026-10-24. Work branch: `feat/creator-platform`. Baseline: POC #7 `a0e9354e939691e723a048340e1f71e88a29679f`, pushed and verified before application changes. This iteration uses mocked providers only; no paid OpenAI generation or live quality results are claimed.
 
 ## Architecture and data protection
 
-See [the pre-implementation assessment](docs/story-template-architecture.md). The existing SQLite reading engine is reused. New immutable story-template snapshots parameterize initial choices/state, opening facts, protagonist, visual references, visual briefs and narrative prompts. Old Neon bibles without template metadata retain their original behavior. No reader database migration is required.
+See [the pre-implementation assessment](../../story-template-architecture.md). The existing SQLite reading engine is reused. New immutable story-template snapshots parameterize initial choices/state, opening facts, protagonist, visual references, visual briefs and narrative prompts. Old Neon bibles without template metadata retain their original behavior. No reader database migration is required.
 
 The original database and reference/image files were backed up before storage changes using SQLite's backup API. Development uses an isolated copy; automated tests use temporary directories. All 209 original records and 53 assets matched their pre-change hashes at the Gate A checkpoint. Eleven historical completed Neon stories and 44 final images loaded through the new HTTP reader routes against that isolated copy, creating zero generation events.
 
@@ -89,16 +91,16 @@ Actual UI captures are local, ignored test artifacts under `test-results-live/po
 
 | Screen | 1440 px | 1024 px |
 | --- | --- | --- |
-| Library | [Screenshot](test-results-live/poc-08/screenshots/library-1440.png) | [Screenshot](test-results-live/poc-08/screenshots/library-1024.png) |
-| Six previews | [Screenshot](test-results-live/poc-08/screenshots/previews-1440.png) | [Screenshot](test-results-live/poc-08/screenshots/previews-1024.png) |
-| Neon opening | [Screenshot](test-results-live/poc-08/screenshots/neon-protocol-opening-1440.png) | [Screenshot](test-results-live/poc-08/screenshots/neon-protocol-opening-1024.png) |
-| Lightkeeper opening | [Screenshot](test-results-live/poc-08/screenshots/last-lightkeeper-opening-1440.png) | [Screenshot](test-results-live/poc-08/screenshots/last-lightkeeper-opening-1024.png) |
-| Orchard opening | [Screenshot](test-results-live/poc-08/screenshots/glass-orchard-opening-1440.png) | [Screenshot](test-results-live/poc-08/screenshots/glass-orchard-opening-1024.png) |
-| Creator prompt/configuration | [Screenshot](test-results-live/poc-08/screenshots/creator-prompt-1440.png) | [Screenshot](test-results-live/poc-08/screenshots/creator-prompt-1024.png) |
-| Editable foundation | [Screenshot](test-results-live/poc-08/screenshots/creator-edit-3-refs-1440.png) | [Screenshot](test-results-live/poc-08/screenshots/creator-edit-3-refs-1024.png) |
-| Uploaded references | [Screenshot](test-results-live/poc-08/screenshots/creator-references-1440.png) | [Screenshot](test-results-live/poc-08/screenshots/creator-references-1024.png) |
-| Saved creator story | [Screenshot](test-results-live/poc-08/screenshots/creator-saved-story-1440.png) | [Screenshot](test-results-live/poc-08/screenshots/creator-saved-story-1024.png) |
-| Completed mock reader | [Screenshot](test-results-live/poc-08/screenshots/creator-completed-reader-mock-1440.png) | [Screenshot](test-results-live/poc-08/screenshots/creator-completed-reader-mock-1024.png) |
+| Library | Screenshot — local-only `test-results-live/poc-08/screenshots/library-1440.png` | Screenshot — local-only `test-results-live/poc-08/screenshots/library-1024.png` |
+| Six previews | Screenshot — local-only `test-results-live/poc-08/screenshots/previews-1440.png` | Screenshot — local-only `test-results-live/poc-08/screenshots/previews-1024.png` |
+| Neon opening | Screenshot — local-only `test-results-live/poc-08/screenshots/neon-protocol-opening-1440.png` | Screenshot — local-only `test-results-live/poc-08/screenshots/neon-protocol-opening-1024.png` |
+| Lightkeeper opening | Screenshot — local-only `test-results-live/poc-08/screenshots/last-lightkeeper-opening-1440.png` | Screenshot — local-only `test-results-live/poc-08/screenshots/last-lightkeeper-opening-1024.png` |
+| Orchard opening | Screenshot — local-only `test-results-live/poc-08/screenshots/glass-orchard-opening-1440.png` | Screenshot — local-only `test-results-live/poc-08/screenshots/glass-orchard-opening-1024.png` |
+| Creator prompt/configuration | Screenshot — local-only `test-results-live/poc-08/screenshots/creator-prompt-1440.png` | Screenshot — local-only `test-results-live/poc-08/screenshots/creator-prompt-1024.png` |
+| Editable foundation | Screenshot — local-only `test-results-live/poc-08/screenshots/creator-edit-3-refs-1440.png` | Screenshot — local-only `test-results-live/poc-08/screenshots/creator-edit-3-refs-1024.png` |
+| Uploaded references | Screenshot — local-only `test-results-live/poc-08/screenshots/creator-references-1440.png` | Screenshot — local-only `test-results-live/poc-08/screenshots/creator-references-1024.png` |
+| Saved creator story | Screenshot — local-only `test-results-live/poc-08/screenshots/creator-saved-story-1440.png` | Screenshot — local-only `test-results-live/poc-08/screenshots/creator-saved-story-1024.png` |
+| Completed mock reader | Screenshot — local-only `test-results-live/poc-08/screenshots/creator-completed-reader-mock-1440.png` | Screenshot — local-only `test-results-live/poc-08/screenshots/creator-completed-reader-mock-1024.png` |
 
 ## Remaining limitations and demo recommendation
 

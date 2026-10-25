@@ -1,5 +1,7 @@
 # POC 04 — P0 diagnostic checkpoint; platform gate blocked
 
+> Historical development checkpoint. See the [current project README](../../../README.md) for setup and supported behavior; [archive notes](README.md) explain the evidence retained here.
+
 **Status: partial implementation. The observed live second-decision defect is not claimed fixed. P1/P2 are deferred.**
 
 Branch `feat/platform-experience` was created from verified clean POC 03.1 commit `0ba638144c2701cbd6ebb6edd163107afcd3d86d`. No main merge, force push, paid generation, data reset or modification of existing saved runs occurred.

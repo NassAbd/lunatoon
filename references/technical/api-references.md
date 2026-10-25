@@ -2,7 +2,7 @@
 
 ## Actual configuration and access
 
-Read only nonsecret model settings from the local environment: narrative `gpt-4.1-mini`, images `gpt-image-2.5-flare`, quality `low`. The key is configured and remains server-only. Non-generating `models.retrieve` calls succeeded for both IDs in this API project. Metadata access alone does not prove a successful image-edit request; live generation evidence is recorded separately in `../POC_02_DECISION.md`.
+Read only nonsecret model settings from the local environment: narrative `gpt-4.1-mini`, images `gpt-image-2.5-flare`, quality `low`. The key is configured and remains server-only. Non-generating `models.retrieve` calls succeeded for both IDs in this API project. Metadata access alone does not prove a successful image-edit request; live generation evidence is recorded separately in [the POC 02 decision record](../../docs/archive/poc/POC_02_DECISION.md).
 
 ## Strict narrative output
 

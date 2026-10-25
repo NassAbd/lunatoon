@@ -93,6 +93,6 @@ The saved reader reports browser text-ready and per-image/total **request-flow**
 
 POC 02's unchanged reader retains its detailed request/validation/decode measurements and same-script comparison. Its one live comparison found 4.810s text-ready and 16.823s total for A, with 12.002s A vs 11.381s B concurrent image phases and higher B cost. These remain one dated sample; no speedup or 3-second target success is inferred for POC 03. This iteration adds immediate loading feedback separately from actual text readiness.
 
-POC 03 automated provider usage and delays are **synthetic fixtures**. No new live latency, image-quality result, price paid or API-access confirmation is claimed. See `POC_03_RESULTS.md`.
+POC 03 automated provider usage and delays are **synthetic fixtures**. No new live latency, image-quality result, price paid or API-access confirmation is claimed. See [historical POC 03 results](archive/poc/POC_03_RESULTS.md).
 
 POC 05 streaming checks are also **mocked SDK/HTTP and browser tests**. No paid call or live streaming validation has been performed in this iteration. Previous live final-image results do not establish preview availability, latency or billed usage for this project.
