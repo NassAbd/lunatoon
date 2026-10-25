@@ -235,7 +235,7 @@ export class CreatorStore {
     return this.transaction(() => {
       const draft = this.draft(id); const asset = record(this.db.prepare("SELECT document FROM creator_assets WHERE id=? AND draft_id=?").get(assetId, id), CreatorAssetSchema);
       if (asset.kind !== "reference") throw new EngineError("creator_asset_not_found", "This reference was not found.", 404);
-      draft.reference_asset_ids = draft.reference_asset_ids.filter(value => value !== assetId); draft.status = "draft"; draft.updated_at = this.now(); this.putDraft(draft); return this.snapshot(id);
+      draft.reference_asset_ids = draft.reference_asset_ids.filter(value => value !== assetId); if (draft.visual_references) draft.visual_references = draft.visual_references.filter(ref => ref.asset_id !== assetId); draft.status = "draft"; draft.updated_at = this.now(); this.putDraft(draft); return this.snapshot(id);
     });
   }
   readReference(id: string, assetId: string) {
@@ -254,14 +254,14 @@ export class CreatorStore {
       for (const assetId of new Set([input.cover_asset_id, ...input.opening_asset_ids, ...input.reference_asset_ids])) { const asset = lookup(assetId); creatorAssetBytes(this.directory, asset); }
       for (const assetId of input.reference_asset_ids) if (!draft.reference_asset_ids.includes(assetId) || lookup(assetId).kind !== "reference") throw new EngineError("invalid_template_assets", "Only this draft's active reference images may be saved.", 400);
       const version = (draft.latest_saved_version ?? 0) + 1;
-      const template = validateStoryTemplate({ ...foundation, id: draft.template_id, version, status: "ready", cover_asset_id: input.cover_asset_id, reference_asset_ids: input.reference_asset_ids, opening_beats: foundation.opening_beats.map((beat, index) => {
+      const template = validateStoryTemplate({ ...foundation, id: draft.template_id, version, status: "ready", cover_asset_id: input.cover_asset_id, reference_asset_ids: input.reference_asset_ids, ...(input.visual_references === undefined ? {} : { visual_references: input.visual_references }), opening_beats: foundation.opening_beats.map((beat, index) => {
         const asset = lookup(input.opening_asset_ids[index]);
         const alt = asset.kind === "artwork" ? `Authored decorative placeholder for opening beat ${index + 1}; the scene is described in the caption below.` : beat.alt;
         return { ...beat, alt, asset_id: asset.id, width: asset.width, height: asset.height };
       }) });
       this.db.prepare("INSERT INTO creator_templates(id,version,draft_id,document) VALUES(?,?,?,?)").run(template.id, template.version, id, JSON.stringify(template));
       this.db.prepare("INSERT INTO creator_saves(operation_id,draft_id,fingerprint,template_id,version) VALUES(?,?,?,?,?)").run(input.operation_id, id, fingerprint, template.id, version);
-      draft.foundation = foundation; draft.latest_saved_version = version; draft.status = "ready"; draft.updated_at = this.now(); this.putDraft(draft); return this.snapshot(id);
+      draft.foundation = foundation; draft.visual_references = input.visual_references; draft.latest_saved_version = version; draft.status = "ready"; draft.updated_at = this.now(); this.putDraft(draft); return this.snapshot(id);
     });
   }
   saveDraft(id: string, value: SaveDraftInput) { return this.openings.saveDraft(id, value); }

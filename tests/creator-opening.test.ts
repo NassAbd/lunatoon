@@ -173,6 +173,6 @@ describe("Creator opening SDK transport (mocked; no provider calls)", () => {
     for (const panel of opening.panels.slice(2)) await service.generate(id, 1, panel.id, input(), undefined, previews);
     expect(calls).toBe(2); expect(previews).not.toHaveBeenCalled();
     requests.forEach((body, index) => { const prompt = String(body instanceof FormData ? body.get("prompt") : body.prompt); expect(prompt).toContain(`Opening scene ${index + 3} of 4`); expect(prompt).toContain(f.character_bible); expect(prompt).toContain("Captions are displayed separately"); expect(prompt).not.toContain("reserve a quiet 20% margin"); });
-    const result = store.getDraft(id); expect(result.opening?.attempts.every(attempt => attempt.status === "succeeded" && attempt.estimated_micro_usd === 4300 && attempt.metrics?.prompt_version === "creator-opening-08-1")).toBe(true); expect(result.opening?.summary.reference_input_micro_usd).toBe(1600);
+    const result = store.getDraft(id); expect(result.opening?.attempts.every(attempt => attempt.status === "succeeded" && attempt.estimated_micro_usd === 4300 && attempt.metrics?.prompt_version === "creator-opening-08.3-identity")).toBe(true); expect(result.opening?.summary.reference_input_micro_usd).toBe(1600);
   });
 });

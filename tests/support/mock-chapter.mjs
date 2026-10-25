@@ -27,7 +27,7 @@ export function mockKaiFoundation() {
     title: "Running Hell", genre: "Cyberpunk Action", description: "Kai Fox must use the SpeedCore to stop NEXUS and save the city.",
     premise: "Kai Fox carries an intact SpeedCore Device outside NEXUS headquarters. He must decide how to stop its city-wide relay.",
     world: "A fictional city threatened by NEXUS, focused on the headquarters entrance and its control room.", protagonist_id: "kai_fox",
-    character_bible: "Kai Fox has a red jacket and a ponytail. Preserve his identity and visual anchor red_jacket_ponytail. He wants to save the city.",
+    character_bible: "Kai Fox is a 15-year-old African-American boy with dark skin, a recognizable youthful face, a ponytail and a red jacket. Preserve his identity and visual anchor red_jacket_ponytail. He wants to save the city.",
     art_direction: "Original graphic cyberpunk comic, clean ink, red jacket, charcoal architecture and restrained electric blue highlights. No lettering.",
     object_anchor: "The SpeedCore Device is a palm-sized silver module with one blue ring. Keep its shape and object ID speedcore_device stable.",
     setting_anchor: "NEXUS headquarters has dark glass doors and a control room with one exposed relay slot.",

@@ -6,6 +6,7 @@ import { EngineError } from "./errors";
 import { providerFailure, type StoryProvider } from "./provider";
 import { StoryStore } from "./store";
 import type { OnIllustrationPreview } from "./image-stream";
+import { orderedVisualReferences } from "../visual-references";
 
 export class StoryEngine {
   constructor(readonly store: StoryStore, private provider: StoryProvider) {}
@@ -49,7 +50,8 @@ export class StoryEngine {
     this.supports(planned?.approach ?? snapshot.run.approach, planned?.model ?? snapshot.run.models.image);
     const referenceIds = snapshot.bible.template?.reference_asset_ids ?? ["kael_reference"];
     if (planned?.approach === "reference" && referenceIds.length === 0) throw new EngineError("reference_missing", "This story has no saved reference images. No alternate paid mode was selected.", 400);
-    const references = planned?.approach === "reference" ? referenceIds.map(id => { const asset = this.store.readAsset(runId, id); return { ...asset, name: `${id}.${asset.mime === "image/jpeg" ? "jpg" : asset.mime.split("/")[1]}` }; }) : [];
+    const selection = planned?.approach === "reference" ? orderedVisualReferences(referenceIds, snapshot.bible.template ? snapshot.bible.template.visual_references : [{ asset_id: "kael_reference", role: "protagonist" }]) : [];
+    const references = selection.map(({ asset_id, role }) => { const asset = this.store.readAsset(runId, asset_id); return { ...asset, asset_id, role, name: `${asset_id}.${asset.mime === "image/jpeg" ? "jpg" : asset.mime.split("/")[1]}` }; });
     signal?.throwIfAborted();
     this.provider.prepare();
     const claim = this.store.claimImage(runId, panelId, input); if (!claim) return this.snapshot(runId);

@@ -9,6 +9,7 @@ import {
 } from "../contracts";
 import { ART_VERSION, buildIllustrationPrompt, isReferenceModelSupported, type IllustrationScene } from "../art-direction";
 import { supportsImagePreviews, type OnIllustrationPreview } from "../story-engine/image-stream";
+import type { VisualReference } from "../story-engine/contracts";
 
 export function getModelConfig() {
   return {
@@ -52,7 +53,7 @@ export async function generateScript(client: OpenAI, request: StoryRequest, sign
   };
 }
 
-export type ReferenceImage = { bytes: Buffer; mime: string; name?: string };
+export type ReferenceImage = { bytes: Buffer; mime: string; name?: string; asset_id?: string; role?: VisualReference["role"] };
 export type VisualMemory = { identity: string; style: string; current: string; reference?: Buffer; references?: ReferenceImage[]; protagonist?: string; prompt_version?: string; models: { image: string; quality: "low" | "medium" | "high" } };
 export async function generateIllustration(client: OpenAI, panel: IllustrationScene, signal?: AbortSignal, approach: ImageApproach = "text", memory?: VisualMemory, onPreview?: OnIllustrationPreview): Promise<ImageResponse> {
   const started = performance.now();

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CreatorSnapshotSchema, type CreatorSnapshot, type FoundationPrompt } from "@/lib/creator/contracts";
-import type { StoryFoundation } from "@/lib/story-engine/contracts";
+import type { StoryFoundation, VisualReference } from "@/lib/story-engine/contracts";
 import { FoundationEditor } from "./foundation-editor";
 import { LibraryLaunch } from "./library-launch";
 import { CreatorOpening } from "./creator-opening";
@@ -28,6 +28,7 @@ export function CreatorStudio({ initial, referenceSupported }: { initial: Creato
   const [snapshot, setSnapshot] = useState(initial);
   const [input, setInput] = useState<FoundationPrompt>(initial?.draft.last_input ?? emptyPrompt);
   const [foundation, setFoundation] = useState<StoryFoundation | null>(initial?.draft.foundation ?? null);
+  const [visualReferences, setVisualReferences] = useState<VisualReference[]>(initial?.draft.visual_references ?? []);
   const [busy, setBusy] = useState(""); const [error, setError] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
   const [notice, setNotice] = useState(initial?.draft.foundation && !initial.latest_template ? "Draft saved. No illustrations were requested." : ""); const [previews, setPreviews] = useState<Record<string, string>>({});
@@ -42,12 +43,19 @@ export function CreatorStudio({ initial, referenceSupported }: { initial: Creato
   const failed = last?.status === "failed" || last?.status === "interrupted";
   const uncertain = Boolean(failed && last?.estimated_micro_usd == null);
   const refs = snapshot?.assets.filter(asset => snapshot.draft.reference_asset_ids.includes(asset.id)) ?? [];
+  const mainReference = refs.findIndex(asset => visualReferences.some(reference => reference.asset_id === asset.id && reference.role === "protagonist"));
   const adopt = (next: CreatorSnapshot, replace = false) => {
     setSnapshot(next); draft.current = next.draft.id;
     openingVersion.current = next.opening?.version;
     if (replace) setFoundation(next.draft.foundation);
   };
   function clearPreview(id: string) { setPreviews(current => { const copy = { ...current }; delete copy[id]; return copy; }); }
+  function setReferenceRole(id: string, role: VisualReference["role"]) {
+    setVisualReferences(current => refs.map(asset => {
+      const previous = current.find(reference => reference.asset_id === asset.id)?.role ?? "unspecified";
+      return { asset_id: asset.id, role: asset.id === id ? role : role === "protagonist" && previous === "protagonist" ? "unspecified" : previous };
+    }));
+  }
   function readSaved() {
     const id = draft.current;
     const next = readQueue.current.catch(() => undefined).then(async () => {
@@ -148,7 +156,7 @@ export function CreatorStudio({ initial, referenceSupported }: { initial: Creato
   async function remove(id: string) {
     if (!draft.current) return;
     setBusy("removing"); setError("");
-    try { adopt(await snapshotRequest(`/api/creator/drafts/${draft.current}/references/${id}`, { method: "DELETE" })); }
+    try { adopt(await snapshotRequest(`/api/creator/drafts/${draft.current}/references/${id}`, { method: "DELETE" })); setVisualReferences(current => current.filter(reference => reference.asset_id !== id)); }
     catch (error) { setError(error instanceof Error ? error.message : "This reference could not be removed."); }
     finally { setBusy(""); }
   }
@@ -156,11 +164,11 @@ export function CreatorStudio({ initial, referenceSupported }: { initial: Creato
     if (!foundation) return;
     setBusy("saving"); setError(""); setNotice("");
     try {
-      const id = await ensureDraft(); const body = { foundation, reference_asset_ids: refs.map(ref => ref.id), mode };
+      const id = await ensureDraft(); const body = { foundation, reference_asset_ids: refs.map(ref => ref.id), visual_references: refs.map(ref => ({ asset_id: ref.id, role: visualReferences.find(reference => reference.asset_id === ref.id)?.role ?? "unspecified" })), mode };
       const fingerprint = JSON.stringify(body);
       if (saveOperation.current?.fingerprint !== fingerprint) saveOperation.current = { fingerprint, id: crypto.randomUUID() };
       const saved = await snapshotRequest(`/api/creator/drafts/${id}/save`, json({ ...body, operation_id: saveOperation.current.id }));
-      adopt(saved, true);
+      adopt(saved, true); setVisualReferences(saved.draft.visual_references ?? []);
       if (mode === "draft") { setNotice("Draft saved. No illustrations were requested."); router.refresh(); }
       else { setPreviews({}); await illustrate(saved, saved.opening?.panels.filter(panel => panel.status === "pending") ?? []); }
     } catch (error) { setError(error instanceof Error ? error.message : "The story needs a little more work before saving."); }
@@ -184,12 +192,13 @@ export function CreatorStudio({ initial, referenceSupported }: { initial: Creato
         <div className="studio-reference-grid">{refs.map((ref, index) => <figure className="studio-reference" data-reference-id={ref.id} key={ref.id}>
           {/* Private local images are normalized and served through draft ownership checks. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`/api/creator/drafts/${ref.draft_id}/references/${ref.id}`} alt={`Reference ${index + 1}`} width={ref.width} height={ref.height} /><figcaption><span>Reference {index + 1}</span><button disabled={disabled} onClick={() => void remove(ref.id)} aria-label={`Remove reference ${index + 1}`}>Remove</button></figcaption>
+          <img src={`/api/creator/drafts/${ref.draft_id}/references/${ref.id}`} alt={`Reference ${index + 1}`} width={ref.width} height={ref.height} /><figcaption><span>Reference {index + 1}</span><label className="studio-reference-role">Use for<select aria-label={`Use Reference ${index + 1} for`} value={visualReferences.find(reference => reference.asset_id === ref.id)?.role ?? "unspecified"} disabled={disabled} onChange={event => setReferenceRole(ref.id, event.target.value as VisualReference["role"])}><option value="unspecified">Unspecified</option><option value="protagonist">Main character</option><option value="character">Other character</option><option value="environment">Setting</option><option value="style">Style</option></select></label><button disabled={disabled} onClick={() => void remove(ref.id)} aria-label={`Remove reference ${index + 1}`}>Remove</button></figcaption>
         </figure>)}</div>
         <label className={`studio-upload ${disabled || refs.length >= 3 ? "is-disabled" : ""}`}>Add reference images<input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={disabled || refs.length >= 3} onChange={event => { const files = Array.from(event.target.files ?? []); event.target.value = ""; void upload(files); }} /></label>
         {busy === "uploading" && <p className="studio-muted" role="status">Checking and saving your reference images…</p>}
         <p className="studio-muted">PNG, JPEG or WebP · 5 MiB each · up to 4096 px per edge / 16 megapixels · still images only. Stored privately on this local installation.</p>
         <p className="studio-reference-note">{refs.length ? `${refs.length} of 3 references attached. These guide the opening and later illustrations; they do not determine the number of scenes. Reference editing adds image-input usage.` : "No references? Your story will use its written visual guide in text-only illustration mode."}</p>
+        {refs.length > 0 && <p className="studio-muted">{mainReference >= 0 ? `Reference ${mainReference + 1} is the main character's visual guide. It will be used first for identity. Selecting another main character replaces this designation.` : "No main-character reference selected. The written character description guides identity; uploaded images keep their chosen purposes."} Save your draft to keep these choices. Save &amp; Illustrate applies them to a new version. Existing readings keep their saved references.</p>}
       </aside>
     </div>
     {error && <p className="studio-alert" role="alert">{error}</p>}

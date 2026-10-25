@@ -11,7 +11,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ dra
     const input = await creatorRequest(request, SaveRequest);
     const foundation = validateStoryFoundation(input.foundation);
     const draftId = recordId((await params).draftId); const store = getCreator().store;
-    const saved = { operation_id: input.operation_id, foundation, reference_asset_ids: input.reference_asset_ids };
+    const saved = { operation_id: input.operation_id, foundation, reference_asset_ids: input.reference_asset_ids, ...(input.visual_references === undefined ? {} : { visual_references: input.visual_references }) };
     // Saving never starts provider work. The explicit illustrate action first
     // freezes this version; individual image routes claim the charged stages.
     return input.mode === "illustrate" ? store.saveIllustratedVersion(draftId, saved) : store.saveDraft(draftId, saved);

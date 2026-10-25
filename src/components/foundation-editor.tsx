@@ -57,7 +57,7 @@ export function FoundationEditor({ foundation, onChange, disabled = false }: Fou
         })} />
       </section>}
       {field("art_direction", "Visual direction", 3000, 4)}
-      <p className="studio-muted">Opening artwork uses an authored placeholder. Your illustrated panels are generated when you continue the story.</p>
+      <p className="studio-muted">Save draft keeps these scenes without generating artwork. Save &amp; Illustrate creates the opening illustrations; later panels follow your reading choices.</p>
       {foundation.opening_beats.map((beat, index) => <Field key={index} label={`Opening beat ${index + 1}`} value={beat.caption} maxLength={500} rows={3} disabled={disabled} onChange={caption => onChange({
         ...foundation,
         opening_beats: foundation.opening_beats.map((current, currentIndex) => currentIndex === index ? { ...current, caption } : current),

@@ -8,6 +8,7 @@ import { OPENING_PROMPT_VERSION, openingMemory, openingScene } from "./opening-p
 import type { OpeningContext } from "./opening-store";
 import { creatorFailure } from "./provider";
 import { CreatorStore } from "./store";
+import { orderedVisualReferences } from "../visual-references";
 
 export interface OpeningProvider {
   prepare(): void;
@@ -17,7 +18,9 @@ export function openAIOpeningProvider(): OpeningProvider {
   return {
     prepare() { getClient(); },
     image(context, signal, onPreview) {
-      return generateIllustration(getClient(), openingScene(context.panel, context.foundation), signal, context.approach, { ...openingMemory(context.foundation), prompt_version: OPENING_PROMPT_VERSION, references: context.references.map(asset => ({ bytes: asset.bytes, mime: asset.mime, name: `${asset.id}.png` })), models: { image: context.model, quality: context.quality } }, onPreview);
+      const selection = orderedVisualReferences(context.references.map(asset => asset.id), context.visual_references);
+      const references = selection.map(({ asset_id, role }) => { const asset = context.references.find(item => item.id === asset_id)!; return { bytes: asset.bytes, mime: asset.mime, name: `${asset.id}.png`, asset_id, role }; });
+      return generateIllustration(getClient(), openingScene(context.panel, context.foundation), signal, context.approach, { ...openingMemory(context.foundation, selection), prompt_version: OPENING_PROMPT_VERSION, references, models: { image: context.model, quality: context.quality } }, onPreview);
     },
   };
 }

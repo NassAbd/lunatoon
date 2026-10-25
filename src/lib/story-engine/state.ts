@@ -3,6 +3,7 @@ import { ValidatedScriptSchema } from "../contracts";
 import { ChapterSchema, StateSchema, StoryFoundationSchema, StoryTemplateSchema, type Chapter, type StoryState, type StoryFoundation, type StoryTemplate } from "./contracts";
 import { withFailurePhase } from "./failure-diagnostics";
 import { EngineError } from "./errors";
+import { orderedVisualReferences } from "../visual-references";
 
 function requireState(valid: boolean, message: string, issue?: { path: string; rule: string }): asserts valid {
   if (!valid) throw new EngineError("invalid_story_state", message, 422, issue ? { phase: "state_validation", kind: "continuity", error_type: "EngineError", issues: [issue] } : undefined);
@@ -41,6 +42,7 @@ export function validateStoryFoundation(value: unknown): StoryFoundation {
 export function validateStoryTemplate(value: unknown): StoryTemplate {
   const template = StoryTemplateSchema.parse(value); validateFoundationFields(template);
   requireState(new Set(template.reference_asset_ids).size === template.reference_asset_ids.length, "Story reference IDs must be unique.");
+  orderedVisualReferences(template.reference_asset_ids, template.visual_references);
   return template;
 }
 export function applyChapter(before: StoryState, proposed: Chapter, step: number, maxSteps: number, openingFactIds: readonly string[] = initialState().facts.map(fact => fact.id)): StoryState {

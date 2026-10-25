@@ -8,6 +8,8 @@ import { generateIllustration, GenerationError, getClient, type ReferenceImage }
 import { chapterRequestSchema, type Chapter, type GenerationEvent, type Models, type NarrativeContext, type Panel, type Snapshot } from "./contracts";
 import type { ImageResponse, Metrics } from "../contracts";
 import type { OnIllustrationPreview } from "./image-stream";
+import { STORY_VISUAL_VERSION } from "../art-direction";
+import { visualReferenceInstructions } from "../visual-references";
 
 export interface StoryProvider {
   prepare(): void;
@@ -55,8 +57,9 @@ export function openAIProvider(): StoryProvider {
       const template = snapshot.bible.template;
       const character = (node.after ?? node.before).characters.find(character => character.id === (template?.protagonist_id ?? "kael"));
       if (!character) throw new EngineError("invalid_story_context", "The saved protagonist is missing.", 422);
-      const roles = references.map((ref, index) => `Reference ${index + 1}: ${snapshot.bible.assets.find(asset => ref.name?.startsWith(`${asset.id}.`))?.purpose ?? "Story visual reference"}`).join("\n");
-      return generateIllustration(getClient(), panel.script, signal, event.approach, { identity: character.visual_anchor, style: snapshot.bible.art_direction, current: `${snapshot.bible.device_anchor}\n${snapshot.bible.setting_anchor}\n${panel.visual_brief}\n${roles}`, references, protagonist: template && template.id !== "neon-protocol" ? character.name : undefined, models: { image: event.model, quality: event.quality } }, onPreview);
+      const roles = visualReferenceInstructions(references.map(ref => ({ asset_id: ref.asset_id ?? "", role: ref.role ?? "unspecified" })), character.name);
+      const identity = `Saved character bible: ${snapshot.bible.character_bible}\nProtagonist ${character.name}; stable identity anchor: ${character.visual_anchor}`;
+      return generateIllustration(getClient(), panel.script, signal, event.approach, { identity, style: snapshot.bible.art_direction, current: `${snapshot.bible.device_anchor}\n${snapshot.bible.setting_anchor}\n${panel.visual_brief}\n${roles}`, references, prompt_version: STORY_VISUAL_VERSION, protagonist: template && template.id !== "neon-protocol" ? character.name : undefined, models: { image: event.model, quality: event.quality } }, onPreview);
     },
   };
 }

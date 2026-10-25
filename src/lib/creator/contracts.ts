@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { MetricsSchema } from "../contracts";
-import { Id, StoryFoundationSchema, StoryTemplateSchema } from "../story-engine/contracts";
+import { Id, StoryFoundationSchema, StoryTemplateSchema, VisualReferencesSchema } from "../story-engine/contracts";
 import { OpeningSnapshotSchema, openingStreamSchema } from "./opening-contracts";
 
 const Key = z.string().regex(/^[a-z][a-z0-9_-]{0,59}$/);
@@ -16,7 +16,7 @@ export const FoundationPromptSchema = GenerateFoundationSchema.pick({ prompt: tr
 // Artwork IDs are supplied by the server's authored-placeholder helper, not uploaded SVGs.
 export const SaveTemplateSchema = z.object({
   operation_id: Id, foundation: StoryFoundationSchema,
-  reference_asset_ids: z.array(Key).max(3), cover_asset_id: Key,
+  reference_asset_ids: z.array(Key).max(3), visual_references: VisualReferencesSchema.optional(), cover_asset_id: Key,
   opening_asset_ids: z.array(Key).min(1).max(4),
 }).strict();
 export const CreatorLimitsSchema = z.object({ max_calls: z.number().int().min(1).max(3), budget_usd: z.number().positive().max(1) }).strict();
@@ -32,7 +32,7 @@ export const CreatorAssetSchema = z.object({
 }).strict();
 export const CreatorDraftSchema = z.object({
   id: Id, operation_id: Id, template_id: Key, status: z.enum(["draft", "ready"]),
-  foundation: StoryFoundationSchema.nullable(), reference_asset_ids: z.array(Key).max(3),
+  foundation: StoryFoundationSchema.nullable(), reference_asset_ids: z.array(Key).max(3), visual_references: VisualReferencesSchema.optional(),
   last_input: FoundationPromptSchema.nullable(),
   limits: CreatorLimitsSchema, model: z.string(), latest_saved_version: z.number().int().positive().nullable(),
   created_at: z.number(), updated_at: z.number(),

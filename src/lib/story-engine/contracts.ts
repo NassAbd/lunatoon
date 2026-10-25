@@ -3,6 +3,9 @@ import { ImageApproachSchema, MetricsSchema, ScriptPanelSchema } from "../contra
 
 export const Id = z.uuid();
 const Key = z.string().regex(/^[a-z][a-z0-9_-]{0,59}$/);
+export const VisualReferenceSchema = z.object({ asset_id: Key, role: z.enum(["protagonist", "character", "environment", "style", "unspecified"]) }).strict();
+export const VisualReferencesSchema = z.array(VisualReferenceSchema).max(3);
+export type VisualReference = z.infer<typeof VisualReferenceSchema>;
 const Text = z.string().min(1).max(300);
 export const FailurePhaseSchema = z.enum(["provider_parse", "chapter_validation", "state_validation", "node_commit", "panel_commit", "usage_commit", "script_commit"]);
 export const FailureDiagnosticsSchema = z.object({
@@ -38,7 +41,7 @@ export const StoryFoundationSchema = z.object({
 }).strict();
 export const StoryTemplateSchema = StoryFoundationSchema.extend({
   id: Key, version: z.number().int().min(1).max(1000000), status: z.enum(["draft", "ready", "preview"]),
-  cover_asset_id: Key, reference_asset_ids: z.array(Key).max(3),
+  cover_asset_id: Key, reference_asset_ids: z.array(Key).max(3), visual_references: VisualReferencesSchema.optional(),
   opening_beats: z.array(StoryFoundationSchema.shape.opening_beats.element.extend({ asset_id: Key, width: z.number().int().min(1).max(4096), height: z.number().int().min(1).max(4096) })).min(1).max(4),
 }).strict();
 export type StoryFoundation = z.infer<typeof StoryFoundationSchema>;
