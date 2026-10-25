@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import Link from "next/link";
 import { CHOICES, INITIAL_CONTEXT, type ComicPanel, type ImageApproach, type Metrics, type StoryRequest, type StoryResponse } from "@/lib/contracts";
 import { fetchImage, fetchStory, RequestError } from "@/lib/api-client";
 import { runContinuation } from "@/lib/pipeline";
@@ -10,6 +9,7 @@ import { StartSavedRun } from "./start-saved-run";
 import { ComicPanelCard } from "./comic-panel";
 import { Icon } from "./icon";
 import { yieldForTextPaint } from "@/lib/presentation";
+import { StoryHeader } from "./story-book";
 
 type Models = { story: string; image: string; quality: string; referenceSupported: boolean };
 type Failure = { stage: string; message: string; code: string; duration_ms: number | null; request_id: string | null };
@@ -112,11 +112,7 @@ export function Reader({ configured, models }: { configured: boolean; models: Mo
   const stage = busy ? panels.length ? "Illustrating" : "Writing the next beat" : run?.failures.length ? "Run interrupted" : complete === 2 ? "Continuation complete" : "Waiting for your choice";
 
   return <div className="app-shell">
-    <header className="site-header">
-      <Link className="wordmark" href="/" aria-label="Lunatoon home"><span className="logo-mark"><Icon name="moon" size={24} /></span>lunatoon<span className="wordmark-dot">.</span></Link>
-      <div className="header-divider" /><span className="header-caption">A NEW KIND OF STORY</span>
-      <div className="header-right"><span className="poc-tag">EXPERIMENT 001</span><span className="local-badge"><i /> LOCAL POC</span></div>
-    </header>
+    <StoryHeader />
 
     <main className="workspace">
       <aside className="director-column">

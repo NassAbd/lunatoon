@@ -146,7 +146,12 @@ test("both decisions append in place with mocked provider previews, stable scrol
   await page.getByLabel("Add a little of your imagination").fill("Destroy it with a hammer.");
   await remember(page, 0);
   const observations: Measurement[] = [await measure(page, "first-before-submit")];
-  let navigations = 0; page.on("framenavigated", frame => { if (frame === page.mainFrame()) navigations++; });
+  await page.evaluate(() => Object.assign(window, { journeyMemory: { document: document.documentElement, reader: document.querySelector(".saved-reader"), decision: document.querySelector(".book-decision[data-step='1']") } }));
+  let documentNavigations = 0, routeNavigations = 0;
+  // Same-URL history events update the RSC cache without navigating. Actual
+  // document requests, URL changes and DOM replacement remain forbidden.
+  page.on("request", item => { if (item.isNavigationRequest() && item.resourceType() === "document" && item.frame() === page.mainFrame()) documentNavigations++; });
+  page.on("framenavigated", frame => { if (frame === page.mainFrame() && frame.url() !== url) routeNavigations++; });
   await submitWithoutScrolling(page);
   observations.push(await measure(page, "first-submitted"));
   await expect(page.getByText("You don't get to follow me.", { exact: true })).toBeAttached();
@@ -155,7 +160,7 @@ test("both decisions append in place with mocked provider previews, stable scrol
   await saveMeasurements("continuous-reader-measurements", observations, info);
   // Baseline fails here: scrollIntoView moves the reader and the decision jumps below the new chapter.
   unchanged(observations[0], observations[1]); unchanged(observations[0], observations[2]);
-  expect(navigations).toBe(0);
+  expect(documentNavigations).toBe(0); expect(routeNavigations).toBe(0);
   expect(observations[2].panels[0].top).toBeGreaterThan(observations[2].decisionTop + observations[2].decisionHeight);
   await expect(page.locator(".generated-image")).toHaveCount(0);
   await expect(page.locator(".preview-image")).toHaveCount(2);
@@ -198,7 +203,13 @@ test("both decisions append in place with mocked provider previews, stable scrol
   await expect(page.getByText("A story only you could tell.")).toBeAttached();
   observations.push(await measure(page, "ending"));
   for (const observation of observations.slice(observations.indexOf(secondStart) + 1)) unchanged(secondStart, observation);
-  expect(navigations).toBe(0);
+  expect(documentNavigations).toBe(0); expect(routeNavigations).toBe(0);
+  expect(observations.at(-1)!.timeOrigin).toBe(observations[0].timeOrigin);
+  expect(observations.at(-1)!.earlierPanelsSame).toBe(true);
+  expect(await page.evaluate(() => {
+    const memory = (window as Window & { journeyMemory?: { document: Element; reader: Element | null; decision: Element | null } }).journeyMemory;
+    return memory?.document === document.documentElement && memory.reader === document.querySelector(".saved-reader") && memory.decision === document.querySelector(".book-decision[data-step='1']");
+  })).toBe(true);
   await expect(page.locator(".book-decision")).toHaveCount(2);
   const completed = await snapshot(request, url); expect(completed.run.status).toBe("ended");
   expect(completed.panels.slice(0, 2).map(panel => panel.image_path)).toEqual(firstPaths);

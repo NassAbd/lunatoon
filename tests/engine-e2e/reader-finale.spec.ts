@@ -100,8 +100,13 @@ test("completed decisions compact only when safe, keep the visible panel anchore
     (window as Window & { finaleMemory?: AnchorMemory }).finaleMemory = { reader: document.querySelector(".saved-reader")!, decision, panels: [] };
     window.scrollTo({ top: decision.getBoundingClientRect().top + scrollY - 80, behavior: "instant" });
   });
-  const initial = await anchor(page); let navigations = 0;
-  page.on("framenavigated", frame => { if (frame === page.mainFrame()) navigations++; });
+  const initial = await anchor(page), readerUrl = page.url();
+  const initialDocument = await page.evaluateHandle(() => document.documentElement);
+  let documentNavigations = 0, routeNavigations = 0;
+  // RSC cache refreshes can emit a same-URL history event. Reject actual
+  // document requests and route changes; identity checks below also reject remounts.
+  page.on("request", item => { if (item.isNavigationRequest() && item.resourceType() === "document" && item.frame() === page.mainFrame()) documentNavigations++; });
+  page.on("framenavigated", frame => { if (frame === page.mainFrame() && frame.url() !== readerUrl) routeNavigations++; });
   await submit(page);
   await expect(page.getByText("You don't get to follow me.", { exact: true })).toBeAttached();
   await expect(firstDecision).toHaveAttribute("data-compact", "false");
@@ -157,8 +162,12 @@ test("completed decisions compact only when safe, keep the visible panel anchore
   expect(completed.run.status).toBe("ended");
   expect(completed.nodes.map(node => node.instruction)).toEqual([firstTwist, secondTwist]);
   await expectFinale(page, completed, "complete");
-  expect(navigations).toBe(0);
-  expect((await anchor(page)).panelsSame).toBe(true);
+  expect(documentNavigations).toBe(0); expect(routeNavigations).toBe(0);
+  const finalAnchor = await anchor(page);
+  expect(await page.evaluate(original => original === document.documentElement, initialDocument)).toBe(true);
+  await initialDocument.dispose();
+  expect(finalAnchor.timeOrigin).toBe(initial.timeOrigin);
+  expect(finalAnchor.readerSame && finalAnchor.decisionSame && finalAnchor.panelsSame).toBe(true);
   const generated = await stats(request);
   expect(generated.scripts - before.scripts).toBe(2); expect(generated.images - before.images).toBe(4);
   writeFileSync("test-results-engine/poc07/decision-compaction.json", JSON.stringify({ initial, visible, focused, compacted }, null, 2));

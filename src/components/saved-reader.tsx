@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { CHOICES, type ComicPanel, type ImageApproach } from "@/lib/contracts";
@@ -28,7 +29,8 @@ async function requestSnapshot(url: string, body?: unknown): Promise<Snapshot> {
   }
   return SnapshotSchema.parse(json);
 }
-export function SavedReader({ initial }: { initial: Snapshot }) {
+export function SavedReader({ initial, openingSceneryIds = [] }: { initial: Snapshot; openingSceneryIds?: readonly string[] }) {
+  const router = useRouter();
   const [snapshot, setSnapshot] = useState(initial); const [busy, setBusy] = useState(false); const busyRef = useRef(false);
   const [error, setError] = useState(""); const [writingStep, setWritingStep] = useState<number | null>(null);
   const [approach, setApproach] = useState<ImageApproach>(initial.run.approach);
@@ -52,7 +54,7 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
   const operations = useRef(new Map<string, string>()); const readQueue = useRef<Promise<unknown>>(Promise.resolve());
   const base = `/api/runs/${initial.run.id}`;
   const template = snapshot.bible.template;
-  const waitingArtwork = waitingArtworkForRun(snapshot);
+  const waitingArtwork = waitingArtworkForRun(snapshot, openingSceneryIds);
   const operation = (key: string) => { let id = operations.current.get(key); if (!id) { id = crypto.randomUUID(); operations.current.set(key, id); } return id; };
   function refresh() {
     // Serialize read responses so concurrent image completions cannot roll the UI back.
@@ -70,7 +72,13 @@ export function SavedReader({ initial }: { initial: Snapshot }) {
   async function work(action: () => Promise<void>) {
     if (busyRef.current) return; busyRef.current = true; setBusy(true); setError("");
     try { await action(); } catch (error) { setError(error instanceof Error ? error.message : "Request interrupted. Reload saved status before retrying."); }
-    finally { busyRef.current = false; setBusy(false); }
+    finally {
+      busyRef.current = false; setBusy(false);
+      // Keep Back navigation's cached server snapshot current after explicit
+      // work. Refresh merges saved data without remounting this reader or
+      // moving its scroll position; it never schedules provider requests.
+      if (window.location.pathname === `/run/${initial.run.id}`) router.refresh();
+    }
   }
   async function images(panels: Panel[], observed?: ReaderObservation, retryOperation?: string) {
     // Start both independent requests immediately after dialogue has painted.

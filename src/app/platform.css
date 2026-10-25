@@ -3,6 +3,7 @@
 .book-navigation a:hover, .book-navigation a[aria-current="page"] { color: #202124; }
 .book-navigation a[aria-current="page"] { box-shadow: 0 2px #b5ce75; }
 .story-reader a:focus-visible, .story-reader summary:focus-visible { outline: 2px solid #6b811d; outline-offset: 5px; border-radius: 3px; }
+.book-header a:focus-visible { outline: 2px solid #6b811d; outline-offset: 4px; border-radius: 3px; }
 .library-main { max-width: 1184px; width: calc(100% - 96px); margin: 0 auto; }
 .library-intro { padding: 40px 0 36px; }
 .library-intro .book-eyebrow { margin-bottom: 22px; }
@@ -69,7 +70,7 @@
 .about-mark { display: grid; place-items: center; width: 68px; height: 68px; border-radius: 50%; background: #d9f77c; color: #465829; margin-bottom: 30px; }
 .about-main > p:not(.book-eyebrow), .about-main section p { color: #687060; font-size: 16px; line-height: 1.95; }
 .about-main section { margin: 40px 0; }
-.about-main section a { color: #617346; font-size: 13px; }
+.about-main section > a { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; color: #617346; font-size: 13px; }
 @media (max-width: 1100px) {
   .library-main { width: calc(100% - 64px); }
   .story-cover { height: 220px; }
@@ -79,8 +80,9 @@
   .library-launch .book-start { max-width: none; }
 }
 @media (max-width: 720px) {
-  .book-header { gap: 8px; height: auto; min-height: 88px; flex-wrap: wrap; padding-top: 16px; padding-bottom: 16px; }
-  .book-navigation { gap: 14px; font-size: 11px; }
+  html { --navigation-height: 104px; }
+  .book-header { gap: 6px; height: var(--navigation-height); flex-wrap: wrap; padding: 12px 24px; }
+  .book-navigation { width: 100%; justify-content: space-between; gap: 8px; font-size: 11px; }
   .book-brand { font-size: 19px; }
   .library-main { width: calc(100% - 32px); }
   .library-intro { padding: 40px 0 30px; }

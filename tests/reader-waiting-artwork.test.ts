@@ -33,6 +33,12 @@ describe("saved waiting artwork selection", () => {
     const result = waitingArtworkForRun({ run, bible: { ...bible, template: NEON_PROTOCOL_TEMPLATE, assets: [asset("city", "image/svg+xml"), asset("opening"), asset("watchers", "image/svg+xml"), asset("device")] } });
     expect(result.map(item => item.asset_id)).toEqual(["city", "watchers"]);
   });
+  it("intersects server-derived scenery with this frozen opening and its own image assets", () => {
+    const template = { ...bible.template!, opening_beats: [{ asset_id: "establishing", width: 100, height: 150, caption: "A story beat", alt: "A scene" }] };
+    const saved = { run, bible: { ...bible, template, assets: [asset("establishing"), asset("portrait")] } };
+    expect(waitingArtworkForRun(saved, ["foreign", "portrait", "establishing", "establishing"]).map(item => item.asset_id)).toEqual(["establishing"]);
+    expect(waitingArtworkForRun(saved)).toEqual([]);
+  });
   it("uses existing authored Neon scenery only for its exact canonical legacy opening", () => {
     const legacy = { ...bible, template: undefined, title: "Neon Protocol", opening: INITIAL_CONTEXT };
     expect(waitingArtworkForRun({ run, bible: legacy }).map(item => item.src)).toEqual(["/neon-city.svg", "/neon-watchers.svg"]);
