@@ -46,9 +46,9 @@ A fresh verified backup captured **two databases, 263 records and 29 private fil
 
 ## Delivery and remaining items
 
-- Finalization commit: to be recorded after validation and commit.
+- Validated cleanup commit: [`32b4cf893a9e728d789e8bebd7d1bbca39edfefa`](https://github.com/NassAbd/lunatoon/commit/32b4cf893a9e728d789e8bebd7d1bbca39edfefa), pushed with an exact local/remote SHA match. The subsequent delivery-receipt commit changes this report only; the [final branch head](https://github.com/NassAbd/lunatoon/commits/chore/hackathon-finalization) includes it.
 - PR target: `main`; head: `chore/hackathon-finalization`.
-- [Prepared comparison](https://github.com/NassAbd/lunatoon/compare/main...chore/hackathon-finalization). PR creation follows validation and remote-SHA verification; it must remain unmerged for user review.
+- [PR #1 — Finalize Lunatoon for DevDay Hackathon](https://github.com/NassAbd/lunatoon/pull/1) is open, ready for review and unmerged. GitHub reported it mergeable against the unchanged `main` SHA after creation. No automatic merge is enabled or requested. The report-only delivery receipt does not change the validated application or test results.
 - The repository remains private. Judge access/public visibility and a license choice require the owner's decision; no license existed and none was invented.
 - Pitch video and hosted demo are not published. The app remains local and unauthenticated, with a short two-decision format and provider-dependent latency/visual consistency. Partial previews are optional, and application budgets are not provider billing caps.
 - This finalization performs no live generation and makes no new live quality, latency or cost claim. Historical evidence remains in the archive.
