@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { once } from "node:events";
 import { createHash } from "node:crypto";
-import { mockChapter, mockFoundation, jpegBase64 } from "./mock-chapter.mjs";
+import { mockChapter, mockFoundation, mockKaiFoundation, jpegBase64 } from "./mock-chapter.mjs";
 
 const port = 3110;
 const directory = mkdtempSync(path.join(os.tmpdir(), "lunatoon-browser-"));
@@ -13,7 +13,7 @@ const stats = { foundations: 0, foundationInputs: [], scripts: 0, images: 0, con
 let nextProcess, failSecond = false, invalidScript = false, duplicateEndingDialogue = false, imageDelay = 900;
 let scriptDelay = 120, reverseImages = false, streamPreviews = false, truncateSecondStream = false;
 let invalidFoundation = false, uncertainFoundation = false, foundationDelay = 120;
-let foundationOpeningCount = 2, failOpeningSequence = 0, truncateOpeningSequence = 0, openingActive = 0;
+let foundationOpeningCount = 2, failOpeningSequence = 0, truncateOpeningSequence = 0, openingActive = 0, kaiFoundation = false;
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 async function bodyBytes(request) { const chunks = []; for await (const chunk of request) chunks.push(chunk); return Buffer.concat(chunks); }
 async function body(request) { return (await bodyBytes(request)).toString("utf8"); }
@@ -59,6 +59,7 @@ const mock = http.createServer(async (request, response) => {
       reverseImages = Boolean(input.reverseImages); streamPreviews = Boolean(input.streamPreviews); truncateSecondStream = Boolean(input.truncateSecondStream);
       invalidFoundation = Boolean(input.invalidFoundation); uncertainFoundation = Boolean(input.uncertainFoundation); foundationDelay = input.foundationDelay ?? 120;
       foundationOpeningCount = input.foundationOpeningCount ?? 2; failOpeningSequence = input.failOpeningSequence ?? 0; truncateOpeningSequence = input.truncateOpeningSequence ?? 0;
+      kaiFoundation = Boolean(input.kaiFoundation);
       return json(response, { ok: true });
     }
     if (request.url === "/__restart") { const child = nextProcess; const stopped = once(child, "exit"); child.kill("SIGTERM"); await stopped; await startNext(); return json(response, { ok: true }); }
@@ -70,7 +71,7 @@ const mock = http.createServer(async (request, response) => {
         if (input.text.format.strict !== true || input.text.format.schema.additionalProperties !== false) return json(response, { error: { message: "Strict foundation schema required" } }, 400);
         await delay(foundationDelay);
         if (uncertainFoundation) return response.destroy();
-        const foundation = mockFoundation(context, foundationOpeningCount);
+        const foundation = kaiFoundation ? mockKaiFoundation() : mockFoundation(context, foundationOpeningCount);
         if (invalidFoundation) foundation.initial_state.objects[0].holder = null;
         return json(response, { id: "resp_local_foundation", model: input.model, status: "completed", output: [{ type: "message", id: "msg_local_foundation", role: "assistant", status: "completed", content: [{ type: "output_text", text: JSON.stringify(foundation), annotations: [] }] }], usage: { input_tokens: 400, input_tokens_details: { cached_tokens: 0 }, output_tokens: 900, total_tokens: 1300 } });
       }

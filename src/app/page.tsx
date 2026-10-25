@@ -2,20 +2,21 @@ import Link from "next/link";
 import { StoryHeader } from "@/components/story-book";
 import { LibraryLaunch } from "@/components/library-launch";
 import { SavedSessions } from "@/components/saved-sessions";
+import { CreatorStories } from "@/components/creator-stories";
 import { getModelConfig } from "@/lib/server/ai";
 import { isReferenceModelSupported } from "@/lib/art-direction";
 import { listSavedRuns } from "@/lib/story-library";
 import { BUNDLED_STORIES, PREVIEW_STORIES } from "@/lib/story-templates/catalog";
-import { listSavedTemplates } from "@/lib/creator/store";
+import { listOwnedSavedTemplates } from "@/lib/creator/store";
 export const dynamic = "force-dynamic";
 export default function Home() {
   let saved: ReturnType<typeof listSavedRuns> | null;
   try { saved = listSavedRuns({ limit: 6 }); } catch { saved = null; }
   const stories = BUNDLED_STORIES.filter(entry => entry.template.status === "ready");
   const referenceSupported = isReferenceModelSupported(getModelConfig().image);
-  let creatorStories: ReturnType<typeof listSavedTemplates> = [];
+  let creatorStories: ReturnType<typeof listOwnedSavedTemplates> = [];
   let creatorUnavailable = false;
-  try { creatorStories = listSavedTemplates({ limit: 12 }); } catch { creatorUnavailable = true; }
+  try { creatorStories = listOwnedSavedTemplates({ limit: 12 }); } catch { creatorUnavailable = true; }
   return <div className="story-reader library-page"><StoryHeader active="library" /><main className="library-main">
     <section className="library-intro"><p className="book-eyebrow">A LITTLE MOONLIGHT. A DIFFERENT STORY.</p><h1>Every story starts<br /> with a choice.</h1><p>Step into an illustrated world. Choose what happens next.<br />Leave a little of yourself in the story.</p></section>
     <section id="stories" className="library-collection" aria-labelledby="playable-heading">
@@ -36,12 +37,7 @@ export default function Home() {
     <section id="creator-stories" className="library-preview library-collection" aria-labelledby="creator-heading">
       <div className="library-section-heading"><div><p className="book-eyebrow">MADE BY YOU</p><h2 id="creator-heading">Your own worlds.</h2></div><Link href="/studio">Create a story <span aria-hidden="true">↗</span></Link></div>
       <p className="library-collection-note">Describe a world, refine its beginning, and make it playable. Saved on this local installation.</p>
-      {creatorUnavailable ? <p role="status">Local creator stories are temporarily unavailable. Your saved files have been preserved.</p> : creatorStories.length ? <div className="library-stories">{creatorStories.map(template => <article className="story-card playable-story" data-story={template.id} data-status="ready" key={`${template.id}:${template.version}`}>
-        <div className="story-cover">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`/api/templates/${template.id}/assets/${template.cover_asset_id}?version=${template.version}`} width={1000} height={600} alt={`Authored placeholder for ${template.title}`} /><span className="cover-label">LOCAL · READY TO PLAY</span>
-        </div><div className="story-card-copy"><p className="story-genre">{template.genre} · v{template.version}</p><h2>{template.title}</h2><p>{template.description}</p><LibraryLaunch template={template} referenceSupported={referenceSupported} /></div>
-      </article>)}</div> : <p className="local-note">Your first original story starts with an idea. <Link href="/studio">Open Creator Studio →</Link></p>}
+      {creatorUnavailable ? <p role="status">Local creator stories are temporarily unavailable. Your saved files have been preserved.</p> : <CreatorStories stories={creatorStories} referenceSupported={referenceSupported} />}
     </section>
     <section className="library-preview library-collection" aria-labelledby="preview-heading">
       <div className="library-section-heading"><div><p className="book-eyebrow">WORLDS ON THE HORIZON</p><h2 id="preview-heading">More stories to look forward to.</h2></div></div>

@@ -48,7 +48,7 @@ describe("persistent narrative request contract (official SDK, mocked transport)
       expect(supplied).toMatchObject({ continuity_fact_ids: ["device_source", "cat_access"] });
     }
     expect(input[1].content.lastIndexOf('"choice"')).toBeGreaterThan(input[1].content.indexOf('"recent_panels"'));
-    expect(result.metrics).toMatchObject({ request_id: "req_stage", prompt_version: "persistent-neon-05.1-causal" });
+    expect(result.metrics).toMatchObject({ request_id: "req_stage", prompt_version: "persistent-neon-08.2-ownership" });
   });
   it("continues a one-consequence saved chapter through the official SDK without requiring a second fact", async () => {
     const context: NarrativeContext = {

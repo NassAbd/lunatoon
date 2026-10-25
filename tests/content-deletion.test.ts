@@ -129,6 +129,56 @@ describe("explicit resumable local content deletion", () => {
     expect(() => s.engine.snapshot(s.run.id)).toThrow(/removed|deleted/); expect(() => s.store.createRun({ operation_id: s.run.operation_id, approach: "reference" }, models, limits)).toThrow(/removed|deleted/);
     expect(s.deletion.resume(receipt.operation_id)).toEqual(receipt);
   });
+  it("deletes pre-template readings from event ownership without requiring a file-intent journal", async () => {
+    const s = setup(); const sibling = s.store.createRun({ operation_id: operation(), approach: "reference" }, models, limits);
+    const before = s.store.snapshot(sibling.id); expect(before.bible.template).toBeUndefined();
+    const written = await s.engine.decide(s.run.id, { operation_id: operation(), choice_id: "investigate", instruction: "" });
+    for (const panel of written.panels) await s.engine.image(s.run.id, panel.id, { operation_id: panel.operation_id, retry: false });
+    const imagePaths = s.store.snapshot(s.run.id).panels.map(panel => panel.image_path!);
+    const unknownTemporary = path.join(s.dir, `${imagePaths[0]}.${operation()}.tmp`); writeFileSync(unknownTemporary, "unproven historical ownership");
+    rmSync(path.join(s.dir, "content-write-intents.jsonl"));
+    const db = new DatabaseSync(path.join(s.dir, "stories.sqlite"));
+    try { db.exec("DROP TABLE deletion_files; DROP TABLE deletion_targets; DROP TABLE deletion_jobs;"); } finally { db.close(); }
+    const calls = s.calls(); const preview = s.deletion.preview({ kind: "run", id: s.run.id });
+    expect(preview).toMatchObject({ run_count: 1, active_work: false });
+    expect(remove(s.deletion, "run", s.run.id).status).toBe("complete");
+    expect(s.store.snapshot(sibling.id)).toEqual(before); expect(s.calls()).toBe(calls);
+    for (const file of imagePaths) expect(existsSync(path.join(s.dir, file))).toBe(false);
+    for (const asset of before.bible.assets) expect(existsSync(path.join(s.dir, asset.path))).toBe(true);
+    expect(readFileSync(unknownTemporary, "utf8")).toBe("unproven historical ownership");
+    expect(existsSync(path.join(s.dir, "content-write-intents.jsonl"))).toBe(false);
+  });
+
+  it("deletes schema-v1 Creator versions and their readings while retaining shared historical artwork and references", () => {
+    const s = setup(), a = creator(s.dir), b = creator(s.dir);
+    const bytes = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jWe8AAAAASUVORK5CYII=", "base64");
+    const versions = [a, a, b].map(owned => {
+      const value = foundation();
+      const reference = owned.store.addReference(owned.draft.id, { bytes, mime: "image/png", width: 1, height: 1, purpose: "Historical reference" });
+      const artwork = owned.store.registerArtwork(owned.draft.id, { bytes: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>'), mime: "image/svg+xml", width: 800, height: 600, purpose: "Historical authored opening" });
+      const template = owned.store.saveTemplate(owned.draft.id, { operation_id: operation(), foundation: value, reference_asset_ids: [reference.id], cover_asset_id: artwork.id, opening_asset_ids: value.opening_beats.map(() => artwork.id) }).latest_template!;
+      const bundle = getSavedTemplateBundle(template.id, template.version, s.dir)!;
+      return s.store.createRun({ operation_id: operation(), approach: "reference" }, models, limits, bundle);
+    });
+    const sibling = s.store.snapshot(versions[2].id), builtIn = s.store.snapshot(s.run.id);
+    const otherAssets = b.store.getDraft(b.draft.id).assets.map(asset => path.join(s.dir, "creator/assets", `${asset.sha256}.${asset.mime === "image/png" ? "png" : "svg"}`));
+    const beforeHashes = otherAssets.map(file => createHash("sha256").update(readFileSync(file)).digest("hex"));
+    rmSync(path.join(s.dir, "content-write-intents.jsonl"));
+    const db = new DatabaseSync(path.join(s.dir, "creator.sqlite"));
+    try {
+      db.exec("DROP TABLE creator_opening_attempts; DROP TABLE creator_openings; DROP TABLE creator_draft_saves; PRAGMA user_version=1;");
+      expect(s.deletion.preview({ kind: "creator", id: a.draft.id })).toMatchObject({ run_count: 2, version_count: 2, active_work: false });
+      expect(remove(s.deletion, "creator", a.draft.id)).toMatchObject({ status: "complete", deleted_run_count: 2 });
+      expect(db.prepare("PRAGMA user_version").get()?.user_version).toBe(1);
+      expect(db.prepare("SELECT count(*) n FROM creator_templates WHERE draft_id=?").get(a.draft.id)?.n).toBe(0);
+      expect(db.prepare("SELECT count(*) n FROM creator_assets WHERE draft_id=?").get(a.draft.id)?.n).toBe(0);
+      expect(db.prepare("SELECT count(*) n FROM creator_drafts WHERE id=?").get(b.draft.id)?.n).toBe(1);
+      expect(s.store.snapshot(versions[2].id)).toEqual(sibling); expect(s.store.snapshot(s.run.id)).toEqual(builtIn);
+      expect(otherAssets.map(file => createHash("sha256").update(readFileSync(file)).digest("hex"))).toEqual(beforeHashes);
+      for (const asset of sibling.bible.assets) expect(existsSync(path.join(s.dir, asset.path))).toBe(true);
+      expect(s.calls()).toBe(0);
+    } finally { db.close(); }
+  });
   it("fences late scripts and the receipt-to-image-write window without recreating files or rows", async () => {
     const s = setup(); let release!: () => void; const wait = new Promise<void>(resolve => { release = resolve; }); s.provider.script = async context => { await wait; return { chapter: chapterFixture(context), metrics: measuredMetrics }; };
     const pending = s.engine.decide(s.run.id, { operation_id: operation(), choice_id: "investigate", instruction: "" });

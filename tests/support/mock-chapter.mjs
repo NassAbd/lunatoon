@@ -1,5 +1,6 @@
 // Deterministic provider output for integration tests; never calls a paid service.
 export function mockChapter(context) {
+  if (context.bible.template?.protagonist_id === "kai_fox") return kaiChapter(context);
   if (context.bible.template?.protagonist_id === "ada") return cartographerChapter(context);
   if (context.bible.template?.id === "last-lightkeeper") return lightkeeperChapter(context);
   if (context.bible.template?.id === "glass-orchard") return orchardChapter(context);
@@ -16,6 +17,47 @@ export function mockChapter(context) {
       used_fact_ids: ending ? ["device_source", "cat_access"] : [], characters_added: [], appearance_changes: ending ? [] : [{ character_id: "kael", injuries_added: ["A shallow cut on his right hand"], clothing_condition: "Yellow coat wet and torn at the right cuff", objects_added: [], objects_removed: [] }], object_updates: [], relationships_added: [], unresolved_threads: ending ? [] : ["Why did Aster Transit Lab target Kael?"],
     },
     next_decision: ending ? { question: "", options: [] } : { question: "The lab seal and cat's TL-9 hatch reveal a route. What now?", options: [{ id: "follow_cat", label: "Follow the cat into the Aster Lab maintenance route", uses_fact_ids: ["device_source", "cat_access"] }, { id: "isolate_signal", label: "Use the TL-9 hatch to isolate Aster Lab's signal", uses_fact_ids: ["device_source", "cat_access"] }] }, is_ending: ending,
+  };
+}
+
+// Reconstructed from user-provided identity/ownership anchors. All prose and
+// model transitions below are synthetic, not the discarded historical output.
+export function mockKaiFoundation() {
+  return {
+    title: "Running Hell", genre: "Cyberpunk Action", description: "Kai Fox must use the SpeedCore to stop NEXUS and save the city.",
+    premise: "Kai Fox carries an intact SpeedCore Device outside NEXUS headquarters. He must decide how to stop its city-wide relay.",
+    world: "A fictional city threatened by NEXUS, focused on the headquarters entrance and its control room.", protagonist_id: "kai_fox",
+    character_bible: "Kai Fox has a red jacket and a ponytail. Preserve his identity and visual anchor red_jacket_ponytail. He wants to save the city.",
+    art_direction: "Original graphic cyberpunk comic, clean ink, red jacket, charcoal architecture and restrained electric blue highlights. No lettering.",
+    object_anchor: "The SpeedCore Device is a palm-sized silver module with one blue ring. Keep its shape and object ID speedcore_device stable.",
+    setting_anchor: "NEXUS headquarters has dark glass doors and a control room with one exposed relay slot.",
+    continuity_rules: ["Kai keeps his red jacket and ponytail.", "Wearing or using SpeedCore does not transfer ownership.", "Stop the relay and resolve the city's immediate danger within two decisions."],
+    initial_state: {
+      facts: [{ id: "nexus_threatens_city", text: "NEXUS threatens the city through a relay inside its headquarters." }],
+      characters: [{ id: "kai_fox", name: "Kai Fox", visual_anchor: "red_jacket_ponytail", injuries: [], clothing_condition: "Red jacket intact", carried_objects: ["speedcore_device"] }],
+      objects: [{ id: "speedcore_device", name: "SpeedCore Device", condition: "intact", holder: "kai_fox" }],
+      relationships: ["Kai wants to protect the city's residents."], unresolved_threads: ["Can Kai stop the NEXUS relay?"],
+    },
+    initial_decision: { question: "How will Kai respond to NEXUS?", options: [{ id: "stop_nexus", label: "Use the speed to stop NEXUS and save the city." }, { id: "study_entrance", label: "Study the headquarters entrance before moving." }, { id: "warn_city", label: "Warn the residents before entering headquarters." }] },
+    opening_beats: [{ caption: "Kai waits outside NEXUS headquarters with the SpeedCore in hand.", alt: "Kai's red jacket and ponytail outside the headquarters" }, { caption: "The SpeedCore's blue ring reflects the dark glass doors.", alt: "Kai holds the intact silver SpeedCore Device" }, { caption: "Beyond the doors, the city relay is about to switch on.", alt: "The headquarters entrance and the distant control room" }],
+    choice_effects: [],
+  };
+}
+
+function kaiChapter(context) {
+  const ending = context.step === context.max_steps;
+  const action = ending ? "Kai unfastens SpeedCore and leaves the module inside the exposed relay slot." : "Kai straps SpeedCore to his wrist and uses its speed to enter NEXUS headquarters.";
+  const consequence = ending ? "SpeedCore's pulse stops the relay. Kai steps back empty-handed as the city's warning lights go dark." : "Inside the control room, Kai finds an exposed slot that can interrupt the city relay while he still wears SpeedCore.";
+  return {
+    panels: [action, consequence].map((text, index) => ({ panel_id: `panel_${index + 1}`, sequence_index: index + 1, layout_aspect: "vertical", visual_description: text, image_prompt: `${index ? "SCENE_TWO Close-up" : "SCENE_ONE Wide shot"}: ${text} Kai keeps his red jacket and ponytail. No lettering.`, dialogues: [{ id: `bubble_${index + 1}`, character: "Kai Fox", text: ending ? index ? "The city is safe. I can leave the speed behind." : "The slot needs the whole module. I'll leave it here." : index ? "That exposed slot is our way to stop the relay." : "SpeedCore stays with me. I'm going inside.", position: index ? "bottom-right" : "top-left", style: "normal" }] })),
+    event: { action, consequence, source_clue: null },
+    story_state_updates: {
+      facts_added: ending ? [{ id: "speedcore_left_in_relay", text: "Kai left SpeedCore in the relay slot and stepped back without it." }, { id: "city_saved", text: "The relay stopped and the city's warning lights went dark." }] : [{ id: "nexus_hq_entered", text: "Kai used SpeedCore to enter NEXUS headquarters." }, { id: "relay_access", text: "An exposed slot in the control room can interrupt the city relay." }],
+      used_fact_ids: ending ? ["nexus_hq_entered", "relay_access"] : ["nexus_threatens_city"], characters_added: [],
+      appearance_changes: [{ character_id: "kai_fox", injuries_added: [], clothing_condition: ending ? "Red jacket intact; wrist strap empty after leaving SpeedCore in the relay" : "Red jacket intact; SpeedCore strapped to Kai's wrist", objects_added: [], objects_removed: ending ? ["speedcore_device"] : [] }],
+      object_updates: [{ id: "speedcore_device", name: "SpeedCore Device", condition: ending ? "intact" : "active", holder: ending ? null : "kai_fox" }], relationships_added: [], unresolved_threads: ending ? [] : ["Will Kai leave SpeedCore in the exposed relay slot to stop NEXUS?"],
+    },
+    next_decision: ending ? { question: "", options: [] } : { question: "Inside NEXUS, the exposed relay slot can stop the threat. What will Kai do?", options: [{ id: "disable_relay", label: "Leave SpeedCore in the exposed relay slot to save the city.", uses_fact_ids: ["nexus_hq_entered", "relay_access"] }, { id: "study_relay", label: "Study the exposed slot before disconnecting the city relay.", uses_fact_ids: ["nexus_hq_entered", "relay_access"] }] }, is_ending: ending,
   };
 }
 

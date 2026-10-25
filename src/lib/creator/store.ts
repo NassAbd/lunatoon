@@ -85,10 +85,17 @@ export function getSavedTemplateBundle(id: string, version?: number, directory?:
     return { template, assets: [...ids].map(assetId => ownedTemplateAsset(db, root, id, template.version, assetId)) };
   });
 }
-export function listSavedTemplates(options: { directory?: string; limit?: number } = {}): StoryTemplate[] {
+export type OwnedSavedTemplate = { template: StoryTemplate; draft_id: string };
+export function listOwnedSavedTemplates(options: { directory?: string; limit?: number } = {}): OwnedSavedTemplate[] {
   const limit = Math.max(1, Math.min(100, Math.floor(options.limit ?? 50) || 50));
-  return readOnly(options.directory, [], (db, root) => db.prepare("SELECT t.document FROM creator_templates t JOIN creator_drafts d ON d.id=t.draft_id WHERE json_extract(t.document,'$.status')='ready' AND t.version=(SELECT MAX(version) FROM creator_templates WHERE id=t.id AND json_extract(document,'$.status')='ready') ORDER BY d.updated_at DESC,d.id LIMIT ?").all(limit).map(row => validateStoryTemplate(record(row, StoryTemplateSchema))).filter(template => !isContentDeleted(root, "template", template.id)));
+  return readOnly(options.directory, [], (db, root) => db.prepare("SELECT t.id,t.version,t.draft_id,t.document,d.document AS draft_document FROM creator_templates t JOIN creator_drafts d ON d.id=t.draft_id WHERE json_extract(t.document,'$.status')='ready' AND t.version=(SELECT MAX(version) FROM creator_templates WHERE id=t.id AND json_extract(document,'$.status')='ready') ORDER BY d.updated_at DESC,d.id LIMIT ?").all(limit).map(row => {
+    const template = validateStoryTemplate(record(row, StoryTemplateSchema));
+    const draft = record({ document: row.draft_document }, CreatorDraftSchema);
+    if (draft.id !== row.draft_id || template.id !== row.id || template.version !== row.version || draft.template_id !== template.id || template.id !== `creator_${draft.id.replaceAll("-", "")}`) throw new EngineError("invalid_content_owner", "The Creator story ownership could not be verified.", 409);
+    return { template, draft_id: draft.id };
+  }).filter(entry => !isContentDeleted(root, "template", entry.template.id) && !isContentDeleted(root, "draft", entry.draft_id)));
 }
+export function listSavedTemplates(options: { directory?: string; limit?: number } = {}): StoryTemplate[] { return listOwnedSavedTemplates(options).map(entry => entry.template); }
 export function listDrafts(options: { directory?: string; limit?: number } = {}) {
   const limit = Math.max(1, Math.min(100, Math.floor(options.limit ?? 20) || 20));
   return readOnly(options.directory, [], (db, root) => db.prepare("SELECT document FROM creator_drafts ORDER BY updated_at DESC,id LIMIT ?").all(limit).map(row => {

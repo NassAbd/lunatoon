@@ -23,8 +23,8 @@ export const LimitsSchema = z.object({
 });
 export const ModelsSchema = z.object({ story: z.string(), image: z.string(), quality: z.enum(["low", "medium", "high"]) });
 const FactSchema = z.object({ id: Key, text: Text }).strict();
-export const CharacterSchema = z.object({ id: Key, name: Text, visual_anchor: z.string().min(1).max(900), injuries: z.array(Text).max(8), clothing_condition: Text, carried_objects: z.array(Key).max(8) }).strict();
-export const ObjectSchema = z.object({ id: Key, name: Text, condition: z.enum(["intact", "active", "damaged", "destroyed", "missing"]), holder: Key.nullable() }).strict();
+export const CharacterSchema = z.object({ id: Key, name: Text, visual_anchor: z.string().min(1).max(900), injuries: z.array(Text).max(8), clothing_condition: Text, carried_objects: z.array(Key).max(8).describe("All tracked object IDs in this character's physical custody, including held, carried, worn or attached objects and retained fragments. Exactly the objects whose holder is this character; not legal ownership or remote operation.") }).strict();
+export const ObjectSchema = z.object({ id: Key, name: Text, condition: z.enum(["intact", "active", "damaged", "destroyed", "missing"]).describe("Physical condition is separate from custody. Activation, damage or destruction alone does not transfer the object. A destroyed object stays destroyed."), holder: Key.nullable().describe("Character ID with physical custody, including an object worn or attached to that character. Must agree with their carried_objects. Null means no character has custody; never use a location ID or infer custody merely from using something remotely.") }).strict();
 export const StateSchema = z.object({ facts: z.array(FactSchema).max(20), characters: z.array(CharacterSchema).min(1).max(6), objects: z.array(ObjectSchema).min(1).max(8), relationships: z.array(Text).max(12), unresolved_threads: z.array(Text).max(8) }).strict();
 export const StoryFoundationSchema = z.object({
   title: z.string().trim().min(1).max(100), genre: z.string().trim().min(1).max(80), description: z.string().trim().min(1).max(400),
@@ -47,7 +47,7 @@ const UpdatesSchema = z.object({
   facts_added: z.array(FactSchema).min(1).max(4),
   used_fact_ids: z.array(Key).max(6),
   characters_added: z.array(CharacterSchema).max(2),
-  appearance_changes: z.array(z.object({ character_id: Key, injuries_added: z.array(Text).max(3), clothing_condition: Text.nullable(), objects_added: z.array(Key).max(3), objects_removed: z.array(Key).max(3) }).strict()).max(4),
+  appearance_changes: z.array(z.object({ character_id: Key, injuries_added: z.array(Text).max(3), clothing_condition: Text.nullable(), objects_added: z.array(Key).max(3).describe("Object IDs newly entering this character's custody. Set the matching object holder to this character. Use [] when retaining custody, including activation, wearing or using an already-carried device."), objects_removed: z.array(Key).max(3).describe("Object IDs leaving this character's custody. Set each matching holder to null or the new character, synchronizing the recipient's inventory. Do not remove an object merely because it is worn, used, damaged or destroyed while retained.") }).strict()).max(4),
   object_updates: z.array(ObjectSchema).max(4),
   relationships_added: z.array(Text).max(3),
   unresolved_threads: z.array(Text).max(8),

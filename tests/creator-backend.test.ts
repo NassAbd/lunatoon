@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import OpenAI from "openai";
 import { DatabaseSync } from "node:sqlite";
 import * as ai from "../src/lib/server/ai";
-import { CreatorStore, getSavedTemplate, getSavedTemplateBundle, listSavedTemplates, readSavedTemplateAsset } from "../src/lib/creator/store";
+import { CreatorStore, getSavedTemplate, getSavedTemplateBundle, listOwnedSavedTemplates, listSavedTemplates, readSavedTemplateAsset } from "../src/lib/creator/store";
 import { CreatorService } from "../src/lib/creator/service";
 import { openAICreatorProvider, type CreatorProvider } from "../src/lib/creator/provider";
 import { CreatorSnapshotSchema, GenerateFoundationSchema } from "../src/lib/creator/contracts";
@@ -30,9 +30,28 @@ afterEach(() => { vi.restoreAllMocks(); stores.splice(0).forEach(store => store.
 describe("local Creator ledger and immutable templates", () => {
   it("keeps read-only library lookups empty without creating a database", () => {
     const dir = directory(); expect(getSavedTemplate("missing", undefined, dir)).toBeNull();
-    expect(getSavedTemplateBundle("missing", undefined, dir)).toBeNull(); expect(listSavedTemplates({ directory: dir })).toEqual([]);
+    expect(getSavedTemplateBundle("missing", undefined, dir)).toBeNull(); expect(listSavedTemplates({ directory: dir })).toEqual([]); expect(listOwnedSavedTemplates({ directory: dir })).toEqual([]);
     expect(() => readSavedTemplateAsset("missing", 1, "missing", dir)).toThrow(); expect(readdirSync(dir)).toEqual([]);
     expect(() => GenerateFoundationSchema.parse({ operation_id: operation(), prompt: "short" })).toThrow();
+  });
+
+  it("projects verified draft ownership for legacy ready templates without migrating storage", () => {
+    const store = setup(); const draft = store.createDraft({ operation_id: operation() }).draft; const cover = artwork(store, draft.id); const value = foundation();
+    const input = { operation_id: operation(), foundation: value, reference_asset_ids: [], cover_asset_id: cover.id, opening_asset_ids: value.opening_beats.map(() => cover.id) };
+    store.saveTemplate(draft.id, input);
+    const latest = store.saveTemplate(draft.id, { ...input, operation_id: operation(), foundation: { ...value, title: "Later saved version" } }).latest_template!;
+    const other = store.createDraft({ operation_id: operation() }).draft;
+    const db = new DatabaseSync(path.join(store.directory, "creator.sqlite"));
+    try {
+      db.exec("DROP TABLE creator_opening_attempts; DROP TABLE creator_openings; DROP TABLE creator_draft_saves; PRAGMA user_version=1;");
+      const before = db.prepare("SELECT * FROM creator_drafts").all();
+      expect(listOwnedSavedTemplates({ directory: store.directory })).toEqual([{ draft_id: draft.id, template: latest }]);
+      expect(listSavedTemplates({ directory: store.directory })).toEqual([latest]);
+      expect(db.prepare("PRAGMA user_version").get()?.user_version).toBe(1);
+      expect(db.prepare("SELECT * FROM creator_drafts").all()).toEqual(before);
+      db.prepare("UPDATE creator_templates SET draft_id=? WHERE id=?").run(other.id, latest.id);
+      expect(() => listOwnedSavedTemplates({ directory: store.directory })).toThrow(/ownership/i);
+    } finally { db.close(); }
   });
 
   it("claims one paid call under concurrent duplicates and rejects operation payload changes", async () => {

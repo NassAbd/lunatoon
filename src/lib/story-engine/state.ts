@@ -7,6 +7,19 @@ import { EngineError } from "./errors";
 function requireState(valid: boolean, message: string, issue?: { path: string; rule: string }): asserts valid {
   if (!valid) throw new EngineError("invalid_story_state", message, 422, issue ? { phase: "state_validation", kind: "continuity", error_type: "EngineError", issues: [issue] } : undefined);
 }
+function validateOwnership(state: StoryState, initial = false) {
+  const prefix = initial ? "initial_state." : "";
+  // These are two mirrors of the same relation. Do not repair either side: an
+  // omitted inventory update cannot be distinguished from a contradictory one.
+  for (const [characterIndex, character] of state.characters.entries()) for (const [objectIndex, id] of character.carried_objects.entries()) {
+    requireState(state.objects.some(object => object.id === id && object.holder === character.id), initial ? "Initial carried objects and their holder must agree." : "A carried object must exist and its saved holder must match the character.", { path: `${prefix}characters.${characterIndex}.carried_objects.${objectIndex}`, rule: "carried_object_holder_mismatch" });
+  }
+  for (const [index, object] of state.objects.entries()) if (object.holder != null) {
+    const holder = state.characters.find(character => character.id === object.holder);
+    requireState(Boolean(holder), "Object holder is unknown to this run.", { path: `${prefix}objects.${index}.holder`, rule: "unknown_object_holder" });
+    requireState(holder!.carried_objects.includes(object.id), initial ? "Initial object ownership and carried objects must agree." : "Object ownership and carried-object appearance must agree.", { path: `${prefix}objects.${index}.holder`, rule: "held_object_missing_from_inventory" });
+  }
+}
 export function initialState(): StoryState {
   return { facts: [{ id: "device_knows_kael", text: "The device knows Kael's name." }, { id: "city_ai_silent", text: "The city's AI is silent while cameras track Kael." }], characters: [{ id: "kael", name: "Kael", visual_anchor: CHARACTER_IDENTITY, injuries: [], clothing_condition: "Mustard-yellow trench coat wet from rain", carried_objects: ["device"] }], objects: [{ id: "device", name: "Palm-sized black square device with cyan core", condition: "intact", holder: "kael" }], relationships: ["Kael distrusts the city AI."], unresolved_threads: ["Who sent the device and why does it know Kael?"] };
 }
@@ -15,8 +28,7 @@ function validateFoundationFields(foundation: StoryFoundation) {
   for (const records of [state.facts, state.characters, state.objects, foundation.initial_decision.options]) requireState(new Set(records.map(item => item.id)).size === records.length, "Initial story record IDs must be unique.");
   requireState(state.characters.some(character => character.id === foundation.protagonist_id), "The story protagonist must exist in its initial characters.");
   requireState(state.facts.length <= 12, "The initial story needs room for two chapters of new facts.");
-  for (const character of state.characters) requireState(character.carried_objects.every(id => state.objects.some(object => object.id === id && object.holder === character.id)), "Initial carried objects and their holder must agree.");
-  for (const object of state.objects) requireState(object.holder == null || state.characters.some(character => character.id === object.holder && character.carried_objects.includes(object.id)), "Initial object ownership and carried objects must agree.");
+  validateOwnership(state, true);
   for (const effect of foundation.choice_effects) {
     requireState(foundation.initial_decision.options.some(choice => choice.id === effect.choice_id), "A choice effect refers to an unknown initial choice.");
     requireState(state.objects.some(object => object.id === effect.object_id), "A choice effect refers to an unknown initial object.");
@@ -69,12 +81,12 @@ export function applyChapter(before: StoryState, proposed: Chapter, step: number
     requireState(!after.characters.some((old) => old.id === character.id), "Character identity anchors are immutable once established.");
     after.characters.push(character);
   }
-  for (const object of updates.object_updates) {
+  for (const [updateIndex, object] of updates.object_updates.entries()) {
     const index = after.objects.findIndex((old) => old.id === object.id);
     const old = after.objects[index];
     requireState(old?.condition !== "destroyed" || object.condition === "destroyed", "A destroyed object cannot silently become intact again.");
     requireState(!old || old.name === object.name, "Object identity anchors cannot be renamed.");
-    requireState(object.holder == null || after.characters.some((character) => character.id === object.holder), "Object holder is unknown to this run.");
+    requireState(object.holder == null || after.characters.some((character) => character.id === object.holder), "Object holder is unknown to this run.", { path: `story_state_updates.object_updates.${updateIndex}.holder`, rule: "unknown_object_holder" });
     if (index < 0) after.objects.push(object); else after.objects[index] = object;
   }
   for (const change of updates.appearance_changes) {
@@ -84,8 +96,7 @@ export function applyChapter(before: StoryState, proposed: Chapter, step: number
     if (change.clothing_condition != null) character!.clothing_condition = change.clothing_condition;
     character!.carried_objects = [...new Set([...character!.carried_objects.filter((id) => !change.objects_removed.includes(id)), ...change.objects_added])];
   }
-  for (const character of after.characters) requireState(character.carried_objects.every((id) => after.objects.some((object) => object.id === id && object.holder === character.id)), "A carried object must exist and its saved holder must match the character.");
-  for (const object of after.objects) requireState(object.holder == null || after.characters.some(character => character.id === object.holder && character.carried_objects.includes(object.id)), "Object ownership and carried-object appearance must agree.");
+  validateOwnership(after);
   after.relationships = [...new Set([...after.relationships, ...updates.relationships_added])];
   after.unresolved_threads = updates.unresolved_threads;
   return StateSchema.parse(after);
